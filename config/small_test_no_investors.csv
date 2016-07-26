@@ -1,0 +1,3 @@
+period,subject,groups,startingWealth,speedCost,maxSpread,marketEventsURL,priceChangesURL
+1,default,"[[1,2,3,4]]",140,1,5,https://dl.dropboxusercontent.com/s/uisi2skx8f4q82e/no_investors.csv?dl=1,https://dl.dropboxusercontent.com/s/n1d4ytrf75328z7/test_jumpData.csv?dl=1
+2,default,,,,,,

@@ -1,0 +1,81 @@
+<div ng-controller="AdminCtrl">
+    <div class="navbar navbar-fixed-top container">
+        <div class="navbar navbar-default" style="margin-bottom: 0;">
+            <div class="navbar-brand" href="#">Economics Experiment</div>
+            <ul class="nav navbar-nav">
+                <li class="active">
+                    <a>Administrator</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="container">
+        <div id="ui">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div id="router-status" class="alert alert-danger"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <ul class="nav nav-pills nav-stacked">
+                                        <li><a href="admin/payouts" target="_blank">View Payouts</a></li>
+                                        <li><a id="archive" href="#">Archive Session</a></li>
+                                        <li><a id="download" href="admin/download">Download Data</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4>Subjects</h4>
+                            <table class="table table-bordered table-condensed table-striped">
+                                <thead>
+                                <tr><th>ID</th><th>Group</th><th>Period</th><th style="width: 150px;"></th></tr>
+                                </thead>
+                                <tbody id="subject-list">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <button id="start-session" class="btn btn-success">Start Session</button>
+                            <button id="refresh-subjects" class="btn btn-info" title="Attempt recover by refreshing all subject browsers">Recover Session</button>
+                            <button id="reset-session" class="btn btn-danger">Reset Session</button>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="pull-right">
+                                <button id="pause-session" class="btn btn-warning" disabled="disabled">Pause</button>
+                                <button id="resume-session" class="btn btn-primary" disabled="disabled">Resume</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-12">
+                    <h4>Configuration</h4>
+                    <load-config></load-config>
+                    <div style="overflow: auto;">
+                        <table class="config table table-bordered table-striped table-condensed"></table>
+                    </div>
+                </div>
+            </div>
+            <div id=control-container>
+                <button id=buy-investor class="btn">Buy Investor</button>
+                <button id=sell-investor class="btn">Sell Investor</button>
+                <input type="number" id="fpc-input" class="form-control">
+                <button class="btn" id="send-fpc">Send FPC</button>
+            </div>
+        </div>
+    </div>
+</div>

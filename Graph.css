@@ -1,0 +1,141 @@
+.price-axis-box {
+    display: none;
+}
+
+/*sets the color for the lighter boxes on the time axis*/
+svg {
+    background-color: white;
+}
+
+/*Style for the lines that visualize incremental levels of the price axis*/
+.price-grid-line {
+    stroke: rgb(200, 200, 200);
+    stroke-width: 1;
+}
+
+.price-grid-line-zero {
+    stroke: rgb(168, 168, 168);
+    stroke-width: 1;
+}
+
+.price-grid-line-text {
+    fill: rgb(150, 150, 150);
+    font-size: 10px;
+}
+
+.time-grid-line-text {
+    fill: rgb(150, 150, 150);
+    font-size: 10px;
+}
+
+.time-grid-box-light {
+    display: none;
+    fill: rgb(255, 255, 255);
+}
+
+.time-grid-box-dark {
+    fill: rgb(250, 250, 250);
+}
+
+.dead-zone {
+    fill: rgb(200, 200, 200);
+}
+
+.price-line {
+    stroke: rgb(50, 50, 150);
+    stroke-width: 3;
+}
+
+.spread {
+    fill: rgba(255, 127, 80, .5);
+}
+
+.buy-line {
+    stroke: rgb(20, 100, 20);
+    stroke-width: 1;
+}
+
+.others-buy-offer {
+    stroke: rgb(140, 140, 140);
+    stroke-width: 1;
+}
+
+.others-sell-offer {
+    stroke: rgb(140, 140, 140);
+    stroke-width: 1;
+}
+
+.my-buy-offer {
+    stroke: black;
+    stroke-width: 1.5;
+}
+
+.my-sell-offer {
+    stroke: black;
+    stroke-width: 1.5;
+}
+
+.cur-buy-offer {
+    stroke: rgb(80, 50, 30);
+    stroke-width: 1;
+}
+
+.cur-sell-offer {
+    stroke: rgb(80, 50, 30);
+    stroke-width: 1;
+}
+
+.past-buy-offer {
+    stroke: rgb(80, 50, 30);
+    stroke-width: 1;
+}
+
+.past-sell-offer {
+    stroke: rgb(80, 50, 30);
+    stroke-width: 1;
+}
+
+.my-profit-out {
+    stroke: rgb(110, 110, 110);
+    stroke-width: 3;
+}
+
+.my-profit-snipe {
+    stroke: rgb(39, 196, 60);
+    stroke-width: 3;
+}
+
+.my-profit-maker {
+    stroke: rgb(26, 73, 232);
+    stroke-width: 3;
+}
+
+.others-profit-out {
+    stroke: rgba(110, 110, 110, 0.4);
+    stroke-width: 1;
+}
+
+.others-profit-snipe {
+    stroke: rgba(39, 196, 60, 0.4);
+    stroke-width: 1;
+}
+
+.others-profit-maker {
+    stroke: rgba(26, 73, 232, 0.4);
+    stroke-width: 1;
+}
+
+.my-positive-transactions {
+    stroke: green;
+    stroke-width: 1;
+}
+
+.my-negative-transactions {
+    stroke: red;
+    stroke-width: 1;
+}
+
+.other-transactions {
+    stroke: gray;
+    stroke-width: 1;
+}

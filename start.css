@@ -1,0 +1,191 @@
+body {
+    padding-top: 73px;
+    /*background-color: red;*/
+}
+
+#slider {
+    margin: auto;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    height: 180px;
+}
+
+.ui-slider {
+    border-radius: 0;
+}
+
+.ui-slider .ui-slider-handle {
+    display: none;
+}
+
+.ui-slider .ui-slider-range {
+    position: absolute;
+    z-index: 0;
+    border-radius: 0;
+    background: none;
+    background-color: rgb(26, 73, 232);
+}
+
+.slider-spread-indicators {
+    position: absolute;
+    z-index: 1;
+    right: -5px;
+    bottom: 0;
+    border-top: 2px solid black;
+    width: 10px;
+}
+
+#slider-container {
+    float: right;
+    width: 30%;
+    height: 100%;
+    padding-top: 10px
+}
+
+#slider-val {
+    margin: auto;
+    width: 50px;
+    display: block;
+}
+
+#buttons-container {
+    text-align: center;
+    float: left;
+    width: 70%;
+    height: 100%;
+    padding: 10px;
+}
+
+#graph-controls {
+    margin-top: 20px;
+}
+
+#data-container {
+    margin: auto;
+    width: 85%;
+    height: 100%;
+    margin-top: 0px;
+    border: 1px solid transparent;
+}
+
+.status-table {
+    margin-top: 20px;
+    height: 60%;
+    background-color: white;
+    /*overflow: auto;*/
+    border: 1px solid green;
+}
+
+.status-display {
+    margin-top: 15px;
+}
+
+.data-heading {
+    margin-top: 20px;
+    text-align: center;
+    background-color: white;
+}
+
+.speed-label {
+    color: orange;
+    font-size: 24px;
+}
+
+.state-label {
+    color: blue;
+    font-size: 24px;
+}
+
+.spread-label {
+    color: red;
+    font-size: 24px;
+}
+
+.ui-container {
+    margin-bottom: 60px;
+}
+
+.top-left-screen {
+    border: rgb(200, 200, 200) 2px solid;
+    background-color: rgb(230, 230, 230);
+}
+
+.top-right-screen {
+    margin-left: 25px;
+    border: rgb(200, 200, 200) 2px solid;
+    background-color: rgb(230, 230, 230);
+}
+
+.bottom-left-screen {
+    border: rgb(200, 200, 200) 2px solid;
+    background-color: rgb(230, 230, 230);
+}
+
+.bottom-right-screen {
+    margin-left: 25px;
+    border: rgb(200, 200, 200) 2px solid;
+    background-color: rgb(230, 230, 230);
+}
+
+.screen-wrapper {
+    height: 320px;
+    margin: 40px;
+}
+
+.screen {
+    width: 100%;
+    height: 100%;
+}
+
+.button-container-state {
+    margin-top: 20px;
+    border: 1px solid blue;
+    padding: 10px;
+    display: inline-block;
+}
+
+.button-container-speed {
+    margin-top: 50px;
+    border: 1px solid orange;
+    padding: 10px;
+    display: inline-block;
+}
+
+.button-container-spread {
+    border: 1px solid red;
+    padding: 10px;
+    display: inline-block;
+}
+
+.state-selected {
+    color: white;
+    border: 2px solid black;
+}
+
+#state_out.state-selected {
+    background-color: rgb(110, 110, 110);
+}
+
+#state_snipe.state-selected {
+    background-color: rgb(39, 196, 60);
+}
+
+#state_maker.state-selected {
+    background-color: rgb(26, 73, 232);
+}
+
+.state-not-selected {
+    color: white;
+    border: 2px solid gray;
+    background-color: gray;
+}
+
+.row {
+    padding: 0px;
+    margin: 0px;
+}
+
+[class*="col-"] {
+    padding: 0px;
+    margin: 0px;
+}

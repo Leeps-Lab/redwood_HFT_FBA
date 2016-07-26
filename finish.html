@@ -1,0 +1,31 @@
+      <div class="navbar navbar-fixed-top container">
+         <div class="navbar navbar-default" style="margin-bottom: 0;">
+            <div class="navbar-brand" href="#">Economics Experiment</div>
+            <ul class="nav navbar-nav">
+               <li class="active">
+                  <a>User ID: <span>{{$root.user_id}}</span></a>
+               </li>
+            </ul>
+         </div>
+      </div>
+      
+      <p>Hello world</p>
+
+      <div class="container">
+         <table class="table table-bordered table-condensed">
+            <thead>
+               <tr><th>Period</th><th>Points</th><th>Earnings</th></tr>
+            </thead>
+            <tbody id="results">
+               <tr ng-repeat="points in pointsByPeriod track by $index">
+                  <td>{{$index + 1}}</td><td>{{points | number:2}}</td><td>${{points | number:2}}</td>
+               </tr>
+               <tr class="warning">
+                  <td>Average:</td><td>{{($root.totalPoints / ($root.period - 1) || 0) | number:2}}</td><td>${{($root.totalPoints / ($root.period - 1) || 0) | number:2}}</td>
+               </tr>
+               <tr class="success">
+                  <td>Total:</td><td>{{$root.totalPoints | number:2}}</td><td>${{$root.totalPoints | number:2}}</td>
+               </tr>
+            </tbody>
+         </table>
+      </div>
