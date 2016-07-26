@@ -23,18 +23,14 @@ svg {
     font-size: 10px;
 }
 
-.time-grid-line-text {
+.batch-line {
+    stroke: gray;
+    stroke-width: 1px;
+}
+
+.batch-label-text {
     fill: rgb(150, 150, 150);
     font-size: 10px;
-}
-
-.time-grid-box-light {
-    display: none;
-    fill: rgb(255, 255, 255);
-}
-
-.time-grid-box-dark {
-    fill: rgb(250, 250, 250);
 }
 
 .dead-zone {

@@ -124,8 +124,6 @@ Redwood.controller("AdminCtrl",
             }
          };
 
-         var CLOCK_FREQUENCY = 50;   // Frequency of loop, measured in hz
-
          $scope.groupManagers = {};
 
          $scope.updateGroupManagers = function () {
@@ -161,10 +159,6 @@ Redwood.controller("AdminCtrl",
             //INITIALIZE ADMIN FOR EXPERIMENT   **************************************
 
             $scope.config = ra.get_config(1, 0);
-
-            $scope.speedCost = $scope.config.speedCost;
-            $scope.startingWealth = $scope.config.startingWealth;
-            $scope.maxSpread = $scope.config.maxSpread;
 
             $scope.priceChanges = [];
             var priceURL = $scope.config.priceChangesURL;
@@ -236,7 +230,7 @@ Redwood.controller("AdminCtrl",
                      };
                      $scope.groupManagers[groupNum] = groupManager.createGroupManager(groupArgs, ra.sendCustom);
                      $scope.groupManagers[groupNum].market = marketManager.createMarketManager(ra.sendCustom, groupNum, $scope.groupManagers[groupNum]);
-                     $scope.groupManagers[groupNum].dataStore = dataStorage.createDataStorage(group, groupNum, $scope.speedCost, $scope.startingWealth);
+                     $scope.groupManagers[groupNum].dataStore = dataStorage.createDataStorage(group, groupNum, $scope.config.speedCost, $scope.config.startingWealth);
                      for (var subjectNum of group) {
 
                         // map subject number to group number
@@ -247,8 +241,8 @@ Redwood.controller("AdminCtrl",
                            myId: subjectNum,
                            groupId: groupNum,
                            isDebug: debugMode,
-                           speedCost: $scope.speedCost,
-                           maxSpread: $scope.maxSpread
+                           speedCost: $scope.config.speedCost,
+                           maxSpread: $scope.config.maxSpread
                         };
                         $scope.groupManagers[groupNum].marketAlgorithms[subjectNum] = marketAlgorithm.createMarketAlgorithm(subjectArgs, $scope.groupManagers[groupNum]);
                      }
@@ -306,10 +300,11 @@ Redwood.controller("AdminCtrl",
                   groupNumber: groupNum,
                   group: group,
                   isDebug: debugMode,
-                  speedCost: $scope.speedCost,
-                  startingWealth: $scope.startingWealth,
-                  maxSpread: $scope.maxSpread,
-                  playerTimeOffsets: $scope.playerTimeOffsets
+                  speedCost: $scope.config.speedCost,
+                  startingWealth: $scope.config.startingWealth,
+                  maxSpread: $scope.config.maxSpread,
+                  playerTimeOffsets: $scope.playerTimeOffsets,
+                  batchLength: $scope.config.batchLength
                };
 
                if($scope.config.hasOwnProperty("input_addresses")) {
