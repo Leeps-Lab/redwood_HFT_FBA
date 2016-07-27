@@ -88,9 +88,9 @@ Redwood.factory("MarketAlgorithm", function () {
             else if (this.state == "state_snipe") {
                nMsg3 = new Message("SYNC_FP", "SNIPE", [this.myId, this.using_speed, []]);
                nMsg3.timeStamp = msg.msgData[0]; // for debugging test output only
-               snipeBuyMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice, true, Date.now()]);
+               snipeBuyMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice, true, Date.now(), this.state]);
                snipeBuyMsg.delay = !this.using_speed;
-               snipeSellMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice, true, Date.now()]);
+               snipeSellMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice, true, Date.now(), this.state]);
                snipeSellMsg.delay = !this.using_speed;
                nMsg3.msgData[2].push(snipeBuyMsg, snipeSellMsg);
             }
@@ -158,91 +158,33 @@ Redwood.factory("MarketAlgorithm", function () {
             var nMsg = new Message("DATA", "C_UUSPR", msg.msgData);
             this.sendToAllDataHistories(nMsg);
          }
-
-         // Confirmation that a buy offer has been placed in market
-         if (msg.msgType == "C_EBUY") {
-            if (msg.msgData[0] == this.myId) {
-               var nMsg = new Message("DATA", "C_EBUY", msg.msgData);
-               this.sendToAllDataHistories(nMsg);
-            }
-         }
-
-         // Confirmation that a sell offer has been placed in market
-         if (msg.msgType == "C_ESELL") {
-            if (msg.msgData[0] == this.myId) {
-               var nMsg = new Message("DATA", "C_ESELL", msg.msgData);
-               this.sendToAllDataHistories(nMsg);
-            }
-         }
-
-         // Confirmation that a buy offer has been removed from market
-         if (msg.msgType == "C_RBUY") {
-            if (msg.msgData[0] == this.myId) {
-               var nMsg = new Message("DATA", "C_RBUY", msg.msgData);
-               this.sendToAllDataHistories(nMsg);
-            }
-         }
-
-         // Confirmation that a sell offer has been placed in market
-         if (msg.msgType == "C_RSELL") {
-            if (msg.msgData[0] == this.myId) {
-               var nMsg = new Message("DATA", "C_RSELL", msg.msgData);
-               this.sendToAllDataHistories(nMsg);
-            }
-         }
-
-         // Confirmation that a buy offer has been updated
-         if (msg.msgType == "C_UBUY") {
-            if (msg.msgData[0] == this.myId) {
-               var nMsg = new Message("DATA", "C_UBUY", msg.msgData);
-               this.sendToAllDataHistories(nMsg);
-            }
-         }
-
-         // Confirmation that a sell offer has been updated
-         if (msg.msgType == "C_USELL") {
-            if (msg.msgData[0] == this.myId) {
-               var nMsg = new Message("DATA", "C_USELL", msg.msgData);
-               this.sendToAllDataHistories(nMsg);
-            }
-         }
-
-         // Confirmation that a transaction has taken place
-         if (msg.msgType == "C_TRA") {
-            //send data message to dataHistory containing [timestamp, price, fund-price, buyer, seller]
-            //pick the buyer to send the message unless the buyer is an outside investor, then use the seller
-            if (msg.msgData[2] === this.myId || (msg.msgData[1] === this.myId && msg.msgData[2] == 0)) {
-               var nMsg = new Message("DATA", "C_TRA", [msg.msgData[0], msg.msgData[3], this.fundamentalPrice, msg.msgData[1], msg.msgData[2]]);
-               this.sendToAllDataHistories(nMsg);
-            }
-
-            if (this.state == "state_maker") {
-               if (msg.msgData[1] === this.myId) this.sendToGroupManager(this.enterBuyOfferMsg());
-               if (msg.msgData[2] === this.myId) this.sendToGroupManager(this.enterSellOfferMsg());
-            }
+         
+         // the market sent the outcome of a batch
+         if (msg.msgType == "BATCH") {
+            this.sendToDataHistory(msg);
          }
       };
 
       marketAlgorithm.enterBuyOfferMsg = function () {
-         var nMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice - this.spread / 2, false, Date.now()]);
+         var nMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice - this.spread / 2, false, Date.now(), this.state]);
          nMsg.delay = !this.using_speed;
          return nMsg;
       };
 
       marketAlgorithm.enterSellOfferMsg = function () {
-         var nMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice + this.spread / 2, false, Date.now()]);
+         var nMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice + this.spread / 2, false, Date.now(), this.state]);
          nMsg.delay = !this.using_speed;
          return nMsg;
       };
 
       marketAlgorithm.updateBuyOfferMsg = function () {
-         var nMsg = new Message("OUCH", "UBUY", [this.myId, this.fundamentalPrice - this.spread / 2, Date.now()]);
+         var nMsg = new Message("OUCH", "UBUY", [this.myId, this.fundamentalPrice - this.spread / 2, Date.now(), this.state]);
          nMsg.delay = !this.using_speed;
          return nMsg;
       };
 
       marketAlgorithm.updateSellOfferMsg = function () {
-         var nMsg = new Message("OUCH", "USELL", [this.myId, this.fundamentalPrice + this.spread / 2, Date.now()]);
+         var nMsg = new Message("OUCH", "USELL", [this.myId, this.fundamentalPrice + this.spread / 2, Date.now(), this.state]);
          nMsg.delay = !this.using_speed;
          return nMsg;
       };

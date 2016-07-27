@@ -2,7 +2,7 @@
     display: none;
 }
 
-/*sets the color for the lighter boxes on the time axis*/
+/*sets the background color of the graphs*/
 svg {
     background-color: white;
 }
@@ -69,26 +69,6 @@ svg {
 .my-sell-offer {
     stroke: black;
     stroke-width: 1.5;
-}
-
-.cur-buy-offer {
-    stroke: rgb(80, 50, 30);
-    stroke-width: 1;
-}
-
-.cur-sell-offer {
-    stroke: rgb(80, 50, 30);
-    stroke-width: 1;
-}
-
-.past-buy-offer {
-    stroke: rgb(80, 50, 30);
-    stroke-width: 1;
-}
-
-.past-sell-offer {
-    stroke: rgb(80, 50, 30);
-    stroke-width: 1;
 }
 
 .my-profit-out {

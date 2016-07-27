@@ -2,13 +2,12 @@ Redwood.factory("MarketManager", function () {
    var api = {};
 
    //Creates the market manager, pass var's that you need for creation in here.
-   api.createMarketManager = function (sendFunction, groupNumber, groupManager, debugMode) {
+   api.createMarketManager = function (sendFunction, groupNumber, groupManager, debugMode, batchLength) {
       var market = {};
 
-      market.CLOCK_FREQUENCY = 100;
-
-      market.CDABook = {};
+      market.FBABook = {};
       market.groupManager = groupManager;
+      market.batchLength = batchLength;
 
       market.debugMode = debugMode;
       if (debugMode) {
@@ -28,10 +27,6 @@ Redwood.factory("MarketManager", function () {
       // handle message from subjects
       market.recvMessage = function (message) {
          message.timestamp = Date.now();
-         
-         // copy current market state to message for debug output
-         message.buyOrdersBeforeState = $.extend(true, [], this.CDABook.buyContracts);
-         message.sellOrdersBeforeState = $.extend(true, [], this.CDABook.sellContracts);
 
          if (this.debugMode) {
             this.logger.logRecv(message, "Group Manager");
@@ -45,96 +40,50 @@ Redwood.factory("MarketManager", function () {
                //if message is a market order
                //call ioc buy with a limit greater than the max price
                if (message.msgData[1] == 214748.3647) {
-                  market.CDABook.makeIOCBuy(message.msgData[0], 200000, message.timestamp, message.sellOrdersBeforeState);
+                  market.FBABook.insertBuy(message.msgData[0], 200000, message.timestamp, message.msgData[3], true);
                }
                //if order's price is out of bounds
                else if (message.msgData[1] > 199999.9900 || message.msgData[1] <= 0) {
                   console.error("marketManager: invalid buy price of " + message.msgData[1]);
                   break;
                }
-               //otherwise order is a regular limit order
                else {
-                  //if IOC, then call IOC insert function
-                  if (message.msgData[2]) {
-                     market.CDABook.makeIOCBuy(message.msgData[0], message.msgData[1], message.timestamp, message.sellOrdersBeforeState);
-                  }
-                  else {
-                     // if insert was successful, send confirm message
-                     if (market.CDABook.insertBuy(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3])) {
-                        //only send C_EBUY message for regular limit order
-                        var msg = new Message("ITCH", "C_EBUY", [message.msgData[0], message.msgData[1], message.timestamp]);
-                        msg.timeStamp = message.timestamp; // for test output only
-                        msg.buyOrdersBeforeState = message.buyOrdersBeforeState;
-                        this.sendToGroupManager(msg);
-                     }
-                  }
+                  market.FBABook.insertBuy(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2], message.msgData[3]);
                }
                break;
 
             // enter sell offer
             case "ESELL":
                if (message.msgData[1] == 214748.3647) {
-                  market.CDABook.makeIOCSell(message.msgData[0], 0, message.timestamp, message.buyOrdersBeforeState);
+                  market.FBABook.insertSell(message.msgData[0], 0, message.timestamp, message.msgData[3], true);
                }
                else if (message.msgData[1] > 199999.9900 || message.msgData[1] <= 0) {
                   console.error("marketManager: invalid sell price of " + message.msgData[1]);
                   break;
                }
                else {
-                  //if IOC, then call IOC insert function
-                  if (message.msgData[2]) {
-                     market.CDABook.makeIOCSell(message.msgData[0], message.msgData[1], message.timestamp, message.buyOrdersBeforeState);
-                  }
-                  else {
-                     // insert returns true if order was actually inserted
-                     if (market.CDABook.insertSell(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3])) {
-                        //only send C_ESELL message for regular limit order
-                        var msg = new Message("ITCH", "C_ESELL", [message.msgData[0], message.msgData[1], message.timestamp]);
-                        msg.timeStamp = message.timestamp; // for test output only
-                        msg.sellOrdersBeforeState = message.sellOrdersBeforeState;
-                        this.sendToGroupManager(msg);
-                     }
-                  }
+                  market.FBABook.insertSell(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], msg.msgData[2], message.msgData[3]);
                }
                break;
 
             // remove buy offer
             case "RBUY":
-               market.CDABook.removeBuy(message.msgData[0]);
-               var msg = new Message("ITCH", "C_RBUY", [message.msgData[0], message.timestamp]);
-               msg.timeStamp = message.timestamp; // for test output only
-               msg.buyOrdersBeforeState = message.buyOrdersBeforeState;
-               this.sendToGroupManager(msg);
+               market.FBABook.removeBuy(message.msgData[0]);
                break;
 
             // remove sell offer
             case "RSELL":
-               market.CDABook.removeSell(message.msgData[0]);
-               var msg = new Message("ITCH", "C_RSELL", [message.msgData[0], message.timestamp]);
-               msg.timeStamp = message.timestamp; // for test output only
-               msg.sellOrdersBeforeState = message.sellOrdersBeforeState;
-               this.sendToGroupManager(msg);
+               market.FBABook.removeSell(message.msgData[0]);
                break;
 
             // update buy offer
             case "UBUY":
-               // insert function works as update now also
-               if (market.CDABook.insertBuy(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[2])) {
-                  var msg = new Message("ITCH", "C_UBUY", [message.msgData[0], message.msgData[1], message.timestamp]);
-                  msg.timeStamp = message.timestamp; // for test output only
-                  msg.buyOrdersBeforeState = message.buyOrdersBeforeState;
-                  this.sendToGroupManager(msg);
-               }
+               market.FBABook.insertBuy(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[2]);
                break;
 
             // update sell offer
             case "USELL":
-               if (market.CDABook.insertSell(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[2])) {
-                  var msg = new Message("ITCH", "C_USELL", [message.msgData[0], message.msgData[1], message.timestamp]);
-                  msg.timeStamp = message.timestamp; // for test output only
-                  msg.sellOrdersBeforeState = message.sellOrdersBeforeState;
-                  this.sendToGroupManager(msg);
-               }
+               market.FBABook.insertSell(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[2]);
                break;
 
             // message not recognized
@@ -143,207 +92,127 @@ Redwood.factory("MarketManager", function () {
          }
       };
 
-      //buyPrices is array of prices that current buys have
-      //buyContracts is array of actual order objects
-      market.CDABook.buyPrices = [];
-      market.CDABook.buyContracts = [];
+      market.FBABook.buyContracts = [];
 
-      market.CDABook.sellPrices = [];
-      market.CDABook.sellContracts = [];
+      market.FBABook.sellContracts = [];
 
       //inserts buy into buy orders data structure
-      market.CDABook.insertBuy = function (newId, newPrice, timestamp, originTimestamp) {
-         // search the whole book to see if this player already has a newer offer inserted
-         var rindex = 0;
-         var cindex = -1;
-         while (rindex < market.CDABook.buyContracts.length) {
-            cindex = market.CDABook.buyContracts[rindex].findIndex(function (element) {
-               return element.id == newId;
-            });
-            if (cindex != -1) break;
-            rindex++;
-         }
-         // if another order from this person was found
-         if (cindex != -1) {
-            if (market.CDABook.buyContracts[rindex][cindex].originTimestamp > originTimestamp) {
-               // if that order is newer than the new one, don't insert the new one
-               console.log("tried to insert an older buy order");
-               return false;
+      market.FBABook.insertBuy = function (newId, newPrice, timestamp, originTimestamp, ioc, state) {
+         // check to see if an order from this player is already in the book
+         var index = market.FBABook.buyContracts.findIndex(function (element) {
+            return element.id == newId;
+         });
+
+         if (index != -1) {
+            if (market.FBABook.buyContracts[index].originTimestamp > originTimestamp) {
+               // if the order already in the book is newer, return
+               console.log("stale buy order submitted");
+               return;
             }
             else {
-               // otherwise, get rid of the old one
-               if (market.CDABook.buyContracts[rindex].length == 1) {
-                  toReturn = market.CDABook.buyContracts.splice(rindex, 1)[0];
-                  market.CDABook.buyPrices.splice(rindex, 1);
-               }
-               else {
-                  toReturn = market.CDABook.buyContracts[rindex].splice(cindex, 1);
-               }
+               // otherwise, remove the old order
+               console.log("stale buy order removed");
+               market.FBABook.buyContracts.splice(index, 1);
             }
          }
 
-         // insert the new order
-         rindex = 0;
-         while (rindex < market.CDABook.buyPrices.length && market.CDABook.buyPrices[rindex] < newPrice) rindex++;
-         if (rindex == market.CDABook.buyPrices.length || market.CDABook.buyPrices[rindex] != newPrice) {
-            market.CDABook.buyPrices.splice(rindex, 0, newPrice);
-            market.CDABook.buyContracts.splice(rindex, 0, []);
-         }
-         cindex = 0;
-         while (cindex < market.CDABook.buyContracts[rindex].length && market.CDABook.buyContracts[rindex][cindex].timestamp > timestamp) cindex++;
-         market.CDABook.buyContracts[rindex].splice(cindex, 0, {
-            price: newPrice,
-            id: newId,
-            timestamp: timestamp,
-            originTimestamp: originTimestamp
-         });
-         return true;
+         // push the new order onto the list
+         // order doesn't matter because list will be sorted when a batch happens
+         market.FBABook.buyContracts.push({id: newId, price: newPrice, timestamp: timestamp, originTimestamp: originTimestamp, ioc: ioc, state: state});
       };
 
       //inserts sell into sell orders data structure
-      market.CDABook.insertSell = function (newId, newPrice, timestamp, originTimestamp) {
-         // search the whole book to see if this player already has a newer offer inserted
-         var rindex = 0;
-         var cindex = -1;
-         while (rindex < market.CDABook.sellContracts.length) {
-            cindex = market.CDABook.sellContracts[rindex].findIndex(function (element) {
-               return element.id == newId;
-            });
-            if (cindex != -1) break;
-            rindex++;
-         }
-         // if another order from this person was found
-         if (cindex != -1) {
-            if (market.CDABook.sellContracts[rindex][cindex].originTimestamp > originTimestamp) {
-               // if that order is newer than the new one, don't insert the new one
-               console.log("tried to insert an older sell order");
-               return false;
+      market.FBABook.insertSell = function (newId, newPrice, timestamp, originTimestamp, ioc, state) {
+         // check to see if an order from this player is already in the book
+         var index = market.FBABook.sellContracts.findIndex(function (element) {
+            return element.id == newId;
+         });
+
+         if (index != -1) {
+            if (market.FBABook.sellContracts[index].originTimestamp > originTimestamp) {
+               // if the order already in the book is newer, return
+               console.log("stale sell order submitted");
+               return;
             }
             else {
-               // otherwise, get rid of the old one
-               if (market.CDABook.sellContracts[rindex].length == 1) {
-                  toReturn = market.CDABook.sellContracts.splice(rindex, 1)[0];
-                  market.CDABook.sellPrices.splice(rindex, 1);
-               }
-               else {
-                  toReturn = market.CDABook.sellContracts[rindex].splice(cindex, 1);
-               }
+               // otherwise, remove the old order
+               console.log("stale sell order removed");
+               market.FBABook.sellContracts.splice(index, 1);
             }
          }
 
-         // insert the new order
-         rindex = 0;
-         while (rindex < market.CDABook.sellPrices.length && market.CDABook.sellPrices[rindex] > newPrice) rindex++;
-         if (rindex == market.CDABook.sellPrices.length || market.CDABook.sellPrices[rindex] != newPrice) {
-            market.CDABook.sellPrices.splice(rindex, 0, newPrice);
-            market.CDABook.sellContracts.splice(rindex, 0, []);
-         }
-         cindex = 0;
-         while (cindex < market.CDABook.sellContracts[rindex].length && market.CDABook.sellContracts[rindex][cindex].timestamp > timestamp) cindex++;
-         market.CDABook.sellContracts[rindex].splice(cindex, 0, {
-            price: newPrice,
-            id: newId,
-            timestamp: timestamp,
-            originTimestamp: originTimestamp
+         // push the new order onto the list
+         // order doesn't matter because list will be sorted when a batch happens
+         market.FBABook.sellContracts.push({id: newId, price: newPrice, timestamp: timestamp, originTimestamp: originTimestamp, ioc: ioc, state: state});
+      };
+
+      //removes buy order associated with a user id from the order book
+      market.FBABook.removeBuy = function (idToRemove) {
+         var index = market.FBABook.buyContracts.findIndex(function (element) {
+            return element.id == idToRemove;
          });
-         return true;
-      };
 
-      //transacts an IOC order
-      market.CDABook.makeIOCBuy = function (buyerId, price, timestamp, sellStateBefore) {
-         if (market.CDABook.sellContracts.length === 0) return;
-         if (market.CDABook.sellPrices[market.CDABook.sellPrices.length - 1] < price) {
-            var order = market.CDABook.sellContracts[market.CDABook.sellContracts.length - 1].pop();
-            if (market.CDABook.sellContracts[market.CDABook.sellContracts.length - 1].length === 0) {
-               market.CDABook.sellContracts.pop();
-               market.CDABook.sellPrices.pop();
-            }
-            var msg = new Message("ITCH", "C_TRA", [timestamp, buyerId, order.id, order.price]);
-            msg.sellOrdersBeforeState = sellStateBefore;
-            market.sendToGroupManager(msg);
-         }
-      };
-
-      market.CDABook.makeIOCSell = function (sellerId, price, timestamp, buyStateBefore) {
-         if (market.CDABook.buyContracts.length === 0) return;
-         if (market.CDABook.buyPrices[market.CDABook.buyPrices.length - 1] > price) {
-            var order = market.CDABook.buyContracts[market.CDABook.buyContracts.length - 1].pop();
-            if (market.CDABook.buyContracts[market.CDABook.buyContracts.length - 1].length === 0) {
-               market.CDABook.buyContracts.pop();
-               market.CDABook.buyPrices.pop();
-            }
-            var msg = new Message("ITCH", "C_TRA", [timestamp, order.id, sellerId, order.price]);
-            msg.buyOrdersBeforeState = buyStateBefore;
-            market.sendToGroupManager(msg);
-         }
-      };
-
-      //removes buy order associated with a user id from the order book and returns it
-      market.CDABook.removeBuy = function (idToRemove) {
-         var rindex = 0;
-         var cindex = -1;
-         while (rindex < market.CDABook.buyContracts.length) {
-            cindex = market.CDABook.buyContracts[rindex].findIndex(function (element) {
-               return element.id == idToRemove;
-            });
-            if (cindex != -1) break;
-            rindex++;
-         }
-         if (cindex == -1) {
-            return null;
-         }
-         var toReturn;
-         if (market.CDABook.buyContracts[rindex].length == 1) {
-            toReturn = market.CDABook.buyContracts.splice(rindex, 1)[0];
-            market.CDABook.buyPrices.splice(rindex, 1);
+         if (index != -1) {
+            market.FBABook.buyContracts.splice(index, 1);
          }
          else {
-            toReturn = market.CDABook.buyContracts[rindex].splice(cindex, 1);
+            console.log("tried to remove nonexistent buy order");
          }
-         return toReturn;
       };
 
-      //removes sell order associated with a user id from the order book and returns it
-      market.CDABook.removeSell = function (idToRemove) {
-         var rindex = 0;
-         var cindex = -1;
-         while (rindex < market.CDABook.sellContracts.length) {
-            cindex = market.CDABook.sellContracts[rindex].findIndex(function (element) {
-               return element.id == idToRemove;
-            });
-            if (cindex != -1) break;
-            rindex++;
-         }
-         if (cindex == -1) {
-            return null;
-         }
-         var toReturn;
-         if (market.CDABook.sellContracts[rindex].length == 1) {
-            toReturn = market.CDABook.sellContracts.splice(rindex, 1)[0];
-            market.CDABook.sellPrices.splice(rindex, 1);
+      //removes sell order associated with a user id from the order book
+      market.FBABook.removeSell = function (idToRemove) {
+         var index = market.FBABook.sellContracts.findIndex(function (element) {
+            return element.id == idToRemove;
+         });
+
+         if (index != -1) {
+            market.FBABook.sellContracts.splice(index, 1);
          }
          else {
-            toReturn = market.CDABook.sellContracts[rindex].splice(cindex, 1);
+            console.log("tried to remove nonexistent sell order");
          }
-         return toReturn;
       };
+
+      market.FBABook.processBatch = function (batchNumber, batchTime) {
+         console.log(market.FBABook);
+         var msg = new Message("ITCH", "BATCH", [batchNumber, market.FBABook.buyContracts, market.FBABook.sellContracts]);
+         this.sendToGroupManager(msg);
+
+         // remove all ioc orders
+         for (let index = 0; index < market.FBABook.buyContracts.length; index++) {
+            if (market.FBABook.buyContracts[index].ioc) {
+               market.FBABook.buyContracts.splice(index, 1);
+               index--;
+            }
+         }
+
+         for (let index = 0; index < market.FBABook.sellContracts.length; index++) {
+            if (market.FBABook.sellContracts[index].ioc) {
+               market.FBABook.sellContracts.splice(index, 1);
+               index--;
+            }
+         }
+
+         window.setTimeout(market.FBABook.processBatch, batchTime + this.batchLength - Date.now(), batchNumber + 1, batchTime + this.batchLength);
+      }.bind(market);
 
       // update functions are unused now, insert does both jobs
 
       //updates a buy order to a new price
-      market.CDABook.updateBuy = function (idToUpdate, newPrice, timestamp) {
-         if (market.CDABook.removeBuy(idToUpdate) === null) {
+      market.FBABook.updateBuy = function (idToUpdate, newPrice, timestamp) {
+         if (market.FBABook.removeBuy(idToUpdate) === null) {
             return;
          }
-         market.CDABook.insertBuy(idToUpdate, newPrice, timestamp);
+         market.FBABook.insertBuy(idToUpdate, newPrice, timestamp);
       };
 
       //updates a sell order to a new price
-      market.CDABook.updateSell = function (idToUpdate, newPrice, timestamp) {
-         if (market.CDABook.removeSell(idToUpdate) === null) {
+      market.FBABook.updateSell = function (idToUpdate, newPrice, timestamp) {
+         if (market.FBABook.removeSell(idToUpdate) === null) {
             return;
          }
-         market.CDABook.insertSell(idToUpdate, newPrice, timestamp);
+         market.FBABook.insertSell(idToUpdate, newPrice, timestamp);
       };
 
       return market;

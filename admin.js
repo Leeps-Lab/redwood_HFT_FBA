@@ -229,7 +229,7 @@ Redwood.controller("AdminCtrl",
                         isDebug: debugMode
                      };
                      $scope.groupManagers[groupNum] = groupManager.createGroupManager(groupArgs, ra.sendCustom);
-                     $scope.groupManagers[groupNum].market = marketManager.createMarketManager(ra.sendCustom, groupNum, $scope.groupManagers[groupNum]);
+                     $scope.groupManagers[groupNum].market = marketManager.createMarketManager(ra.sendCustom, groupNum, $scope.groupManagers[groupNum], debugMode, $scope.config.batchLength);
                      $scope.groupManagers[groupNum].dataStore = dataStorage.createDataStorage(group, groupNum, $scope.config.speedCost, $scope.config.startingWealth);
                      for (var subjectNum of group) {
 
@@ -315,6 +315,7 @@ Redwood.controller("AdminCtrl",
                ra.sendCustom("Experiment_Begin", beginData, "admin", 1, groupNum);
                $scope.groupManagers[groupNum].startTime = startTime;
                $scope.groupManagers[groupNum].dataStore.init(startFP, startTime);
+               window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, startTime + $scope.config.batchLength - Date.now(), 1, startTime + $scope.config.batchLength);
                for (var user of group) {
                   $scope.groupManagers[groupNum].marketAlgorithms[user].fundamentalPrice = startFP;
                }
