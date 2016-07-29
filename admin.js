@@ -315,7 +315,7 @@ Redwood.controller("AdminCtrl",
                ra.sendCustom("Experiment_Begin", beginData, "admin", 1, groupNum);
                $scope.groupManagers[groupNum].startTime = startTime;
                $scope.groupManagers[groupNum].dataStore.init(startFP, startTime);
-               window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, startTime + $scope.config.batchLength - Date.now(), 1, startTime + $scope.config.batchLength);
+               window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, startTime + $scope.config.batchLength - Date.now(), startTime + $scope.config.batchLength);
                for (var user of group) {
                   $scope.groupManagers[groupNum].marketAlgorithms[user].fundamentalPrice = startFP;
                }

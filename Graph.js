@@ -173,8 +173,24 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
                return d != 0 ? "price-grid-line" : "price-grid-line-zero";
             });
       };
+      
+      graph.drawBatches = function (graphRefr, dataSet) {
+         this.marketSVG.selectAll("circle.offer")
+            .data(dataSet)
+            .enter()
+            .append("circle")
+            .attr("cx", function (d) {
+               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength);
+            })
+            .attr("cy", function (d) {
+               if (d.price == 0) return graphRefr.elementHeight;
+               else return graphRefr.mapMarketPriceToYAxis(d.price);
+            })
+            .attr("r", 2)
+            .attr("class", "offer");
+      };
 
-      //draws FP and offers
+      //draws FP
       graph.drawMarket = function (graphRefr, historyDataSet, currentData, styleClassName) {
          this.marketSVG.selectAll("line." + styleClassName)
             .data(historyDataSet, function (d) {
@@ -182,6 +198,9 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             })
             .enter()
             .append("line")
+            .filter(function (d) {
+               return d[1] >= (graphRefr.currentTime - graphRefr.timeInterval * 1000);
+            })
             .attr("x1", function (d) {
                return graphRefr.mapTimeToXAxis(d[0]);
             })
@@ -214,6 +233,9 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             })
             .enter()
             .append("line")
+            .filter(function (d) {
+               return d[1] >= (graphRefr.currentTime - graphRefr.timeInterval * 1000);
+            })
             .attr("x1", function (d) {
                return graphRefr.mapTimeToXAxis(d[0]);
             })
@@ -386,7 +408,10 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          this.drawPriceGridLines(graphRefr, this.marketPriceLines, this.marketSVG, this.mapMarketPriceToYAxis);
          this.drawPriceGridLines(graphRefr, this.profitPriceLines, this.profitSVG, this.mapProfitPriceToYAxis);
 
+
          this.drawMarket(graphRefr, dataHistory.pastFundPrices, dataHistory.curFundPrice, "price-line");
+
+         this.drawBatches(graphRefr, dataHistory.orderHistory);
          //this.drawOffers(graphRefr, dataHistory);
          //this.drawTransactions(graphRefr, dataHistory.transactions, dataHistory.myId);
 

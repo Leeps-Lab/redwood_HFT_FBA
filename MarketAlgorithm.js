@@ -178,13 +178,13 @@ Redwood.factory("MarketAlgorithm", function () {
       };
 
       marketAlgorithm.updateBuyOfferMsg = function () {
-         var nMsg = new Message("OUCH", "UBUY", [this.myId, this.fundamentalPrice - this.spread / 2, Date.now(), this.state]);
+         var nMsg = new Message("OUCH", "UBUY", [this.myId, this.fundamentalPrice - this.spread / 2, false, Date.now(), this.state]);
          nMsg.delay = !this.using_speed;
          return nMsg;
       };
 
       marketAlgorithm.updateSellOfferMsg = function () {
-         var nMsg = new Message("OUCH", "USELL", [this.myId, this.fundamentalPrice + this.spread / 2, Date.now(), this.state]);
+         var nMsg = new Message("OUCH", "USELL", [this.myId, this.fundamentalPrice + this.spread / 2, false, Date.now(), this.state]);
          nMsg.delay = !this.using_speed;
          return nMsg;
       };

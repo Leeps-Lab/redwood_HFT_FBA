@@ -10,10 +10,10 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.group = group;
       dataHistory.curFundPrice = [startTime, startFP, 0];
       dataHistory.pastFundPrices = [];
-      dataHistory.transactions = [];    //entries look like [timestamp, myTransaction]
       dataHistory.profit = startingWealth;
       dataHistory.speedCost = speedCost;
       dataHistory.maxSpread = maxSpread;
+      dataHistory.orderHistory = [];
 
       dataHistory.playerData = {};     //holds state, offer and profit data for each player in the group
       dataHistory.lowestSpread = "N/A";
@@ -66,7 +66,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                state: "Out",
                spread: this.maxSpread / 2,
                curProfitSegment: [this.startTime, this.profit, 0, "Out"], // [start time, start profit, slope, state]
-               pastProfitSegments: []                              // [start time, end time, start price, end price, state]
+               pastProfitSegments: []                                     // [start time, end time, start price, end price, state]
             };
          }
       };
@@ -81,7 +81,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       };
 
       dataHistory.recordBatch = function (msg) {
-         console.log(msg.msgData);
+         this.orderHistory = this.orderHistory.concat(msg.msgData[0], msg.msgData[1]);
       };
 
       dataHistory.recordStateChange = function (newState, uid, timestamp) {

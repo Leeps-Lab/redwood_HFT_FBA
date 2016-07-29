@@ -6,6 +6,8 @@ Redwood.factory("MarketManager", function () {
       var market = {};
 
       market.FBABook = {};
+      market.FBABook.batchNumber = 1;
+
       market.groupManager = groupManager;
       market.batchLength = batchLength;
 
@@ -40,7 +42,7 @@ Redwood.factory("MarketManager", function () {
                //if message is a market order
                //call ioc buy with a limit greater than the max price
                if (message.msgData[1] == 214748.3647) {
-                  market.FBABook.insertBuy(message.msgData[0], 200000, message.timestamp, message.msgData[3], true);
+                  market.FBABook.insertBuy(message.msgData[0], 200000, message.timestamp, message.msgData[3], true, null);
                }
                //if order's price is out of bounds
                else if (message.msgData[1] > 199999.9900 || message.msgData[1] <= 0) {
@@ -48,21 +50,21 @@ Redwood.factory("MarketManager", function () {
                   break;
                }
                else {
-                  market.FBABook.insertBuy(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2], message.msgData[3]);
+                  market.FBABook.insertBuy(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2], message.msgData[4]);
                }
                break;
 
             // enter sell offer
             case "ESELL":
                if (message.msgData[1] == 214748.3647) {
-                  market.FBABook.insertSell(message.msgData[0], 0, message.timestamp, message.msgData[3], true);
+                  market.FBABook.insertSell(message.msgData[0], 0, message.timestamp, message.msgData[3], true, null);
                }
                else if (message.msgData[1] > 199999.9900 || message.msgData[1] <= 0) {
                   console.error("marketManager: invalid sell price of " + message.msgData[1]);
                   break;
                }
                else {
-                  market.FBABook.insertSell(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], msg.msgData[2], message.msgData[3]);
+                  market.FBABook.insertSell(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2], message.msgData[4]);
                }
                break;
 
@@ -78,12 +80,12 @@ Redwood.factory("MarketManager", function () {
 
             // update buy offer
             case "UBUY":
-               market.FBABook.insertBuy(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[2]);
+               market.FBABook.insertBuy(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2], message.msgData[4]);
                break;
 
             // update sell offer
             case "USELL":
-               market.FBABook.insertSell(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[2]);
+               market.FBABook.insertSell(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2], message.msgData[4]);
                break;
 
             // message not recognized
@@ -111,14 +113,21 @@ Redwood.factory("MarketManager", function () {
             }
             else {
                // otherwise, remove the old order
-               console.log("stale buy order removed");
                market.FBABook.buyContracts.splice(index, 1);
             }
          }
 
          // push the new order onto the list
          // order doesn't matter because list will be sorted when a batch happens
-         market.FBABook.buyContracts.push({id: newId, price: newPrice, timestamp: timestamp, originTimestamp: originTimestamp, ioc: ioc, state: state});
+         var order = {id: newId,
+            price: newPrice,
+            timestamp: timestamp,
+            originTimestamp: originTimestamp,
+            ioc: ioc,
+            state: state,
+            batchNumber: this.batchNumber
+         };
+         market.FBABook.buyContracts.push(order);
       };
 
       //inserts sell into sell orders data structure
@@ -136,14 +145,22 @@ Redwood.factory("MarketManager", function () {
             }
             else {
                // otherwise, remove the old order
-               console.log("stale sell order removed");
                market.FBABook.sellContracts.splice(index, 1);
             }
          }
 
          // push the new order onto the list
          // order doesn't matter because list will be sorted when a batch happens
-         market.FBABook.sellContracts.push({id: newId, price: newPrice, timestamp: timestamp, originTimestamp: originTimestamp, ioc: ioc, state: state});
+         var order = {
+            id: newId,
+            price: newPrice,
+            timestamp: timestamp,
+            originTimestamp: originTimestamp,
+            ioc: ioc,
+            state: state,
+            batchNumber: this.batchNumber
+         };
+         market.FBABook.sellContracts.push(order);
       };
 
       //removes buy order associated with a user id from the order book
@@ -174,13 +191,14 @@ Redwood.factory("MarketManager", function () {
          }
       };
 
-      market.FBABook.processBatch = function (batchNumber, batchTime) {
-         console.log(market.FBABook);
-         var msg = new Message("ITCH", "BATCH", [batchNumber, market.FBABook.buyContracts, market.FBABook.sellContracts]);
+      market.FBABook.processBatch = function (batchTime) {
+         var msg = new Message("ITCH", "BATCH", [market.FBABook.buyContracts, market.FBABook.sellContracts]);
          this.sendToGroupManager(msg);
 
          // remove all ioc orders
          for (let index = 0; index < market.FBABook.buyContracts.length; index++) {
+            market.FBABook.buyContracts[index].batchNumber++;
+
             if (market.FBABook.buyContracts[index].ioc) {
                market.FBABook.buyContracts.splice(index, 1);
                index--;
@@ -188,13 +206,17 @@ Redwood.factory("MarketManager", function () {
          }
 
          for (let index = 0; index < market.FBABook.sellContracts.length; index++) {
+            market.FBABook.sellContracts[index].batchNumber++;
+
             if (market.FBABook.sellContracts[index].ioc) {
                market.FBABook.sellContracts.splice(index, 1);
                index--;
             }
          }
 
-         window.setTimeout(market.FBABook.processBatch, batchTime + this.batchLength - Date.now(), batchNumber + 1, batchTime + this.batchLength);
+         this.FBABook.batchNumber++;
+
+         window.setTimeout(market.FBABook.processBatch, batchTime + this.batchLength - Date.now(), batchTime + this.batchLength);
       }.bind(market);
 
       // update functions are unused now, insert does both jobs

@@ -107,7 +107,7 @@
                                     <div class="slider-spread-indicators"
                                          ng-repeat="(player, data) in dHistory.playerData"
                                          ng-show="player != dHistory.myId && data.state == 'Maker'"
-                                         style="height: {{((data.spread / dHistory.maxSpread) * 100) + '%'}}">
+                                         style="height: {{data.spread / dHistory.maxSpread * 100}}%">
                                     </div>
                                 </div>
                             </div>
