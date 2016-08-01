@@ -1,7 +1,7 @@
 RedwoodHighFrequencyTrading.factory("DataHistory", function () {
    var api = {};
 
-   api.createDataHistory = function (startTime, startFP, myId, group, debugMode, speedCost, startingWealth, maxSpread) {
+   api.createDataHistory = function (startTime, startFP, myId, group, debugMode, speedCost, startingWealth, maxSpread, batchLength) {
       //Variables
       dataHistory = {};
       
@@ -13,6 +13,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.profit = startingWealth;
       dataHistory.speedCost = speedCost;
       dataHistory.maxSpread = maxSpread;
+      dataHistory.batchLength = batchLength;
       dataHistory.orderHistory = [];
 
       dataHistory.playerData = {};     //holds state, offer and profit data for each player in the group
@@ -81,7 +82,26 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       };
 
       dataHistory.recordBatch = function (msg) {
-         this.orderHistory = this.orderHistory.concat(msg.msgData[0], msg.msgData[1]);
+         for (var buyOrder of msg.msgData[0]) {
+            if (buyOrder.transacted) {
+               var uid = buyOrder.id;
+               if (uid == this.myId) this.profit += msg.msgData[4] - msg.msgData[3];
+               
+               var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
+               this.recordProfitSegment(curProfit + msg.msgData[4] - msg.msgData[3], this.startTime + this.batchLength * msg.msgData[2], this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);
+            }
+         }
+         for (var sellOrder of msg.msgData[1]) {
+            if (sellOrder.transacted) {
+               var uid = sellOrder.id;
+               if (uid == this.myId) this.profit += msg.msgData[3] - msg.msgData[4];
+               
+               var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
+               this.recordProfitSegment(curProfit + msg.msgData[3] - msg.msgData[4], this.startTime + this.batchLength * msg.msgData[2], this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);
+            }
+         }
+
+         this.orderHistory.push(msg.msgData);
       };
 
       dataHistory.recordStateChange = function (newState, uid, timestamp) {

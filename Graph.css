@@ -51,8 +51,19 @@ svg {
     stroke-width: 1;
 }
 
-.offer {
-    fill: black;
+.my-orders {
+    stroke-width: 2;
+    stroke: black;
+}
+
+.investor-orders {
+    stroke-width: 1;
+    stroke: orange;
+}
+
+.others-orders {
+    stroke-width: 1;
+    stroke: gray;
 }
 
 .my-profit-out {

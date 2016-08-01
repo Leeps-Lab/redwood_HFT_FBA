@@ -45,6 +45,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       graph.timeSinceStart = 0;        //the amount of time since the start of the experiment in seconds
       graph.timePerPixel = 0;          // number of ms represented by one pixel
       graph.advanceTimeShown = 0;      // the amount of time shown to the right of the current time on the graph
+      graph.investorOrderSpacing = 1;  // spacing between investor orders in dollars
+      graph.orderWidth = 10;           // width of orders in pixels
 
          graph.getCurOffsetTime = function () {
          return Date.now() - this.timeOffset;
@@ -173,21 +175,77 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
                return d != 0 ? "price-grid-line" : "price-grid-line-zero";
             });
       };
+
+      graph.drawAllBatches = function (graphRefr, dataHistory) {
+         // index of first batch that will be displayed on graph
+         var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength) - 1;
+         if (firstVisibleBatch < 0) firstVisibleBatch = 0;
+
+         // separate orders into my orders, investor orders and others' orders and draw them
+         var myOrders = [];
+         var othersOrders = [];
+         var investorOrders = [];
+         for (var index = firstVisibleBatch; index < dataHistory.orderHistory.length; index++) {
+            // calculate offset buy investor price
+            // first find minimum non-investor order price
+            var buyInvestorPrice = dataHistory.orderHistory[index][0].reduce(function (previousValue, currentElement) {
+               return currentElement.price < previousValue && currentElement.id != 0 ? currentElement.price : previousValue;
+            }, dataHistory.orderHistory[index][4]);
+            //then subtract investor spacing
+            buyInvestorPrice -= this.investorOrderSpacing;
+
+            for (var buyOrder of dataHistory.orderHistory[index][0]) {
+               if (buyOrder.id == dataHistory.myId) myOrders.push(buyOrder);
+               else if (buyOrder.id == 0) {
+                  // if it's an investor order, change its price before pushing it on
+                  buyOrder.price = buyInvestorPrice;
+                  buyInvestorPrice -= this.investorOrderSpacing;
+                  investorOrders.push(buyOrder);
+               }
+               else othersOrders.push(buyOrder);
+            }
+
+            // do the same calculation for sell investors
+            var sellInvestorPrice = dataHistory.orderHistory[index][1].reduce(function (previousValue, currentElement) {
+               return currentElement.price > previousValue && currentElement.id != 0 ? currentElement.price : previousValue;
+            }, dataHistory.orderHistory[index][4]);
+            sellInvestorPrice += this.investorOrderSpacing;
+
+            for (var sellOrder of dataHistory.orderHistory[index][1]) {
+               if (sellOrder.id == dataHistory.myId) myOrders.push(sellOrder);
+               else if (sellOrder.id == 0) {
+                  sellOrder.price = sellInvestorPrice;
+                  sellInvestorPrice += this.investorOrderSpacing;
+                  investorOrders.push(sellOrder);
+               }
+               else othersOrders.push(sellOrder);
+            }
+         }
+         console.log(myOrders);
+         this.drawBatch(graphRefr, othersOrders, "others-orders");
+         this.drawBatch(graphRefr, investorOrders, "investor-orders");
+         this.drawBatch(graphRefr, myOrders, "my-orders");
+      };
       
-      graph.drawBatches = function (graphRefr, dataSet) {
-         this.marketSVG.selectAll("circle.offer")
+      graph.drawBatch = function (graphRefr, dataSet, styleClassName) {
+         console.log(dataSet);
+         this.marketSVG.selectAll("line." + styleClassName)
             .data(dataSet)
             .enter()
-            .append("circle")
-            .attr("cx", function (d) {
-               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength);
+            .append("line")
+            .attr("x1", function (d) {
+               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) - graphRefr.orderWidth / 2;
             })
-            .attr("cy", function (d) {
-               if (d.price == 0) return graphRefr.elementHeight;
-               else return graphRefr.mapMarketPriceToYAxis(d.price);
+            .attr("x2", function (d) {
+               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) + graphRefr.orderWidth / 2;
             })
-            .attr("r", 2)
-            .attr("class", "offer");
+            .attr("y1", function (d) {
+               return graphRefr.mapMarketPriceToYAxis(d.price);
+            })
+            .attr("y2", function (d) {
+               return graphRefr.mapMarketPriceToYAxis(d.price);
+            })
+            .attr("class", styleClassName);
       };
 
       //draws FP
@@ -344,7 +402,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
 
          var curCenterMarket = (this.maxPriceMarket + this.minPriceMarket) / 2;
 
-            if (Math.abs(this.centerPriceMarket - curCenterMarket) > 1) {
+         if (Math.abs(this.centerPriceMarket - curCenterMarket) > 1) {
             this.marketPriceLines = this.calcPriceGridLines(this.maxPriceMarket, this.minPriceMarket, this.marketPriceGridIncrement);
             if (this.centerPriceMarket > curCenterMarket) {
                this.maxPriceMarket += this.graphAdjustSpeedMarket;
@@ -411,7 +469,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
 
          this.drawMarket(graphRefr, dataHistory.pastFundPrices, dataHistory.curFundPrice, "price-line");
 
-         this.drawBatches(graphRefr, dataHistory.orderHistory);
+         this.drawAllBatches(graphRefr, dataHistory);
          //this.drawOffers(graphRefr, dataHistory);
          //this.drawTransactions(graphRefr, dataHistory.transactions, dataHistory.myId);
 

@@ -161,6 +161,22 @@ Redwood.factory("MarketAlgorithm", function () {
          
          // the market sent the outcome of a batch
          if (msg.msgType == "BATCH") {
+            // if I'm a maker, check to see if one of my orders was filled
+            if (this.state == "state_maker") {
+               for (let order of msg.msgData[0]) {
+                  if (order.id == this.myId && order.transacted) {
+                     this.sendToGroupManager(this.enterBuyOfferMsg());
+                  }
+               }
+               for (let order of msg.msgData[1]) {
+                  if (order.id == this.myId && order.transacted) {
+                     this.sendToGroupManager((this.enterSellOfferMsg()));
+                  }
+               }
+            }
+
+            // add the current fundamental price to the message and send it on to dataHistory
+            msg.msgData.push(this.fundamentalPrice);
             this.sendToDataHistory(msg);
          }
       };

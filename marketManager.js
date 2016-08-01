@@ -100,20 +100,22 @@ Redwood.factory("MarketManager", function () {
 
       //inserts buy into buy orders data structure
       market.FBABook.insertBuy = function (newId, newPrice, timestamp, originTimestamp, ioc, state) {
-         // check to see if an order from this player is already in the book
-         var index = market.FBABook.buyContracts.findIndex(function (element) {
-            return element.id == newId;
-         });
+         // if new order isn't from an investor, check to see if an order from this player is already in the book
+         if (newId != 0) {
+            var index = market.FBABook.buyContracts.findIndex(function (element) {
+               return element.id == newId;
+            });
 
-         if (index != -1) {
-            if (market.FBABook.buyContracts[index].originTimestamp > originTimestamp) {
-               // if the order already in the book is newer, return
-               console.log("stale buy order submitted");
-               return;
-            }
-            else {
-               // otherwise, remove the old order
-               market.FBABook.buyContracts.splice(index, 1);
+            if (index != -1) {
+               if (market.FBABook.buyContracts[index].originTimestamp > originTimestamp) {
+                  // if the order already in the book is newer, return
+                  console.log("stale buy order submitted");
+                  return;
+               }
+               else {
+                  // otherwise, remove the old order
+                  market.FBABook.buyContracts.splice(index, 1);
+               }
             }
          }
 
@@ -125,6 +127,7 @@ Redwood.factory("MarketManager", function () {
             originTimestamp: originTimestamp,
             ioc: ioc,
             state: state,
+            transacted: false,
             batchNumber: this.batchNumber
          };
          market.FBABook.buyContracts.push(order);
@@ -133,22 +136,24 @@ Redwood.factory("MarketManager", function () {
       //inserts sell into sell orders data structure
       market.FBABook.insertSell = function (newId, newPrice, timestamp, originTimestamp, ioc, state) {
          // check to see if an order from this player is already in the book
-         var index = market.FBABook.sellContracts.findIndex(function (element) {
-            return element.id == newId;
-         });
+         if (newId != 0) {
+            var index = market.FBABook.sellContracts.findIndex(function (element) {
+               return element.id == newId;
+            });
 
-         if (index != -1) {
-            if (market.FBABook.sellContracts[index].originTimestamp > originTimestamp) {
-               // if the order already in the book is newer, return
-               console.log("stale sell order submitted");
-               return;
-            }
-            else {
-               // otherwise, remove the old order
-               market.FBABook.sellContracts.splice(index, 1);
+            if (index != -1) {
+               if (market.FBABook.sellContracts[index].originTimestamp > originTimestamp) {
+                  // if the order already in the book is newer, return
+                  console.log("stale sell order submitted");
+                  return;
+               }
+               else {
+                  // otherwise, remove the old order
+                  market.FBABook.sellContracts.splice(index, 1);
+               }
             }
          }
-
+         
          // push the new order onto the list
          // order doesn't matter because list will be sorted when a batch happens
          var order = {
@@ -158,6 +163,7 @@ Redwood.factory("MarketManager", function () {
             originTimestamp: originTimestamp,
             ioc: ioc,
             state: state,
+            transacted: false,
             batchNumber: this.batchNumber
          };
          market.FBABook.sellContracts.push(order);
@@ -192,28 +198,49 @@ Redwood.factory("MarketManager", function () {
       };
 
       market.FBABook.processBatch = function (batchTime) {
-         var msg = new Message("ITCH", "BATCH", [market.FBABook.buyContracts, market.FBABook.sellContracts]);
+         // if buy and sell orders aren't empty, then there might be some transactions
+         if (this.FBABook.buyContracts.length > 0 && this.FBABook.sellContracts.length > 0) {
+            // combine and sort buy and sell orders to find clearing price
+            var allOrders = this.FBABook.buyContracts.concat(this.FBABook.sellContracts);
+            allOrders.sort(function (a, b) {
+               return b.price - a.price;
+            });
+
+            // calculate equilibrium price
+            var equilibriumPrice = (allOrders[this.FBABook.buyContracts.length - 1] + allOrders[this.FBABook.buyContracts.length]) / 2;
+
+            // every buy order below equilibrium is transacted and every sell order above equilibrium is transacted
+            for (let order of this.FBABook.buyContracts) {
+               if (order.price <= equilibriumPrice) order.transacted = true;
+            }
+            for (let order of this.FBABook.sellContracts) {
+               if (order.price >= equilibriumPrice) order.transacted = true;
+            }
+         }
+
+         var msg = new Message("ITCH", "BATCH", [this.FBABook.buyContracts, this.FBABook.sellContracts, this.FBABook.batchNumber, equilibriumPrice]);
          this.sendToGroupManager(msg);
-
-         // remove all ioc orders
-         for (let index = 0; index < market.FBABook.buyContracts.length; index++) {
-            market.FBABook.buyContracts[index].batchNumber++;
-
-            if (market.FBABook.buyContracts[index].ioc) {
-               market.FBABook.buyContracts.splice(index, 1);
-               index--;
+         
+         // move non-ioc and non-transacted order to next batch
+         var newBuyContracts = [];
+         for (let order of this.FBABook.buyContracts) {
+            if (!order.ioc && !order.transacted) {
+               order.batchNumber++;
+               newBuyContracts.push(order);
             }
          }
-
-         for (let index = 0; index < market.FBABook.sellContracts.length; index++) {
-            market.FBABook.sellContracts[index].batchNumber++;
-
-            if (market.FBABook.sellContracts[index].ioc) {
-               market.FBABook.sellContracts.splice(index, 1);
-               index--;
+         
+         var newSellContracts = [];
+         for (let order of this.FBABook.sellContracts) {
+            if (!order.ioc && !order.transacted) {
+               order.batchNumber++;
+               newSellContracts.push(order);
             }
          }
-
+         
+         this.FBABook.buyContracts = newBuyContracts;
+         this.FBABook.sellContracts = newSellContracts;
+         
          this.FBABook.batchNumber++;
 
          window.setTimeout(market.FBABook.processBatch, batchTime + this.batchLength - Date.now(), batchTime + this.batchLength);
