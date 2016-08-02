@@ -33,10 +33,6 @@ svg {
     font-size: 10px;
 }
 
-.dead-zone {
-    fill: rgb(200, 200, 200);
-}
-
 .price-line {
     stroke: rgb(50, 50, 150);
     stroke-width: 3;
@@ -49,6 +45,11 @@ svg {
 .buy-line {
     stroke: rgb(20, 100, 20);
     stroke-width: 1;
+}
+
+.equilibrium-price-line {
+    stroke: red;
+    stroke-width: 2;
 }
 
 .my-orders {
@@ -64,6 +65,18 @@ svg {
 .others-orders {
     stroke-width: 1;
     stroke: gray;
+}
+
+.my-filled-orders-positive {
+    fill: green;
+}
+
+.my-filled-orders-negative {
+    fill: red;
+}
+
+.others-filled-orders {
+    fill: #595959;
 }
 
 .my-profit-out {
@@ -93,20 +106,5 @@ svg {
 
 .others-profit-maker {
     stroke: rgba(26, 73, 232, 0.4);
-    stroke-width: 1;
-}
-
-.my-positive-transactions {
-    stroke: green;
-    stroke-width: 1;
-}
-
-.my-negative-transactions {
-    stroke: red;
-    stroke-width: 1;
-}
-
-.other-transactions {
-    stroke: gray;
     stroke-width: 1;
 }

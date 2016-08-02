@@ -45,7 +45,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       graph.timeSinceStart = 0;        //the amount of time since the start of the experiment in seconds
       graph.timePerPixel = 0;          // number of ms represented by one pixel
       graph.advanceTimeShown = 0;      // the amount of time shown to the right of the current time on the graph
-      graph.investorOrderSpacing = 1;  // spacing between investor orders in dollars
       graph.orderWidth = 10;           // width of orders in pixels
 
          graph.getCurOffsetTime = function () {
@@ -177,62 +176,47 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       };
 
       graph.drawAllBatches = function (graphRefr, dataHistory) {
-         // index of first batch that will be displayed on graph
+         // first batch that will be displayed on graph
          var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength) - 1;
          if (firstVisibleBatch < 0) firstVisibleBatch = 0;
 
-         // separate orders into my orders, investor orders and others' orders and draw them
-         var myOrders = [];
-         var othersOrders = [];
-         var investorOrders = [];
-         for (var index = firstVisibleBatch; index < dataHistory.orderHistory.length; index++) {
-            // calculate offset buy investor price
-            // first find minimum non-investor order price
-            var buyInvestorPrice = dataHistory.orderHistory[index][0].reduce(function (previousValue, currentElement) {
-               return currentElement.price < previousValue && currentElement.id != 0 ? currentElement.price : previousValue;
-            }, dataHistory.orderHistory[index][4]);
-            //then subtract investor spacing
-            buyInvestorPrice -= this.investorOrderSpacing;
+         // draw others' filled order circles
+         this.drawBatchCircles(graphRefr, dataHistory.othersOrders, "others-filled-orders", firstVisibleBatch);
+         this.drawBatchCircles(graphRefr, dataHistory.investorOrders, "others-filled-orders", firstVisibleBatch);
 
-            for (var buyOrder of dataHistory.orderHistory[index][0]) {
-               if (buyOrder.id == dataHistory.myId) myOrders.push(buyOrder);
-               else if (buyOrder.id == 0) {
-                  // if it's an investor order, change its price before pushing it on
-                  buyOrder.price = buyInvestorPrice;
-                  buyInvestorPrice -= this.investorOrderSpacing;
-                  investorOrders.push(buyOrder);
-               }
-               else othersOrders.push(buyOrder);
-            }
+         // filter out positive and negative orders for my orders
+         this.drawBatchCircles(graphRefr, dataHistory.myOrders.filter(function (element) {
+            return element.positive;
+         }), "my-filled-orders-positive", firstVisibleBatch);
+         this.drawBatchCircles(graphRefr, dataHistory.myOrders.filter(function (element) {
+            return !element.positive;
+         }), "my-filled-orders-negative", firstVisibleBatch);
+         
+         this.drawBatchTicks(graphRefr, dataHistory.othersOrders, "others-orders", firstVisibleBatch);
+         this.drawBatchTicks(graphRefr, dataHistory.investorOrders, "investor-orders", firstVisibleBatch);
+         this.drawBatchTicks(graphRefr, dataHistory.myOrders, "my-orders", firstVisibleBatch);
 
-            // do the same calculation for sell investors
-            var sellInvestorPrice = dataHistory.orderHistory[index][1].reduce(function (previousValue, currentElement) {
-               return currentElement.price > previousValue && currentElement.id != 0 ? currentElement.price : previousValue;
-            }, dataHistory.orderHistory[index][4]);
-            sellInvestorPrice += this.investorOrderSpacing;
-
-            for (var sellOrder of dataHistory.orderHistory[index][1]) {
-               if (sellOrder.id == dataHistory.myId) myOrders.push(sellOrder);
-               else if (sellOrder.id == 0) {
-                  sellOrder.price = sellInvestorPrice;
-                  sellInvestorPrice += this.investorOrderSpacing;
-                  investorOrders.push(sellOrder);
-               }
-               else othersOrders.push(sellOrder);
+         // draw horizontal price lines
+         for (var batchIndex = firstVisibleBatch; batchIndex < dataHistory.orderHistory.length; batchIndex++) {
+            if (dataHistory.orderHistory[batchIndex][3] != null) {
+               this.marketSVG.append("line")
+                  .attr("x1", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * dataHistory.orderHistory[batchIndex][2]))
+                  .attr("x2", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * (dataHistory.orderHistory[batchIndex][2] - 1)))
+                  .attr("y1", this.mapMarketPriceToYAxis(dataHistory.orderHistory[batchIndex][3]))
+                  .attr("y2", this.mapMarketPriceToYAxis(dataHistory.orderHistory[batchIndex][3]))
+                  .attr("class", "equilibrium-price-line")
             }
          }
-         console.log(myOrders);
-         this.drawBatch(graphRefr, othersOrders, "others-orders");
-         this.drawBatch(graphRefr, investorOrders, "investor-orders");
-         this.drawBatch(graphRefr, myOrders, "my-orders");
       };
       
-      graph.drawBatch = function (graphRefr, dataSet, styleClassName) {
-         console.log(dataSet);
+      graph.drawBatchTicks = function (graphRefr, dataSet, styleClassName, firstVisibleBatch) {
          this.marketSVG.selectAll("line." + styleClassName)
             .data(dataSet)
             .enter()
             .append("line")
+            .filter(function (d) {
+               return d.batchNumber > firstVisibleBatch;
+            })
             .attr("x1", function (d) {
                return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) - graphRefr.orderWidth / 2;
             })
@@ -245,6 +229,24 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             .attr("y2", function (d) {
                return graphRefr.mapMarketPriceToYAxis(d.price);
             })
+            .attr("class", styleClassName);
+      };
+
+      graph.drawBatchCircles = function (graphRefr, dataSet, styleClassName, firstVisibleBatch) {
+         this.marketSVG.selectAll("circle." + styleClassName)
+            .data(dataSet)
+            .enter()
+            .append("circle")
+            .filter(function (d) {
+               return d.transacted && d.batchNumber > firstVisibleBatch;
+            })
+            .attr("cx", function (d) {
+               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength);
+            })
+            .attr("cy", function (d) {
+               return graphRefr.mapMarketPriceToYAxis(d.price);
+            })
+            .attr("r", graphRefr.orderWidth / 2)
             .attr("class", styleClassName);
       };
 

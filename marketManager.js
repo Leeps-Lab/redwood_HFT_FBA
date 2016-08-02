@@ -153,7 +153,7 @@ Redwood.factory("MarketManager", function () {
                }
             }
          }
-         
+
          // push the new order onto the list
          // order doesn't matter because list will be sorted when a batch happens
          var order = {
@@ -207,18 +207,18 @@ Redwood.factory("MarketManager", function () {
             });
 
             // calculate equilibrium price
-            var equilibriumPrice = (allOrders[this.FBABook.buyContracts.length - 1] + allOrders[this.FBABook.buyContracts.length]) / 2;
+            var equilibriumPrice = (allOrders[this.FBABook.sellContracts.length - 1].price + allOrders[this.FBABook.sellContracts.length].price) / 2;
 
-            // every buy order below equilibrium is transacted and every sell order above equilibrium is transacted
+            // every buy order above equilibrium is transacted and every sell order below equilibrium is transacted
             for (let order of this.FBABook.buyContracts) {
-               if (order.price <= equilibriumPrice) order.transacted = true;
+               if (order.price >= equilibriumPrice) order.transacted = true;
             }
             for (let order of this.FBABook.sellContracts) {
-               if (order.price >= equilibriumPrice) order.transacted = true;
+               if (order.price <= equilibriumPrice) order.transacted = true;
             }
          }
 
-         var msg = new Message("ITCH", "BATCH", [this.FBABook.buyContracts, this.FBABook.sellContracts, this.FBABook.batchNumber, equilibriumPrice]);
+         var msg = new Message("ITCH", "BATCH", [this.FBABook.buyContracts, this.FBABook.sellContracts, this.FBABook.batchNumber, equilibriumPrice === undefined ? null : equilibriumPrice]);
          this.sendToGroupManager(msg);
          
          // move non-ioc and non-transacted order to next batch
