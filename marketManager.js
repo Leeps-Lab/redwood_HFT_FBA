@@ -209,6 +209,23 @@ Redwood.factory("MarketManager", function () {
 
          // if buy and sell orders aren't empty, then there might be some transactions
          if (this.FBABook.buyContracts.length > 0 && this.FBABook.sellContracts.length > 0) {
+            // calculate max non-investor sell price and min non-investor buy price
+            var minBuyPrice = this.FBABook.buyContracts.reduce(function (previousValue, currentElement) {
+               return currentElement.id != 0 && currentElement.price < previousValue ? currentElement.price : previousValue;
+            }, 200000);
+            var maxSellPrice = this.FBABook.sellContracts.reduce(function (previousValue, currentElement) {
+               return currentElement.id != 0 && currentElement.price > previousValue ? currentElement.price : previousValue;
+            }, 0);
+
+            // set all buy investor prices to same as max sell investor price
+            for (let order of this.FBABook.buyContracts) {
+               if (order.id == 0) order.price = maxSellPrice;
+            }
+            // set all sell investor prices to same as min buy investor
+            for (let order of this.FBABook.sellContracts) {
+               if (order.id == 0) order.price = minBuyPrice;
+            }
+
             // combine and sort buy and sell orders to find clearing price
             var allOrders = this.FBABook.buyContracts.concat(this.FBABook.sellContracts);
             allOrders.sort(function (a, b) {
