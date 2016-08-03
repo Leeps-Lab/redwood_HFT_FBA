@@ -3,7 +3,7 @@
 Redwood.factory("DataStorage", function () {
    var api = {};
 
-   api.createDataStorage = function (group, groupNum, speedCost, startingWealth) {
+   api.createDataStorage = function (group, groupNum, speedCost, startingWealth, batchLength) {
       var dataStorage = {};
 
       dataStorage.startTime = 0;          // experiment start time
@@ -12,6 +12,7 @@ Redwood.factory("DataStorage", function () {
       dataStorage.curFundPrice = 0;       // current fundamental price. used for finding fp delta
       dataStorage.speedCost = speedCost;
       dataStorage.startingWealth = startingWealth;
+      dataStorage.batchLength = batchLength;
 
       dataStorage.speedChanges = [];      // array of speed change events: [timestamp, speed, uid]
       dataStorage.stateChanges = [];      // array of state change events: [timestamp, state, uid]
@@ -19,9 +20,9 @@ Redwood.factory("DataStorage", function () {
       dataStorage.profitChanges = [];     // array of profit change events: [timestamp, deltaProfit, uid]
       dataStorage.investorArrivals = [];  // array of investor arrival events: [timestamp, buyOrSell]
       dataStorage.fundPriceChanges = [];  // array of fundamental price change events: [timestamp, deltaPrice, cumPrice]
-      dataStorage.playerOrders = [];     // array of player order lists [timestamp, [player order]]
-      dataStorage.buyOrderChanges = [];   // array of changes in the buy order book [timestamp, [buy order book after], [buy order book before]]
-      dataStorage.sellOrderChanges = [];  // array of changes in the sell order book [timestamp, [sell order book], [buy order book before]]
+      dataStorage.playerOrders = [];      // array of player order lists: [timestamp, [player order]]
+      dataStorage.buyOrderChanges = [];   // array of changes in the buy order book: [timestamp, [buy order book after], [buy order book before]]
+      dataStorage.sellOrderChanges = [];  // array of changes in the sell order book: [timestamp, [sell order book], [buy order book before]]
 
       dataStorage.init = function (startFP, startTime) {
          this.startTime = startTime;
@@ -63,8 +64,8 @@ Redwood.factory("DataStorage", function () {
             case "UUSPR" :
                this.storeSpreadChange(message.msgData[2], message.msgData[1], message.msgData[0]);
                break;
-            case "C_TRA" :
-               this.storeTransaction(message.timeStamp, message.msgData[1], message.msgData[2], message.msgData[3], message.msgData[4]);
+            case "BATCH" :
+               this.storeBatch(message.msgData[0], message.msgData[1], message.msgData[2], message.msgData[3], message.msgData[4]);
                break;
             case "FPC" :
                this.storeFPC(message.timeStamp, message.msgData[1])
@@ -96,13 +97,16 @@ Redwood.factory("DataStorage", function () {
          this.spreadChanges.push([timestamp - this.startTime, spread, uid]);
       };
 
-      dataStorage.storeTransaction = function (timestamp, price, fundPrice, buyer, seller) {
-         if (buyer != 0) {
-            this.profitChanges.push([timestamp - this.startTime, fundPrice - price, buyer]);
+      dataStorage.storeBatch = function (buyOrders, sellOrders, batchNumber, equilibriumPrice, fundPrice) {
+         for (let order of buyOrders) {
+            if (order.id != 0 && order.transacted) {
+               this.profitChanges.push([batchNumber * this.batchLength, fundPrice - equilibriumPrice, order.id]);
+            }
          }
-
-         if (seller != 0) {
-            this.profitChanges.push([timestamp - this.startTime, price - fundPrice, seller]);
+         for (let order of sellOrders) {
+            if (order.id != 0 && order.transacted) {
+               this.profitChanges.push([batchNumber * this.batchLength, equilibriumPrice - fundPrice, order.id]);
+            }
          }
       };
 
@@ -210,14 +214,11 @@ Redwood.factory("DataStorage", function () {
                let origTimes = [];
                let prices = [];
 
-               for (let marketCol of entry[2].reverse()) {
-                  for (let marketRow of marketCol.reverse()) {
-                     ids.push(playerToIndex[marketRow.id] + 1);
-                     times.push(marketRow.timestamp - this.startTime);
-                     prices.push(marketRow.price);
-                     origTimes.push(marketRow.originTimestamp - this.startTime);
-
-                  }
+               for (let order of entry[2]) {
+                  ids.push(order.id == 0 ? "INV" : playerToIndex[order.id] + 1);
+                  times.push(order.timestamp - this.startTime);
+                  prices.push(order.price);
+                  origTimes.push(order.originTimestamp - this.startTime);
                }
 
                row[numColumns - 8] = "\"{'id': (" + ids.join(', ') + "), 'time': (" + times.join(', ') + "), 'price': (" + prices.join(', ') + "), 'time_orig': (" + origTimes.join(', ') + ")}\"";
@@ -231,14 +232,11 @@ Redwood.factory("DataStorage", function () {
                let origTimes = [];
                let prices = [];
 
-               for (let marketCol of entry[1].reverse()) {
-                  for (let marketRow of marketCol.reverse()) {
-                     ids.push(playerToIndex[marketRow.id] + 1);
-                     times.push(marketRow.timestamp - this.startTime);
-                     prices.push(marketRow.price);
-                     origTimes.push(marketRow.originTimestamp - this.startTime);
-
-                  }
+               for (let order of entry[1]) {
+                  ids.push(order.id == 0 ? "INV" : playerToIndex[order.id] + 1);
+                  times.push(order.timestamp - this.startTime);
+                  prices.push(order.price);
+                  origTimes.push(order.originTimestamp - this.startTime);
                }
 
                row[numColumns - 7] = "\"{'id': (" + ids.join(', ') + "), 'time': (" + times.join(', ') + "), 'price': (" + prices.join(', ') + "), 'time_orig': (" + origTimes.join(', ') + ")}\"";
@@ -261,13 +259,11 @@ Redwood.factory("DataStorage", function () {
                let origTimes = [];
                let prices = [];
 
-               for (let marketCol of entry[2].reverse()) {
-                  for (let marketRow of marketCol.reverse()) {
-                     ids.push(playerToIndex[marketRow.id] + 1);
-                     times.push(marketRow.timestamp - this.startTime);
-                     prices.push(marketRow.price);
-                     origTimes.push(marketRow.originTimestamp - this.startTime);
-                  }
+               for (let order of entry[2]) {
+                  ids.push(order.id == 0 ? "INV" : playerToIndex[order.id] + 1);
+                  times.push(order.timestamp - this.startTime);
+                  prices.push(order.price);
+                  origTimes.push(order.originTimestamp - this.startTime);
                }
 
                row[numColumns - 6] = "\"{'id': (" + ids.join(', ') + "), 'time': (" + times.join(', ') + "), 'price': (" + prices.join(', ') + "), 'time_orig': (" + origTimes.join(', ') + ")}\"";
@@ -281,13 +277,11 @@ Redwood.factory("DataStorage", function () {
                let origTimes = [];
                let prices = [];
 
-               for (let marketCol of entry[1].reverse()) {
-                  for (let marketRow of marketCol.reverse()) {
-                     ids.push(playerToIndex[marketRow.id] + 1);
-                     times.push(marketRow.timestamp - this.startTime);
-                     prices.push(marketRow.price);
-                     origTimes.push(marketRow.originTimestamp - this.startTime);
-                  }
+               for (let order of entry[1]) {
+                  ids.push(order.id == 0 ? "INV" : playerToIndex[order.id] + 1);
+                  times.push(order.timestamp - this.startTime);
+                  prices.push(order.price);
+                  origTimes.push(order.originTimestamp - this.startTime);
                }
 
                row[numColumns - 5] = "\"{'id': (" + ids.join(', ') + "), 'time': (" + times.join(', ') + "), 'price': (" + prices.join(', ') + "), 'time_orig': (" + origTimes.join(', ') + ")}\"";

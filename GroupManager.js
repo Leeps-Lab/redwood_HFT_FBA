@@ -37,6 +37,7 @@ Redwood.factory("GroupManager", function () {
       };
 
       groupManager.sendToDataHistory = function (msg, uid) {
+         this.dataStore.storeMsg(msg);
          this.rssend("To_Data_History_" + uid, msg);
       };
 
@@ -179,7 +180,7 @@ Redwood.factory("GroupManager", function () {
 
       groupManager.sendNextInvestorArrival = function () {
          this.dataStore.investorArrivals.push([Date.now() - this.startTime, this.investorArrivals[this.investorIndex][1] == 1 ? "BUY" : "SELL"]);
-         var msg2 = new Message("OUCH", this.investorArrivals[this.investorIndex][1] == 1 ? "EBUY" : "ESELL", [0, 214748.3647, true]);
+         var msg2 = new Message("OUCH", this.investorArrivals[this.investorIndex][1] == 1 ? "EBUY" : "ESELL", [0, 214748.3647, true, this.startTime + this.investorArrivals[this.investorIndex][0]]);
          msg2.delay = false;
          this.sendToMarket(msg2);
 

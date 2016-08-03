@@ -230,7 +230,7 @@ Redwood.controller("AdminCtrl",
                      };
                      $scope.groupManagers[groupNum] = groupManager.createGroupManager(groupArgs, ra.sendCustom);
                      $scope.groupManagers[groupNum].market = marketManager.createMarketManager(ra.sendCustom, groupNum, $scope.groupManagers[groupNum], debugMode, $scope.config.batchLength);
-                     $scope.groupManagers[groupNum].dataStore = dataStorage.createDataStorage(group, groupNum, $scope.config.speedCost, $scope.config.startingWealth);
+                     $scope.groupManagers[groupNum].dataStore = dataStorage.createDataStorage(group, groupNum, $scope.config.speedCost, $scope.config.startingWealth, $scope.config.batchLength);
                      for (var subjectNum of group) {
 
                         // map subject number to group number

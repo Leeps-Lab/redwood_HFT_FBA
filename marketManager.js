@@ -34,13 +34,15 @@ Redwood.factory("MarketManager", function () {
             this.logger.logRecv(message, "Group Manager");
          }
 
+         var buyOrdersBefore = $.extend(true, [], this.FBABook.buyContracts);
+         var sellOrdersBefore = $.extend(true, [], this.FBABook.sellContracts);
+
          // handle message based on type. Send reply once message has been handled
          switch (message.msgType) {
 
             // enter buy offer
             case "EBUY":
                //if message is a market order
-               //call ioc buy with a limit greater than the max price
                if (message.msgData[1] == 214748.3647) {
                   market.FBABook.insertBuy(message.msgData[0], 200000, message.timestamp, message.msgData[3], true, null);
                }
@@ -92,6 +94,9 @@ Redwood.factory("MarketManager", function () {
             default:
                console.error("marketManager: invalid message type: " + message.msgType);
          }
+
+         if (message.msgType == "EBUY" || message.msgType == "UBUY" || message.msgType == "RBUY") this.groupManager.dataStore.storeBuyOrderState(message.timestamp, this.FBABook.buyContracts, buyOrdersBefore);
+         else this.groupManager.dataStore.storeSellOrderState(message.timestamp, this.FBABook.sellContracts, sellOrdersBefore);
       };
 
       market.FBABook.buyContracts = [];
@@ -198,6 +203,10 @@ Redwood.factory("MarketManager", function () {
       };
 
       market.FBABook.processBatch = function (batchTime) {
+         // save initial market state for data logging purposes
+         var buyOrdersBefore = $.extend(true, [], this.FBABook.buyContracts);
+         var sellOrdersBefore = $.extend(true, [], this.FBABook.sellContracts);
+
          // if buy and sell orders aren't empty, then there might be some transactions
          if (this.FBABook.buyContracts.length > 0 && this.FBABook.sellContracts.length > 0) {
             // combine and sort buy and sell orders to find clearing price
@@ -242,6 +251,9 @@ Redwood.factory("MarketManager", function () {
          this.FBABook.sellContracts = newSellContracts;
          
          this.FBABook.batchNumber++;
+
+         this.groupManager.dataStore.storeBuyOrderState(batchTime, this.FBABook.buyContracts, buyOrdersBefore);
+         this.groupManager.dataStore.storeSellOrderState(batchTime, this.FBABook.sellContracts, sellOrdersBefore);
 
          window.setTimeout(market.FBABook.processBatch, batchTime + this.batchLength - Date.now(), batchTime + this.batchLength);
       }.bind(market);
