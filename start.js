@@ -132,6 +132,11 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             }
          };
 
+         $("#speed-switch")
+            .click(function () {
+               $scope.setSpeed(this.checked);
+            });
+
          $("#slider-val")
             .change( function () {
                var newVal = $(this).val();
@@ -205,6 +210,9 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             .addClass("state-selected")
             .button()
             .click(function (event) {
+               $scope.setSpeed(false);
+               $("#speed-switch").prop("checked", false);
+               
                var msg = new Message("USER", "UOUT", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
                $scope.sendToGroupManager(msg);
                $scope.setState("state_out");

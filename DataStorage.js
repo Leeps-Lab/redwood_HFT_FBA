@@ -295,7 +295,7 @@ Redwood.factory("DataStorage", function () {
             data.push(row);
          }
 
-         // add equilibriumm price data
+         // add equilibrium price data
          for (let entry of this.equilibriumPrices) {
             let row = new Array(numColumns).fill(null);
 

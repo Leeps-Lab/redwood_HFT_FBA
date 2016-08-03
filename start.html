@@ -62,14 +62,10 @@
                                 <div class="speed-label">
                                     Speed
                                 </div>
-                                <label class="radio-inline" ng-click="setSpeed(true);">
-                                    <input type="radio" id="speed-on" name="speed-status">
-                                    On
-                                </label>
-                                <label class="radio-inline" ng-click="setSpeed(false);">
-                                    <input type="radio" id="speed-off" name="speed-status" checked>
-                                    Off
-                                </label>
+                                <div class="material-switch" ng-disabled="state=='state_out'">
+                                    <input id="speed-switch" type="checkbox" ng-disabled="state=='state_out'"/>
+                                    <label for="speed-switch"></label>
+                                </div>
                             </div>
 
                             <div class="button-container-state">
