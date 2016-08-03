@@ -235,6 +235,9 @@ Redwood.factory("MarketManager", function () {
             // calculate equilibrium price
             var equilibriumPrice = (allOrders[this.FBABook.sellContracts.length - 1].price + allOrders[this.FBABook.sellContracts.length].price) / 2;
 
+            // store equilibrium price
+            this.groupManager.dataStore.storeEqPrice(batchTime, equilibriumPrice);
+
             // every buy order above equilibrium is transacted and every sell order below equilibrium is transacted
             for (let order of this.FBABook.buyContracts) {
                if (order.price >= equilibriumPrice) order.transacted = true;

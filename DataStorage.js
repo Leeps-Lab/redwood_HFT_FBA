@@ -23,6 +23,7 @@ Redwood.factory("DataStorage", function () {
       dataStorage.playerOrders = [];      // array of player order lists: [timestamp, [player order]]
       dataStorage.buyOrderChanges = [];   // array of changes in the buy order book: [timestamp, [buy order book after], [buy order book before]]
       dataStorage.sellOrderChanges = [];  // array of changes in the sell order book: [timestamp, [sell order book], [buy order book before]]
+      dataStorage.equilibriumPrices = []; // array of equilibrium prices for each batch
 
       dataStorage.init = function (startFP, startTime) {
          this.startTime = startTime;
@@ -70,6 +71,10 @@ Redwood.factory("DataStorage", function () {
             case "FPC" :
                this.storeFPC(message.timeStamp, message.msgData[1])
          }
+      };
+
+      dataStorage.storeEqPrice = function (timestamp, price) {
+         this.equilibriumPrices.push([timestamp - this.startTime, price]);
       };
 
       dataStorage.storePlayerOrder = function (timestamp, order) {
@@ -125,7 +130,7 @@ Redwood.factory("DataStorage", function () {
             playerToIndex[this.group[index]] = index;
          }
 
-         var numColumns = this.group.length * 5 + 9;
+         var numColumns = this.group.length * 5 + 10;
 
          // iterate through every entry in each storage array
 
@@ -290,6 +295,16 @@ Redwood.factory("DataStorage", function () {
             data.push(row);
          }
 
+         // add equilibriumm price data
+         for (let entry of this.equilibriumPrices) {
+            let row = new Array(numColumns).fill(null);
+
+            row[0] = entry[0];
+            row[numColumns - 9] = entry[1];
+
+            data.push(row);
+         }
+
          // sort data by timestamp
          data.sort(function (a, b) {
             return a[0] - b[0];
@@ -337,6 +352,7 @@ Redwood.factory("DataStorage", function () {
             if (row[numColumns - 3] === null) row[numColumns - 3] = 0;
             if (row[numColumns - 1] === null) row[numColumns - 1] = "NA";
             if (row[numColumns - 4] === null) row[numColumns - 4] = "NA";
+            if (row[numColumns - 9] === null) row[numColumns - 9] = "NA";
          }
 
          // fill empty cells with the value above them
@@ -367,7 +383,7 @@ Redwood.factory("DataStorage", function () {
          for (let index = 0; index < this.group.length; index++) {
             data[0].push("status_p" + (index + 1), "spread_p" + (index + 1), "speed_p" + (index + 1), "dprofit_p" + (index + 1), "cumprofit_p" + (index + 1));
          }
-         data[0].push("buy_orders_before", "buy_orders_after", "sell_orders_before", "sell_orders_after", "porder", "dvalue", "cumvalue", "investor_buy_sell");
+         data[0].push("eq_price", "buy_orders_before", "buy_orders_after", "sell_orders_before", "sell_orders_after", "porder", "dvalue", "cumvalue", "investor_buy_sell");
 
          // download data 2d array as csv
          // stolen from stackoverflow
