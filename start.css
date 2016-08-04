@@ -71,8 +71,7 @@ body {
     margin-top: 20px;
     height: 60%;
     background-color: white;
-    /*overflow: auto;*/
-    border: 1px solid green;
+    border: 1px solid rgb(200, 200, 200);
 }
 
 .status-display {
@@ -86,18 +85,15 @@ body {
 }
 
 .speed-label {
-    color: orange;
     font-size: 24px;
     margin-bottom: 5px;
 }
 
 .state-label {
-    color: blue;
     font-size: 24px;
 }
 
 .spread-label {
-    color: red;
     font-size: 24px;
 }
 
@@ -139,20 +135,20 @@ body {
 
 .button-container-state {
     margin-top: 30px;
-    border: 1px solid blue;
+    border: 1px solid rgb(200, 200, 200);
     padding: 10px;
     display: inline-block;
 }
 
 .button-container-speed {
     margin-top: 30px;
-    border: 1px solid orange;
+    border: 1px solid rgb(200, 200, 200);
     padding: 10px;
     display: inline-block;
 }
 
 .button-container-spread {
-    border: 1px solid red;
+    border: 1px solid rgb(200, 200, 200);
     padding: 10px;
     display: inline-block;
 }
@@ -167,7 +163,7 @@ body {
 }
 
 #state_snipe.state-selected {
-    background-color: rgb(39, 196, 60);
+    background-color: rgb(200, 79, 34);
 }
 
 #state_maker.state-selected {
@@ -204,7 +200,7 @@ body {
     width: 40px;
     text-align: left;
     /*switch color*/
-    background-color: orange;
+    background-color: green;
 }
 
 .material-switch > label::before {

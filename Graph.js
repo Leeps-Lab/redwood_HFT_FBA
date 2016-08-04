@@ -45,7 +45,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       graph.timeSinceStart = 0;        //the amount of time since the start of the experiment in seconds
       graph.timePerPixel = 0;          // number of ms represented by one pixel
       graph.advanceTimeShown = 0;      // the amount of time shown to the right of the current time on the graph
-      graph.orderWidth = 10;           // width of orders in pixels
 
          graph.getCurOffsetTime = function () {
          return Date.now() - this.timeOffset;
@@ -177,7 +176,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
 
       graph.drawAllBatches = function (graphRefr, dataHistory) {
          // first batch that will be displayed on graph
-         var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength);
+         var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength) - 1;
          if (firstVisibleBatch < 0) firstVisibleBatch = 0;
 
          // draw horizontal price lines
@@ -218,10 +217,10 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
                return d.batchNumber >= firstVisibleBatch;
             })
             .attr("x1", function (d) {
-               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) - graphRefr.orderWidth / 2;
+               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) - 8;
             })
             .attr("x2", function (d) {
-               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) + graphRefr.orderWidth / 2;
+               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) + 8;
             })
             .attr("y1", function (d) {
                return graphRefr.mapMarketPriceToYAxis(d.price);
@@ -246,7 +245,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             .attr("cy", function (d) {
                return graphRefr.mapMarketPriceToYAxis(d.price);
             })
-            .attr("r", graphRefr.orderWidth / 2)
+            .attr("r", 5)
             .attr("class", styleClassName);
       };
 

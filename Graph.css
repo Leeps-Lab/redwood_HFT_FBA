@@ -34,7 +34,7 @@ svg {
 }
 
 .price-line {
-    stroke: rgb(50, 50, 150);
+    stroke: rgb(105, 103, 147);
     stroke-width: 3;
 }
 
@@ -54,21 +54,21 @@ svg {
 
 .my-orders {
     stroke-width: 2;
-    stroke: black;
+    stroke: rgb(26, 73, 232);
 }
 
 .investor-orders {
     stroke-width: 1;
-    stroke: orange;
+    stroke: rgb(163, 112, 224);
 }
 
 .others-orders {
-    stroke-width: 1;
-    stroke: gray;
+    stroke-width: 2;
+    stroke: rgba(26, 73, 232, .5);
 }
 
 .my-filled-orders-positive {
-    fill: green;
+    fill: rgb(58, 247, 71);
 }
 
 .my-filled-orders-negative {
@@ -76,7 +76,7 @@ svg {
 }
 
 .others-filled-orders {
-    fill: #595959;
+    fill: rgb(232, 232, 232);
 }
 
 .my-profit-out {
@@ -85,7 +85,7 @@ svg {
 }
 
 .my-profit-snipe {
-    stroke: rgb(39, 196, 60);
+    stroke: rgb(200, 79, 34);
     stroke-width: 3;
 }
 
@@ -100,7 +100,7 @@ svg {
 }
 
 .others-profit-snipe {
-    stroke: rgba(39, 196, 60, 0.4);
+    stroke: rgba(200, 79, 34, 0.4);
     stroke-width: 1;
 }
 
