@@ -207,6 +207,8 @@ Redwood.factory("MarketManager", function () {
          var buyOrdersBefore = $.extend(true, [], this.FBABook.buyContracts);
          var sellOrdersBefore = $.extend(true, [], this.FBABook.sellContracts);
 
+         var equilibriumPrice = null;
+
          // if buy and sell orders aren't empty, then there might be some transactions
          if (this.FBABook.buyContracts.length > 0 && this.FBABook.sellContracts.length > 0) {
             // calculate max non-investor sell price and min non-investor buy price
@@ -233,7 +235,7 @@ Redwood.factory("MarketManager", function () {
             });
 
             // calculate equilibrium price
-            var equilibriumPrice = (allOrders[this.FBABook.sellContracts.length - 1].price + allOrders[this.FBABook.sellContracts.length].price) / 2;
+            equilibriumPrice = (allOrders[this.FBABook.sellContracts.length - 1].price + allOrders[this.FBABook.sellContracts.length].price) / 2;
 
             // store equilibrium price
             this.groupManager.dataStore.storeEqPrice(batchTime, equilibriumPrice);
@@ -247,7 +249,8 @@ Redwood.factory("MarketManager", function () {
             }
          }
 
-         var msg = new Message("ITCH", "BATCH", [this.FBABook.buyContracts, this.FBABook.sellContracts, this.FBABook.batchNumber, equilibriumPrice === undefined ? null : equilibriumPrice]);
+         // copy current market state into batch message
+         var msg = new Message("ITCH", "BATCH", [$.extend(true, [], this.FBABook.buyContracts), $.extend(true, [], this.FBABook.sellContracts), this.FBABook.batchNumber, equilibriumPrice]);
          this.sendToGroupManager(msg);
          
          // move non-ioc and non-transacted order to next batch
