@@ -177,7 +177,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
 
       graph.drawAllBatches = function (graphRefr, dataHistory) {
          // first batch that will be displayed on graph
-         var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength) - 1;
+         var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength);
          if (firstVisibleBatch < 0) firstVisibleBatch = 0;
 
          // draw horizontal price lines
@@ -215,7 +215,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             .enter()
             .append("line")
             .filter(function (d) {
-               return d.batchNumber > firstVisibleBatch;
+               return d.batchNumber >= firstVisibleBatch;
             })
             .attr("x1", function (d) {
                return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) - graphRefr.orderWidth / 2;
@@ -238,7 +238,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             .enter()
             .append("circle")
             .filter(function (d) {
-               return d.transacted && d.batchNumber > firstVisibleBatch;
+               return d.transacted && d.batchNumber >= firstVisibleBatch;
             })
             .attr("cx", function (d) {
                return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength);

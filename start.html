@@ -58,16 +58,6 @@
 
                         <div id="buttons-container">
 
-                            <div class="button-container-speed">
-                                <div class="speed-label">
-                                    Speed
-                                </div>
-                                <div class="material-switch" ng-disabled="state=='state_out'">
-                                    <input id="speed-switch" type="checkbox" ng-disabled="state=='state_out'"/>
-                                    <label for="speed-switch"></label>
-                                </div>
-                            </div>
-
                             <div class="button-container-state">
                                 <div class="state-label">
                                     Role
@@ -81,6 +71,16 @@
                                 <button id="state_maker" ng-disabled="state=='state_maker'" class="btn" type="button">
                                     Maker
                                 </button>
+                            </div>
+
+                            <div class="button-container-speed">
+                                <div class="speed-label">
+                                    Speed
+                                </div>
+                                <div class="material-switch">
+                                    <input id="speed-switch" type="checkbox" ng-disabled="state=='state_out'"/>
+                                    <label for="speed-switch"></label>
+                                </div>
                             </div>
 
                             <div id="graph-controls">

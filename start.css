@@ -138,14 +138,14 @@ body {
 }
 
 .button-container-state {
-    margin-top: 20px;
+    margin-top: 30px;
     border: 1px solid blue;
     padding: 10px;
     display: inline-block;
 }
 
 .button-container-speed {
-    margin-top: 50px;
+    margin-top: 30px;
     border: 1px solid orange;
     padding: 10px;
     display: inline-block;

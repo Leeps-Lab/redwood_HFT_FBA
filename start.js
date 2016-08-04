@@ -280,12 +280,12 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
 
                case "FAST":
                   $scope.setSpeed(true);
-                  $("#speed-on").attr("checked", true);
+                  $("#speed-switch").prop("checked", true);
                   break;
 
                case "SLOW":
                   $scope.setSpeed(false);
-                  $("#speed-off").attr("checked", true);
+                  $("#speed-switch").prop("checked", false);
                   break;
 
                case "SPREAD":
