@@ -7,7 +7,8 @@ Redwood.factory("MarketManager", function () {
 
       market.FBABook = {};
       market.FBABook.batchNumber = 1;
-
+      
+      market.timeoutID = null; //id of the timeout that calls sendBatch. for canceling the timeout on experiment finish
       market.groupManager = groupManager;
       market.batchLength = batchLength;
 
@@ -278,7 +279,7 @@ Redwood.factory("MarketManager", function () {
          this.groupManager.dataStore.storeBuyOrderState(batchTime, this.FBABook.buyContracts, buyOrdersBefore);
          this.groupManager.dataStore.storeSellOrderState(batchTime, this.FBABook.sellContracts, sellOrdersBefore);
 
-         window.setTimeout(market.FBABook.processBatch, batchTime + this.batchLength - Date.now(), batchTime + this.batchLength);
+         this.timeoutID = window.setTimeout(market.FBABook.processBatch, batchTime + this.batchLength - Date.now(), batchTime + this.batchLength);
       }.bind(market);
 
       // update functions are unused now, insert does both jobs

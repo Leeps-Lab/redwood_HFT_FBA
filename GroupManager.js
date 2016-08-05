@@ -160,6 +160,7 @@ Redwood.factory("GroupManager", function () {
          // if current price is -1, end the game
          if (this.priceChanges[this.priceIndex][1] == -1) {
             this.rssend("end_game", this.groupNumber);
+            window.clearTimeout(this.market.timeoutID);
             return;
          }
 

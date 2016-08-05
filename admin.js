@@ -289,13 +289,13 @@ Redwood.controller("AdminCtrl",
 
             // start experiment if all subjects are marked ready
             if ($scope.startSyncArrays[groupNum].allReady()) {
-               var startTime = Date.now();
+               $scope.startTime = Date.now();
                var group = $scope.getGroup(groupNum);
                var startFP = $scope.priceChanges[0][1];
 
                //send out start message with start time and information about group then start groupManager
                var beginData = {
-                  startTime: startTime,
+                  startTime: $scope.startTime,
                   startFP: startFP,
                   groupNumber: groupNum,
                   group: group,
@@ -313,18 +313,18 @@ Redwood.controller("AdminCtrl",
                }
 
                ra.sendCustom("Experiment_Begin", beginData, "admin", 1, groupNum);
-               $scope.groupManagers[groupNum].startTime = startTime;
-               $scope.groupManagers[groupNum].dataStore.init(startFP, startTime);
-               window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, startTime + $scope.config.batchLength - Date.now(), startTime + $scope.config.batchLength);
+               $scope.groupManagers[groupNum].startTime = $scope.startTime;
+               $scope.groupManagers[groupNum].dataStore.init(startFP, $scope.startTime);
+               $scope.groupManagers[groupNum].market.timeoutID = window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, $scope.startTime + $scope.config.batchLength - Date.now(), $scope.startTime + $scope.config.batchLength);
                for (var user of group) {
                   $scope.groupManagers[groupNum].marketAlgorithms[user].fundamentalPrice = startFP;
                }
 
                // if there are any price changes to send, start sending them
                if ($scope.priceChanges.length > 2) {
-                  window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - Date.now());
+                  window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, $scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - Date.now());
                }
-               window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - Date.now());
+               window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - Date.now());
                //$scope.groupManagers[groupNum].intervalPromise = $interval($scope.groupManagers[groupNum].update.bind($scope.groupManagers[groupNum]), CLOCK_FREQUENCY);
             }
          });
@@ -332,10 +332,6 @@ Redwood.controller("AdminCtrl",
          ra.recv("To_Group_Manager", function (uid, msg) {
             var groupNum = $scope.idToGroup[uid];
             $scope.groupManagers[groupNum].recvFromSubject(msg);
-         });
-
-         ra.on("end_game", function (msg) {
-            $interval.cancel($scope.groupManagers[msg].intervalPromise);
          });
 
          ra.on("pause", function () {
@@ -352,7 +348,7 @@ Redwood.controller("AdminCtrl",
                var msg = new Message("OUCH", "EBUY", [0, 214748.3647, true]);
                msg.delay = false;
                for (var group in $scope.groupManagers) {
-                  $scope.groupManagers[group].dataStore.investorArrivals.push([Date.now() - this.startTime, "BUY"]);
+                  $scope.groupManagers[group].dataStore.investorArrivals.push([Date.now() - $scope.startTime, "BUY"]);
                   $scope.groupManagers[group].sendToMarket(msg);
                }
             });
@@ -363,7 +359,7 @@ Redwood.controller("AdminCtrl",
                var msg = new Message("OUCH", "ESELL", [0, 214748.3647, true]);
                msg.delay = false;
                for (var group in $scope.groupManagers) {
-                  $scope.groupManagers[group].dataStore.investorArrivals.push([Date.now() - this.startTime, "SELL"]);
+                  $scope.groupManagers[group].dataStore.investorArrivals.push([Date.now() - $scope.startTime, "SELL"]);
                   $scope.groupManagers[group].sendToMarket(msg);
                }
             });
@@ -377,6 +373,42 @@ Redwood.controller("AdminCtrl",
                   $scope.groupManagers[group].dataStore.storeMsg(msg);
                   $scope.groupManagers[group].sendToMarketAlgorithms(msg);
                }
-            })
+            });
+
+         $("#export-profits")
+            .button()
+            .click(function () {
+               // export final profit values to csv
+               var data = [];
+               for (var group in $scope.groupManagers) {
+                  for (var player in $scope.groupManagers[group].dataStore.playerFinalProfits) {
+                     data.push([player, $scope.groupManagers[group].dataStore.playerFinalProfits[player]]);
+                  }
+               }
+
+               data.sort(function (a, b) {
+                  return a[0] - b[0];
+               });
+
+               data.unshift(["player", "final_profit"]);
+
+               // get file name by formatting start time as readable string
+               var d = new Date($scope.startTime);
+               var filename = d.getHours() + '_' + d.getMinutes() + '_' + d.getSeconds() + '_final_profits.csv';
+
+               var csvRows = [];
+               for (let index = 0; index < data.length; index++) {
+                  csvRows.push(data[index].join(','));
+               }
+               var csvString = csvRows.join("\n");
+               var a = document.createElement('a');
+               a.href = 'data:attachment/csv,' + encodeURIComponent(csvString);
+               a.target = '_blank';
+               a.download = filename;
+
+               document.body.appendChild(a);
+               a.click();
+               a.remove();
+            });
 
       }]);

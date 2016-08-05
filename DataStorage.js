@@ -25,6 +25,8 @@ Redwood.factory("DataStorage", function () {
       dataStorage.sellOrderChanges = [];  // array of changes in the sell order book: [timestamp, [sell order book], [buy order book before]]
       dataStorage.equilibriumPrices = []; // array of equilibrium prices for each batch
 
+      dataStorage.playerFinalProfits = {};
+
       dataStorage.init = function (startFP, startTime) {
          this.startTime = startTime;
          this.curFundPrice = startFP;
@@ -404,6 +406,11 @@ Redwood.factory("DataStorage", function () {
          document.body.appendChild(a);
          a.click();
          a.remove();
+
+         // fill player final profits array with cumulative profit value from last line of data
+         for (let index = 0; index < this.group.length; index++) {
+            this.playerFinalProfits[this.group[index]] = data[data.length - 1][index * 5 + 5];
+         }
       };
 
       return dataStorage;
