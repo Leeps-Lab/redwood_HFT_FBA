@@ -71,7 +71,21 @@ body {
     margin-top: 20px;
     height: 60%;
     background-color: white;
-    border: 1px solid rgb(200, 200, 200);
+    border: 1px solid rgb(200, 200, 200,);
+}
+
+/*styles for table state indication entries
+  capital is to make it work better with ng-style*/
+.state-label-Snipe {
+    background-color: rgba(200, 79, 34, .5);
+}
+
+.state-label-Maker {
+    background-color: rgba(26, 73, 232, .5);
+}
+
+.state-label-Out {
+    background-color: rgba(110, 110, 110, .5);
 }
 
 .status-display {

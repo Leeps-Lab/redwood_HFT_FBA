@@ -69,6 +69,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.init = function () {
          for (var uid of this.group) {
             this.playerData[uid] = {
+               speed: false,
                state: "Out",
                spread: this.maxSpread / 2,
                curProfitSegment: [this.startTime, this.profit, 0, "Out"], // [start time, start profit, slope, state]
@@ -172,6 +173,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
 
       dataHistory.storeSpeedChange = function (msg) {
          var uid = msg.msgData[0];
+         this.playerData[uid].speed = msg.msgData[1];
          var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
          this.recordProfitSegment(curProfit, msg.msgData[2], msg.msgData[1] ? this.speedCost : 0, uid, this.playerData[uid].state);
       };

@@ -24,13 +24,15 @@
                                             <th>Player</th>
                                             <th>Role</th>
                                             <th>Spread</th>
+                                            <th>Speed?</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr ng-repeat="(player, data) in dHistory.playerData">
                                             <td>{{player == dHistory.myId ? "You" : displayId[player]}}</td>
-                                            <td>{{data.state}}</td>
+                                            <td ng-class="'state-label-' + data.state">{{data.state}}</td>
                                             <td>{{data.state == "Maker" ? data.spread : ""}}</td>
+                                            <td>{{data.speed ? "On" : "Off"}}</td>
                                         </tr>
                                     </tbody>
                                 </table>
