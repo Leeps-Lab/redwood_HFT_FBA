@@ -141,8 +141,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             .change( function () {
                var newVal = $(this).val();
 
-               // if someone tries to enter an empty value or a value greater than the max spread
-               if (newVal == "" || newVal > $scope.maxSpread) {
+               // if someone tries to enter an invalid spread value
+               if (newVal == "" || newVal > $scope.maxSpread || newVal < 0) {
                   $(this).val($scope.sliderVal);
                   return;
                }
