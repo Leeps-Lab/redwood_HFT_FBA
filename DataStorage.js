@@ -385,6 +385,10 @@ Redwood.factory("DataStorage", function () {
          }
          data[0].push("eq_price", "buy_orders_before", "buy_orders_after", "sell_orders_before", "sell_orders_after", "porder", "dvalue", "cumvalue", "investor_buy_sell");
 
+         // get file name by formatting start time as readable string
+         var d = new Date(this.startTime);
+         var filename = d.getHours() + '_' + d.getMinutes() + '_' + d.getSeconds() + '_group' + this.groupNum + '.csv';
+
          // download data 2d array as csv
          // stolen from stackoverflow
          var csvRows = [];
@@ -395,7 +399,7 @@ Redwood.factory("DataStorage", function () {
          var a = document.createElement('a');
          a.href = 'data:attachment/csv,' + encodeURIComponent(csvString);
          a.target = '_blank';
-         a.download = 'group_' + this.groupNum + '.csv';
+         a.download = filename;
 
          document.body.appendChild(a);
          a.click();
