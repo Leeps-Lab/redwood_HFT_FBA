@@ -129,7 +129,6 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          for (var sellOrder of msg.msgData[1]) {
             if (sellOrder.transacted && sellOrder.id != 0) {
                var uid = sellOrder.id;
-               console.log(msg.msgData[3]);
                if (uid == this.myId) this.profit += msg.msgData[3] - msg.msgData[4];
                
                var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);

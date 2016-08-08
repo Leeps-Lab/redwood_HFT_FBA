@@ -134,7 +134,8 @@ Redwood.factory("MarketManager", function () {
             ioc: ioc,
             state: state,
             transacted: false,
-            batchNumber: this.batchNumber
+            batchNumber: this.batchNumber,
+            originBatch: this.batchNumber
          };
          market.FBABook.buyContracts.push(order);
       };
@@ -170,7 +171,8 @@ Redwood.factory("MarketManager", function () {
             ioc: ioc,
             state: state,
             transacted: false,
-            batchNumber: this.batchNumber
+            batchNumber: this.batchNumber,
+            originBatch: this.batchNumber
          };
          market.FBABook.sellContracts.push(order);
       };
@@ -241,12 +243,66 @@ Redwood.factory("MarketManager", function () {
             // store equilibrium price
             this.groupManager.dataStore.storeEqPrice(batchTime, equilibriumPrice);
 
+            var equalBuyOrders = [];   // array of buy orders with price equal to the equilibrium price
+            var equalSellOrders = [];  // array of sell orders with price equal to the equilibrium price
+
             // every buy order above equilibrium is transacted and every sell order below equilibrium is transacted
+            // push orders with price at equilibrium onto equal lists
             for (let order of this.FBABook.buyContracts) {
-               if (order.price >= equilibriumPrice) order.transacted = true;
+               if (order.price > equilibriumPrice) order.transacted = true;
+               else if (order.price == equilibriumPrice) equalBuyOrders.push(order);
             }
             for (let order of this.FBABook.sellContracts) {
-               if (order.price <= equilibriumPrice) order.transacted = true;
+               if (order.price < equilibriumPrice) order.transacted = true;
+               else if(order.price == equilibriumPrice) equalSellOrders.push(order);
+            }
+
+            // 3 cases: equal numbers of buy and sell orders at equilibrium price, more buy orders at equilibrium price or more sell orders at equilibrium price
+            if (equalBuyOrders.length == equalSellOrders.length) {
+               // if equal, all orders are transacted
+               for (let order of equalBuyOrders) {
+                  order.transacted = true;
+               }
+               for (let order of equalSellOrders) {
+                  order.transacted = true;
+               }
+            }
+            else if(equalBuyOrders.length > equalSellOrders.length) {
+               // if more buy orders, all sell orders are transacted
+               for (let order of equalSellOrders) {
+                  order.transacted = true;
+               }
+
+               // sort buy orders so that orders from an older batch have priority, and orders from the same batch have random priority
+               equalBuyOrders.sort(function (a, b) {
+                  if (a.originBatch == b.originBatch) return Math.floor(Math.random() * 2) ? 1 : -1;
+                  else {
+                     return a.originBatch - b.originBatch;
+                  }
+               });
+
+               // first n buy orders get transacted where n = number of equal price sell orders
+               for (let index = 0; index < equalSellOrders.length; index++) {
+                  equalBuyOrders[index].transacted = true;
+               }
+            }
+            else {
+               // if more sell orders, all buy orders are transacted
+               for (let order of equalBuyOrders) {
+                  order.transacted = true;
+               }
+
+               // sort sell orders so that orders from an older batch have priority, and orders from the same batch have random priority
+               equalSellOrders.sort(function (a, b) {
+                  if (a.originBatch == b.originBatch) return Math.floor(Math.random() * 2) ? 1 : -1;
+                  else {
+                     return a.originBatch - b.originBatch;
+                  }
+               });
+
+               for (let index = 0; index < equalBuyOrders.length; index++) {
+                  equalSellOrders[index].transacted = true;
+               }
             }
          }
 
