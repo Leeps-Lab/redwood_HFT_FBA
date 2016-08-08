@@ -57,6 +57,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       graph.setContractedGraph = function () {
          this.expandedGraph = false;
          this.timeInterval = this.contractedTimeInterval;
+         this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
+         this.advanceTimeShown = graph.timePerPixel * (graph.axisLabelWidth + graph.graphPaddingRight);
       };
 
       graph.calculateSize = function () {
@@ -448,6 +450,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          this.timeSinceStart = (this.currentTime - dataHistory.startTime) / 1000;
          if (this.expandedGraph) {
             this.timeInterval = this.timeSinceStart;
+            this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
+            this.advanceTimeShown = graph.timePerPixel * (graph.axisLabelWidth + graph.graphPaddingRight);
          }
 
          this.curTimeX = this.mapTimeToXAxis(this.currentTime);
@@ -456,7 +460,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          this.calcPriceBounds(dataHistory);
 
          //Check if it is necessary to recalculate timeLines
-         if (this.currentTime + this.advanceTimeShown > this.batchLines[this.batchLines.length - 1] + this.batchLength) {
+         if (this.currentTime + this.advanceTimeShown > this.batchLines[this.batchLines.length - 1] + this.batchLength ||
+             this.currentTime - this.timeInterval * 1000 < this.batchLines[0] - this.timeIncrement) {
             this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000, this.currentTime + this.advanceTimeShown, this.batchLength);
          }
 

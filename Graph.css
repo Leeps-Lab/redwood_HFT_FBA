@@ -9,7 +9,7 @@ svg {
 
 /*Style for the lines that visualize incremental levels of the price axis*/
 .price-grid-line {
-    stroke: rgb(200, 200, 200);
+    stroke: rgb(213, 213, 213);
     stroke-width: 1;
 }
 
@@ -24,7 +24,7 @@ svg {
 }
 
 .batch-line {
-    stroke: gray;
+    stroke: #a7a7a7;
     stroke-width: 1px;
 }
 
