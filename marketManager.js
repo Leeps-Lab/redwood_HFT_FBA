@@ -275,7 +275,7 @@ Redwood.factory("MarketManager", function () {
 
                // sort buy orders so that orders from an older batch have priority, and orders from the same batch have random priority
                equalBuyOrders.sort(function (a, b) {
-                  if (a.originBatch == b.originBatch) return Math.floor(Math.random() * 2) ? 1 : -1;
+                  if (a.originBatch == b.originBatch) return 0.5 - Math.random();
                   else {
                      return a.originBatch - b.originBatch;
                   }
@@ -294,7 +294,7 @@ Redwood.factory("MarketManager", function () {
 
                // sort sell orders so that orders from an older batch have priority, and orders from the same batch have random priority
                equalSellOrders.sort(function (a, b) {
-                  if (a.originBatch == b.originBatch) return Math.floor(Math.random() * 2) ? 1 : -1;
+                  if (a.originBatch == b.originBatch) return 0.5 - Math.random();
                   else {
                      return a.originBatch - b.originBatch;
                   }
