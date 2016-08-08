@@ -13,6 +13,7 @@ Redwood.factory("DataStorage", function () {
       dataStorage.speedCost = speedCost;
       dataStorage.startingWealth = startingWealth;
       dataStorage.batchLength = batchLength;
+      dataStorage.playerSpreadValues = {};// associative array of each player's current spread value
 
       dataStorage.speedChanges = [];      // array of speed change events: [timestamp, speed, uid]
       dataStorage.stateChanges = [];      // array of state change events: [timestamp, state, uid]
@@ -27,7 +28,7 @@ Redwood.factory("DataStorage", function () {
 
       dataStorage.playerFinalProfits = {};
 
-      dataStorage.init = function (startFP, startTime) {
+      dataStorage.init = function (startFP, startTime, maxSpread) {
          this.startTime = startTime;
          this.curFundPrice = startFP;
          this.fundPriceChanges.push([0, startFP, startFP]);
@@ -38,8 +39,10 @@ Redwood.factory("DataStorage", function () {
          for (let user of this.group) {
             this.speedChanges.push([0, "NO", user]);
             this.stateChanges.push([0, "OUT", user]);
-            this.spreadChanges.push([0, 5, user]);
+            this.spreadChanges.push([0, "NA", user]);
             this.profitChanges.push([0, 0, user]);
+
+            this.playerSpreadValues[user] = maxSpread / 2;
          }
 
          $("#ui").append("<button class='btn' id='export-btn-" + groupNum + "' type='button'>Export Group " + this.groupNum + " CSV</button>");
@@ -98,10 +101,17 @@ Redwood.factory("DataStorage", function () {
 
       dataStorage.storeStateChange = function (timestamp, state, uid) {
          this.stateChanges.push([timestamp - this.startTime, state, uid]);
+         if (state == "MAKER") {
+            this.spreadChanges.push([timestamp - this.startTime, this.playerSpreadValues[uid], uid]);
+         }
+         else {
+            this.spreadChanges.push([timestamp - this.startTime, "NA", uid]);
+         }
       };
 
       dataStorage.storeSpreadChange = function (timestamp, spread, uid) {
          this.spreadChanges.push([timestamp - this.startTime, spread, uid]);
+         this.playerSpreadValues[uid] = spread;
       };
 
       dataStorage.storeBatch = function (buyOrders, sellOrders, batchNumber, equilibriumPrice, fundPrice) {
