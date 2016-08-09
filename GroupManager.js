@@ -158,13 +158,14 @@ Redwood.factory("GroupManager", function () {
 
       groupManager.sendNextPriceChange = function () {
          // if current price is -1, end the game
-         if (this.priceChanges[this.priceIndex][1] == -1) {
+         if (this.priceChanges[this.priceIndex][1] < 0) {
             this.rssend("end_game", this.groupNumber);
             window.clearTimeout(this.market.timeoutID);
             return;
          }
-
-         var msg = new Message("ITCH", "FPC", [Date.now(), this.priceChanges[this.priceIndex][1], this.priceIndex]);
+         
+         // FPC message contains timestamp, new price, price index and a boolean reflecting the jump's direction
+         var msg = new Message("ITCH", "FPC", [Date.now(), this.priceChanges[this.priceIndex][1], this.priceIndex, this.priceChanges[this.priceIndex][1] > this.priceChanges[this.priceIndex - 1][1]]);
          msg.delay = false;
          this.dataStore.storeMsg(msg);
          this.sendToMarketAlgorithms(msg);
@@ -194,33 +195,6 @@ Redwood.factory("GroupManager", function () {
 
          window.setTimeout(this.sendNextInvestorArrival, this.startTime + this.investorArrivals[this.investorIndex][0] - Date.now());
       }.bind(groupManager);
-
-      groupManager.update = function () {
-         //Looks for change in fundamental price and sends message if change is found
-         if (this.priceIndex < this.priceChanges.length
-            && Date.now() > this.priceChanges[this.priceIndex][0] + this.startTime) {
-            if (this.priceChanges[this.priceIndex][1] == -1) {
-               this.dataStore.exportDataCsv();
-               this.rssend("end_game", this.groupNumber);
-            }
-            else {
-               var msg = new Message("ITCH", "FPC", [Date.now(), this.priceChanges[this.priceIndex][1], this.priceIndex]);
-               msg.delay = false;
-               this.dataStore.storeMsg(msg);
-               this.sendToMarketAlgorithms(msg);
-               this.priceIndex++;
-            }
-         }
-
-         //looks for investor arrivals and sends message if one has occurred
-         if (this.investorIndex < this.investorArrivals.length
-            && Date.now() > this.investorArrivals[this.investorIndex][0] + this.startTime) {
-            var msg2 = new Message("OUCH", this.investorArrivals[this.investorIndex][1] == 1 ? "EBUY" : "ESELL", [0, 214748.3647, true]);
-            msg2.delay = false;
-            this.sendToMarket(msg2);
-            this.investorIndex++;
-         }
-      };
 
       return groupManager;
    };

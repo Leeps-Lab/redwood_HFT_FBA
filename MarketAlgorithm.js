@@ -88,11 +88,16 @@ Redwood.factory("MarketAlgorithm", function () {
             else if (this.state == "state_snipe") {
                nMsg3 = new Message("SYNC_FP", "SNIPE", [this.myId, this.using_speed, []]);
                nMsg3.timeStamp = msg.msgData[0]; // for debugging test output only
-               snipeBuyMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice, true, Date.now(), this.state]);
-               snipeBuyMsg.delay = !this.using_speed;
-               snipeSellMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice, true, Date.now(), this.state]);
-               snipeSellMsg.delay = !this.using_speed;
-               nMsg3.msgData[2].push(snipeBuyMsg, snipeSellMsg);
+               var snipeMsg;
+               if (msg.msgData[3]) {
+                  snipeMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice, true, Date.now(), this.state]);
+                  snipeMsg.delay = !this.using_speed;
+               }
+               else {
+                  snipeMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice, true, Date.now(), this.state]);
+                  snipeMsg.delay = !this.using_speed;
+               }
+               nMsg3.msgData[2].push(snipeMsg);
             }
             else {
                console.error("invalid state");
@@ -128,9 +133,8 @@ Redwood.factory("MarketAlgorithm", function () {
 
          // user sent signal to change state to "out of market"
          if (msg.msgType === "UOUT") {
-            if (this.state === "state_maker") {   // if switching from being a maker, exit the market
-               this.exitMarket();
-            }
+            this.exitMarket();                  // clear the market of my orders
+            
             this.state = "state_out";           // update state
 
             var nMsg = new Message("DATA", "C_UOUT", msg.msgData);

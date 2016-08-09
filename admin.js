@@ -367,7 +367,7 @@ Redwood.controller("AdminCtrl",
          $("#send-fpc")
             .button()
             .click(function () {
-               var msg = new Message("ITCH", "FPC", [Date.now(), parseFloat( $("#fpc-input").val() )]);
+               var msg = new Message("ITCH", "FPC", [Date.now(), parseFloat( $("#fpc-input").val() ), 0]);
                msg.delay = false;
                for (var group in $scope.groupManagers) {
                   $scope.groupManagers[group].dataStore.storeMsg(msg);
