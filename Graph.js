@@ -181,17 +181,16 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength) - 1;
          if (firstVisibleBatch < 0) firstVisibleBatch = 0;
 
-         // draw horizontal price lines
-         for (var batchIndex = firstVisibleBatch; batchIndex < dataHistory.orderHistory.length; batchIndex++) {
-            if (dataHistory.orderHistory[batchIndex][3] != null) {
-               this.marketSVG.append("line")
-                  .attr("x1", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * dataHistory.orderHistory[batchIndex][2]))
-                  .attr("x2", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * (dataHistory.orderHistory[batchIndex][2] - 1)))
-                  .attr("y1", this.mapMarketPriceToYAxis(dataHistory.orderHistory[batchIndex][3]))
-                  .attr("y2", this.mapMarketPriceToYAxis(dataHistory.orderHistory[batchIndex][3]))
-                  .attr("class", "equilibrium-price-line")
-            }
-         }
+         // for (var batchIndex = firstVisibleBatch; batchIndex < dataHistory.orderHistory.length; batchIndex++) {
+         //    if (dataHistory.orderHistory[batchIndex][3] != null) {
+         //       this.marketSVG.append("line")
+         //          .attr("x1", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * dataHistory.orderHistory[batchIndex][2]))
+         //          .attr("x2", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * (dataHistory.orderHistory[batchIndex][2] - 1)))
+         //          .attr("y1", this.mapMarketPriceToYAxis(dataHistory.orderHistory[batchIndex][3]))
+         //          .attr("y2", this.mapMarketPriceToYAxis(dataHistory.orderHistory[batchIndex][3]))
+         //          .attr("class", "equilibrium-price-line")
+         //    }
+         // }
 
          // draw others' filled order circles
          this.drawBatchCircles(graphRefr, dataHistory.othersOrders, "others-filled-orders", firstVisibleBatch);
@@ -208,6 +207,18 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          this.drawBatchTicks(graphRefr, dataHistory.othersOrders, "others-orders", firstVisibleBatch);
          this.drawBatchTicks(graphRefr, dataHistory.investorOrders, "investor-orders", firstVisibleBatch);
          this.drawBatchTicks(graphRefr, dataHistory.myOrders, "my-orders", firstVisibleBatch);
+
+         // draw horizontal price lines
+         for (var batchIndex = firstVisibleBatch; batchIndex < dataHistory.orderHistory.length; batchIndex++) {
+            if (dataHistory.orderHistory[batchIndex][3] != null) {
+               this.marketSVG.append("line")
+                  .attr("x1", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * dataHistory.orderHistory[batchIndex][2]) - 8)
+                  .attr("x2", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * dataHistory.orderHistory[batchIndex][2]) + 8)
+                  .attr("y1", this.mapMarketPriceToYAxis(dataHistory.orderHistory[batchIndex][3]))
+                  .attr("y2", this.mapMarketPriceToYAxis(dataHistory.orderHistory[batchIndex][3]))
+                  .attr("class", "equilibrium-price-line")
+            }
+         }
       };
       
       graph.drawBatchTicks = function (graphRefr, dataSet, styleClassName, firstVisibleBatch) {
