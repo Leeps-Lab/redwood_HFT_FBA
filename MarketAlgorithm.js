@@ -88,16 +88,20 @@ Redwood.factory("MarketAlgorithm", function () {
             else if (this.state == "state_snipe") {
                nMsg3 = new Message("SYNC_FP", "SNIPE", [this.myId, this.using_speed, []]);
                nMsg3.timeStamp = msg.msgData[0]; // for debugging test output only
-               var snipeMsg;
+
+               var snipeEnterMsg;
+               var snipeRemoveMsg;
                if (msg.msgData[3]) {
-                  snipeMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice, true, Date.now(), this.state]);
-                  snipeMsg.delay = !this.using_speed;
+                  snipeEnterMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice, true, Date.now(), this.state]);
+                  snipeRemoveMsg = new Message("OUCH", "RSELL", [this.myId]);    // if I'm inserting a new buy snipe message, also make sure I don't have any stale snipe sell messages
                }
                else {
-                  snipeMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice, true, Date.now(), this.state]);
-                  snipeMsg.delay = !this.using_speed;
+                  snipeEnterMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice, true, Date.now(), this.state]);
+                  snipeRemoveMsg = new Message("OUCH", "RBUY", [this.myId]);
                }
-               nMsg3.msgData[2].push(snipeMsg);
+               snipeEnterMsg.delay = !this.using_speed;
+               snipeRemoveMsg.delay = !this.using_speed;
+               nMsg3.msgData[2].push(snipeRemoveMsg, snipeEnterMsg);
             }
             else {
                console.error("invalid state");

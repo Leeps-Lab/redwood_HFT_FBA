@@ -399,7 +399,7 @@ Redwood.factory("DataStorage", function () {
 
          // get file name by formatting start time as readable string
          var d = new Date(this.startTime);
-         var filename = d.getHours() + '_' + d.getMinutes() + '_' + d.getSeconds() + '_group' + this.groupNum + '.csv';
+         var filename = d.getHours() + '_' + d.getMinutes() + '_' + d.getSeconds() + '_group_' + this.groupNum + '.csv';
 
          // download data 2d array as csv
          // stolen from stackoverflow

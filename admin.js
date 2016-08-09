@@ -126,12 +126,6 @@ Redwood.controller("AdminCtrl",
 
          $scope.groupManagers = {};
 
-         $scope.updateGroupManagers = function () {
-            $scope.groupManagers.forEach(function (entry) {
-               entry.update();
-            });
-         };
-
          var resetGroups = function () {
             var config = ra.get_config(1, 0) || {};
             for (var i = 0; i < ra.subjects.length; i++) { //set all subjects to group 1 (this is so that matching can be changed per period)
@@ -367,7 +361,11 @@ Redwood.controller("AdminCtrl",
          $("#send-fpc")
             .button()
             .click(function () {
-               var msg = new Message("ITCH", "FPC", [Date.now(), parseFloat( $("#fpc-input").val() ), 0]);
+               // get current FP from market algorithm of first player in first group
+               var oldFP = $scope.groupManagers[1].marketAlgorithms[$scope.groups[0][0]].fundamentalPrice;
+               var newFP = parseFloat( $("#fpc-input").val() );
+               console.log(oldFP);
+               var msg = new Message("ITCH", "FPC", [Date.now(), newFP, 0, newFP > oldFP]);
                msg.delay = false;
                for (var group in $scope.groupManagers) {
                   $scope.groupManagers[group].dataStore.storeMsg(msg);
