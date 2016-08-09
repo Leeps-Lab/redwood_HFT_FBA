@@ -116,12 +116,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          return lines;
       };
 
-      graph.getTimeGridClass = function (timeStamp) {
-         if (timeStamp % (this.timeIncrement * 2000) == 0)
-            return "time-grid-box-light";
-         else return "time-grid-box-dark";
-      };
-
       graph.drawBatchLines = function (graphRefr, svgToUpdate) {
          //Draw rectangles for time grid lines
          svgToUpdate.selectAll("line.batch-line")
@@ -470,9 +464,12 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          // recalculate market price bounds if necessary
          this.calcPriceBounds(dataHistory);
 
-         //Check if it is necessary to recalculate timeLines
+         //Check if it is necessary to recalculate batch lines
+         // recalculate if right edge of graph is more than a batch length past last batch line
+         // or if left edge is more than a batch length past first batch line
+         // Math.max expression finds time at left edge of screen
          if (this.currentTime + this.advanceTimeShown > this.batchLines[this.batchLines.length - 1] + this.batchLength ||
-             this.currentTime - this.timeInterval * 1000 < this.batchLines[0] - this.timeIncrement) {
+             Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000) < this.batchLines[0] - this.batchLength) {
             this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000, this.currentTime + this.advanceTimeShown, this.batchLength);
          }
 

@@ -216,7 +216,6 @@ body {
     /*switch color*/
     background-color: green;
 }
-
 .material-switch > label::before {
     background: rgb(0, 0, 0);
     box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.5);
@@ -249,4 +248,7 @@ body {
 .material-switch > input[type="checkbox"]:checked + label::after {
     background: inherit;
     left: 20px;
+}
+.material-switch > input[disabled] + label {
+    cursor: not-allowed;
 }
