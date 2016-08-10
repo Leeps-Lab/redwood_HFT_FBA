@@ -175,17 +175,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength) - 1;
          if (firstVisibleBatch < 0) firstVisibleBatch = 0;
 
-         // for (var batchIndex = firstVisibleBatch; batchIndex < dataHistory.orderHistory.length; batchIndex++) {
-         //    if (dataHistory.orderHistory[batchIndex][3] != null) {
-         //       this.marketSVG.append("line")
-         //          .attr("x1", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * dataHistory.orderHistory[batchIndex][2]))
-         //          .attr("x2", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * (dataHistory.orderHistory[batchIndex][2] - 1)))
-         //          .attr("y1", this.mapMarketPriceToYAxis(dataHistory.orderHistory[batchIndex][3]))
-         //          .attr("y2", this.mapMarketPriceToYAxis(dataHistory.orderHistory[batchIndex][3]))
-         //          .attr("class", "equilibrium-price-line")
-         //    }
-         // }
-
          // draw others' filled order circles
          this.drawBatchCircles(graphRefr, dataHistory.othersOrders, "others-filled-orders", firstVisibleBatch);
          this.drawBatchCircles(graphRefr, dataHistory.investorOrders, "others-filled-orders", firstVisibleBatch);
@@ -224,16 +213,16 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
                return d.batchNumber >= firstVisibleBatch;
             })
             .attr("x1", function (d) {
-               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) - 8;
+               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) - 6;
             })
             .attr("x2", function (d) {
-               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) + 8;
+               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) + 6;
             })
             .attr("y1", function (d) {
-               return graphRefr.mapMarketPriceToYAxis(d.price);
+               return graphRefr.mapMarketPriceToYAxis(d.price) + (d.isBuy ? -6 : 6);
             })
             .attr("y2", function (d) {
-               return graphRefr.mapMarketPriceToYAxis(d.price);
+               return graphRefr.mapMarketPriceToYAxis(d.price) + (d.isBuy ? 6 : -6);
             })
             .attr("class", styleClassName);
       };

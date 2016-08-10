@@ -97,6 +97,8 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          buyInvestorPrice += this.investorOrderSpacing;
 
          for (var buyOrder of msg.msgData[0]) {
+            // boolean for differentiating between buy and sell orders later
+            buyOrder.isBuy = true;
             if (buyOrder.transacted && buyOrder.id != 0) {
                var uid = buyOrder.id;
                if (uid == this.myId) this.profit += msg.msgData[4] - msg.msgData[3];
@@ -127,6 +129,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          sellInvestorPrice -= this.investorOrderSpacing;
 
          for (var sellOrder of msg.msgData[1]) {
+            sellOrder.isBuy = false;
             if (sellOrder.transacted && sellOrder.id != 0) {
                var uid = sellOrder.id;
                if (uid == this.myId) this.profit += msg.msgData[3] - msg.msgData[4];
