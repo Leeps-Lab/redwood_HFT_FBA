@@ -306,6 +306,25 @@ Redwood.factory("MarketManager", function () {
             }
          }
 
+         // if there are no transacted orders in the book, set the equilibrium price to null
+         // probably not the best way to do this
+         var anyTransactions = false;
+         for (let order of this.FBABook.buyContracts) {
+            if (order.transacted) {
+               anyTransactions = true;
+               break;
+            }
+         }
+         if (!anyTransactions) {
+            for (let order of this.FBABook.sellContracts) {
+               if (order.transacted) {
+                  anyTransactions = true;
+                  break;
+               }
+            }
+         }
+         if (!anyTransactions) equilibriumPrice = null;
+
          // copy current market state into batch message
          var msg = new Message("ITCH", "BATCH", [$.extend(true, [], this.FBABook.buyContracts), $.extend(true, [], this.FBABook.sellContracts), this.FBABook.batchNumber, equilibriumPrice]);
          this.sendToGroupManager(msg);
