@@ -213,16 +213,16 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
                return d.batchNumber >= firstVisibleBatch;
             })
             .attr("x1", function (d) {
-               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) - 6;
+               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) - 8;
             })
             .attr("x2", function (d) {
-               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) + 6;
+               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) + 8;
             })
             .attr("y1", function (d) {
-               return graphRefr.mapMarketPriceToYAxis(d.price) + (d.isBuy ? -6 : 6);
+               return graphRefr.mapMarketPriceToYAxis(d.price); // + (d.isBuy ? -6 : 6);
             })
             .attr("y2", function (d) {
-               return graphRefr.mapMarketPriceToYAxis(d.price) + (d.isBuy ? 6 : -6);
+               return graphRefr.mapMarketPriceToYAxis(d.price); // + (d.isBuy ? 6 : -6);
             })
             .attr("class", styleClassName);
       };
