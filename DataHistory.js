@@ -16,7 +16,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.batchLength = batchLength;
       
       dataHistory.priceHistory = [];         // storage for all equilibrium prices
-      dataHistory.investorOrderSpacing = 1;  // visual spacing between investor orders in dollars
+      dataHistory.investorOrderSpacing = maxSpread / 4;  // visual spacing between investor orders in dollars
       dataHistory.myOrders = [];             // alternate order storage for graphing
       dataHistory.othersOrders = [];
       dataHistory.investorOrders = [];

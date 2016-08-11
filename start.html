@@ -23,7 +23,7 @@
                                         <tr>
                                             <th>Player</th>
                                             <th>Role</th>
-                                            <th>Spread</th>
+                                            <th>Last Spread</th>
                                             <th>Speed?</th>
                                         </tr>
                                     </thead>
@@ -102,11 +102,6 @@
                                 </div>
                                 <input id="slider-val" type="number" min="0" max="{{maxSpread}}" step=".01" value="{{sliderVal}}">
                                 <div id="slider">
-                                    <div class="slider-spread-indicators"
-                                         ng-repeat="(player, data) in dHistory.playerData"
-                                         ng-show="player != dHistory.myId && data.state == 'Maker'"
-                                         style="height: {{data.displaySpread / dHistory.maxSpread * 100}}%">
-                                    </div>
                                 </div>
                             </div>
                         </div>
