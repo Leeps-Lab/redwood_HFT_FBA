@@ -484,11 +484,11 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
 
       graph.init = function (startFP, maxSpread, startingWealth) {
          // set price bounds for both graphs
-         this.maxPriceMarket = startFP + 1.5 * maxSpread;
-         this.minPriceMarket = startFP - 1.5 * maxSpread;
+         this.maxPriceMarket = startFP + maxSpread;
+         this.minPriceMarket = startFP - maxSpread;
          this.centerPriceMarket = (this.maxPriceMarket + this.minPriceMarket) / 2;
-         this.maxPriceProfit = startingWealth + 1.5 * maxSpread;
-         this.minPriceProfit = startingWealth - 1.5 * maxSpread;
+         this.maxPriceProfit = startingWealth + maxSpread;
+         this.minPriceProfit = startingWealth - maxSpread;
          this.centerPriceProfit = (graph.maxPriceProfit + graph.minPriceProfit) / 2;
 
          this.calculateSize();
