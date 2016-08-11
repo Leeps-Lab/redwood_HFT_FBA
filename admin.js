@@ -392,7 +392,7 @@ Redwood.controller("AdminCtrl",
 
                // get file name by formatting start time as readable string
                var d = new Date($scope.startTime);
-               var filename = d.getHours() + '_' + d.getMinutes() + '_' + d.getSeconds() + '_final_profits.csv';
+               var filename = d.getHours() + '_' + d.getMinutes() + '_' + d.getSeconds() + '_fba_final_profits.csv';
 
                var csvRows = [];
                for (let index = 0; index < data.length; index++) {

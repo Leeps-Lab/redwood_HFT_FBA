@@ -30,8 +30,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       graph.centerPriceProfit = 0;
       graph.graphAdjustSpeedMarket = .1;      //speed that market price axis adjusts in pixels per frame
       graph.graphAdjustSpeedProfit = .1;      //speed that market price axis adjusts in pixels per frame
-      graph.marketPriceGridIncrement = 5;     //amount between each line on market price axis
-      graph.profitPriceGridIncrement = 5;     //amount between each line on profit price axis
+      graph.marketPriceGridIncrement = 1;     //amount between each line on market price axis
+      graph.profitPriceGridIncrement = 1;     //amount between each line on profit price axis
       graph.contractedTimeInterval = 30;      //amount of time displayed on time axis when graph is contracted
       graph.timeInterval = graph.contractedTimeInterval; //current amount in seconds displayed at once on full time axis
       graph.batchLength = batchLength;        //length in ms of a single batch
@@ -192,13 +192,13 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          this.drawBatchTicks(graphRefr, dataHistory.myOrders, "my-orders", firstVisibleBatch);
 
          // draw horizontal price lines
-         for (var batchIndex = firstVisibleBatch; batchIndex < dataHistory.orderHistory.length; batchIndex++) {
-            if (dataHistory.orderHistory[batchIndex][3] != null) {
+         for (var batchIndex = firstVisibleBatch; batchIndex < dataHistory.priceHistory.length; batchIndex++) {
+            if (dataHistory.priceHistory[batchIndex][1] != null) {
                this.marketSVG.append("line")
-                  .attr("x1", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * dataHistory.orderHistory[batchIndex][2]) - 8)
-                  .attr("x2", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * dataHistory.orderHistory[batchIndex][2]) + 8)
-                  .attr("y1", this.mapMarketPriceToYAxis(dataHistory.orderHistory[batchIndex][3]))
-                  .attr("y2", this.mapMarketPriceToYAxis(dataHistory.orderHistory[batchIndex][3]))
+                  .attr("x1", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * dataHistory.priceHistory[batchIndex][0]) - 8)
+                  .attr("x2", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * dataHistory.priceHistory[batchIndex][0]) + 8)
+                  .attr("y1", this.mapMarketPriceToYAxis(dataHistory.priceHistory[batchIndex][1]))
+                  .attr("y2", this.mapMarketPriceToYAxis(dataHistory.priceHistory[batchIndex][1]))
                   .attr("class", "equilibrium-price-line")
             }
          }

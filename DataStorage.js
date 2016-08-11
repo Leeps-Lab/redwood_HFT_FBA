@@ -232,7 +232,7 @@ Redwood.factory("DataStorage", function () {
                let prices = [];
 
                for (let order of entry[2]) {
-                  ids.push(order.id == 0 ? "INV" : playerToIndex[order.id] + 1);
+                  ids.push(order.id == 0 ? "'INV'" : playerToIndex[order.id] + 1);
                   times.push(order.timestamp - this.startTime);
                   prices.push(order.price);
                   origTimes.push(order.originTimestamp - this.startTime);
@@ -250,7 +250,7 @@ Redwood.factory("DataStorage", function () {
                let prices = [];
 
                for (let order of entry[1]) {
-                  ids.push(order.id == 0 ? "INV" : playerToIndex[order.id] + 1);
+                  ids.push(order.id == 0 ? "'INV'" : playerToIndex[order.id] + 1);
                   times.push(order.timestamp - this.startTime);
                   prices.push(order.price);
                   origTimes.push(order.originTimestamp - this.startTime);
@@ -277,7 +277,7 @@ Redwood.factory("DataStorage", function () {
                let prices = [];
 
                for (let order of entry[2]) {
-                  ids.push(order.id == 0 ? "INV" : playerToIndex[order.id] + 1);
+                  ids.push(order.id == 0 ? "'INV'" : playerToIndex[order.id] + 1);
                   times.push(order.timestamp - this.startTime);
                   prices.push(order.price);
                   origTimes.push(order.originTimestamp - this.startTime);
@@ -295,7 +295,7 @@ Redwood.factory("DataStorage", function () {
                let prices = [];
 
                for (let order of entry[1]) {
-                  ids.push(order.id == 0 ? "INV" : playerToIndex[order.id] + 1);
+                  ids.push(order.id == 0 ? "'INV'" : playerToIndex[order.id] + 1);
                   times.push(order.timestamp - this.startTime);
                   prices.push(order.price);
                   origTimes.push(order.originTimestamp - this.startTime);
@@ -399,7 +399,7 @@ Redwood.factory("DataStorage", function () {
 
          // get file name by formatting start time as readable string
          var d = new Date(this.startTime);
-         var filename = d.getHours() + '_' + d.getMinutes() + '_' + d.getSeconds() + '_group_' + this.groupNum + '.csv';
+         var filename = d.getHours() + '_' + d.getMinutes() + '_' + d.getSeconds() + '_fba_group_' + this.groupNum + '.csv';
 
          // download data 2d array as csv
          // stolen from stackoverflow

@@ -15,7 +15,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.maxSpread = maxSpread;
       dataHistory.batchLength = batchLength;
       
-      dataHistory.orderHistory = [];
+      dataHistory.priceHistory = [];         // storage for all equilibrium prices
       dataHistory.investorOrderSpacing = 1;  // visual spacing between investor orders in dollars
       dataHistory.myOrders = [];             // alternate order storage for graphing
       dataHistory.othersOrders = [];
@@ -72,6 +72,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                speed: false,
                state: "Out",
                spread: this.maxSpread / 2,
+               displaySpread: this.maxSpread / 2,                         // the player's spread at the time of the last batch
                curProfitSegment: [this.startTime, this.profit, 0, "Out"], // [start time, start profit, slope, state]
                pastProfitSegments: []                                     // [start time, end time, start price, end price, state]
             };
@@ -150,8 +151,15 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             else this.othersOrders.push(sellOrder);
          }
 
-         // also save it in its regular format
-         this.orderHistory.push(msg.msgData);
+         // save equilibrium price
+         this.priceHistory.push([msg.msgData[2], msg.msgData[3]]);
+
+         console.log(this.priceHistory);
+         
+         // update display spread for all players
+         for (var uid of this.group) {
+            this.playerData[uid].displaySpread = this.playerData[uid].spread;
+         }
       };
 
       dataHistory.recordStateChange = function (newState, uid, timestamp) {
