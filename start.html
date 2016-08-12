@@ -10,8 +10,8 @@
                 <div class="col-xs-8 screen-wrapper">
                     <div class="screen top-left-screen">
                         <svg width="100%" height="100%" id="graph1">
-                            <span class="zoom-in" id="market-zoom-in">+</span>
-                            <span class="zoom-out" id="market-zoom-out">-</span>
+                            <span class="zoom-in" id="market-zoom-in" ng-class="{'zoom-disabled': tradingGraph.expandedGraph}">+</span>
+                            <span class="zoom-out" id="market-zoom-out" ng-class="{'zoom-disabled': tradingGraph.expandedGraph}">-</span>
                         </svg>
                     </div>
                 </div>
@@ -54,8 +54,8 @@
                 <div class="col-xs-8 screen-wrapper">
                     <div class="screen bottom-left-screen">
                         <svg width="100%" height="100%" id="graph2">
-                            <span class="zoom-in" id="profit-zoom-in">+</span>
-                            <span class="zoom-out" id="profit-zoom-out">-</span>
+                            <span class="zoom-in" id="profit-zoom-in" ng-class="{'zoom-disabled': tradingGraph.expandedGraph}">+</span>
+                            <span class="zoom-out" id="profit-zoom-out" ng-class="{'zoom-disabled': tradingGraph.expandedGraph}">-</span>
                         </svg>
                     </div>
                 </div>

@@ -38,10 +38,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       graph.currentTime = 0;           //Time displayed on graph
       graph.marketPriceLines = [];           //
       graph.batchLines = [];
-      graph.pricesArray = [];
       graph.adminStartTime = adminStartTime;
       graph.timeOffset = playerTimeOffset;            //offset to adjust for clock difference between lab computers
-      graph.expandedGraph = false;
       graph.timeSinceStart = 0;        //the amount of time since the start of the experiment in seconds
       graph.timePerPixel = 0;          // number of ms represented by one pixel
       graph.advanceTimeShown = 0;      // the amount of time shown to the right of the current time on the graph
@@ -49,17 +47,33 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       graph.marketZoomLevel = 4;       // current zoom level for each graph
       graph.profitZoomLevel = 4;
       graph.maxZoomLevel = 4;          // maximum allowed zoom level
-      graph.zoomAmount = 0;            // amount zoomed per click
+      graph.zoomAmount = 0;            // amount zoomed per click in dollars
+
+      graph.expandedGraph = false;     // boolean to determine whether graph is expanded or not
+      graph.prevMaxPriceMarket = 0;    // storage for previous max and min values for when graph is in expanded mode
+      graph.prevMinPriceMarket = 0;
+      graph.prevMaxPriceProfit = 0;
+      graph.prevMinPriceProfit = 0;
 
       graph.getCurOffsetTime = function () {
          return Date.now() - this.timeOffset;
       };
 
       graph.setExpandedGraph = function () {
+         this.prevMaxPriceMarket = this.maxPriceMarket;
+         this.prevMinPriceMarket = this.minPriceMarket;
+         this.prevMaxPriceProfit = this.maxPriceProfit;
+         this.prevMinPriceProfit = this.minPriceProfit;
+
          this.expandedGraph = true;
       };
 
       graph.setContractedGraph = function () {
+         this.maxPriceMarket = this.prevMaxPriceMarket;
+         this.minPriceMarket = this.prevMinPriceMarket;
+         this.maxPriceProfit = this.prevMaxPriceProfit;
+         this.minPriceProfit = this.prevMinPriceProfit;
+
          this.expandedGraph = false;
          this.timeInterval = this.contractedTimeInterval;
          this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
@@ -395,35 +409,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             });
       };
 
-      // unused in FBA
-/*      graph.drawTransactions = function (graphRefr, historyDataSet, myId) {
-         graphRefr.marketSVG.selectAll("line.my-positive-transactions line.my-negative-transactions line.other-transactions")
-            .data(historyDataSet)
-            .enter()
-            .append("line")
-            .attr("x1", function (d) {
-               return graphRefr.mapTimeToXAxis(d[0]);
-            })
-            .attr("x2", function (d) {
-               return graphRefr.mapTimeToXAxis(d[0]);
-            })
-            .attr("y1", function (d) {
-               return graphRefr.mapMarketPriceToYAxis(d[1]);
-            })
-            .attr("y2", function (d) {
-               return graphRefr.mapMarketPriceToYAxis(d[2]);
-            })
-            .attr("class", function (d) {
-               if (d[3] == myId) {
-                  return d[2] - d[1] > 0 ? "my-positive-transactions" : "my-negative-transactions";
-               }
-               else if (d[4] == myId) {
-                  return d[1] - d[2] > 0 ? "my-positive-transactions" : "my-negative-transactions";
-               }
-               else return "other-transactions";
-            });
-      };*/
-
       graph.calcPriceBounds = function (dHistory) {
          // calc bounds for market graph
          // check to see if current FP is outside of middle 80% of screen
@@ -481,6 +466,11 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             this.timeInterval = this.timeSinceStart;
             this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
             this.advanceTimeShown = graph.timePerPixel * (graph.axisLabelWidth + graph.graphPaddingRight);
+
+            this.maxPriceMarket = Math.max(dataHistory.highestMarketPrice + 1, this.prevMaxPriceMarket);
+            this.minPriceMarket = Math.min(dataHistory.lowestMarketPrice + 1, this.prevMinPriceMarket);
+            this.maxPriceProfit = Math.max(dataHistory.highestProfitPrice - 1, this.prevMaxPriceProfit);
+            this.minPriceProfit = Math.min(dataHistory.lowestProfitPrice - 1, this.prevMinPriceProfit);
          }
 
          this.curTimeX = this.mapTimeToXAxis(this.currentTime);

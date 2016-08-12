@@ -24,6 +24,11 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.playerData = {};     //holds state, offer and profit data for each player in the group
       dataHistory.lowestSpread = "N/A";
 
+      dataHistory.highestMarketPrice = startFP;
+      dataHistory.lowestMarketPrice = startFP;
+      dataHistory.highestProfitPrice = startingWealth;
+      dataHistory.lowestProfitPrice = startingWealth;
+
       dataHistory.debugMode = debugMode;
       if (debugMode) {
          dataHistory.logger = new MessageLogger("Data History " + String(myId), "orange", "subject-log");
@@ -121,6 +126,10 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             else this.othersOrders.push(buyOrder);
          }
 
+         // highest order in this batch is buy investor price minus investor spacing
+         // check to see if new price is greater than current highest price
+         if (buyInvestorPrice - this.investorOrderSpacing > this.highestMarketPrice) this.highestMarketPrice = buyInvestorPrice - this.investorOrderSpacing;
+
          // do the same calculation for sell investors
          var sellInvestorPrice = msg.msgData[0].reduce(function (previousValue, currentElement) {
             return currentElement.price < previousValue && currentElement.id != 0 ? currentElement.price : previousValue;
@@ -148,6 +157,8 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             else this.othersOrders.push(sellOrder);
          }
 
+         if (sellInvestorPrice + this.investorOrderSpacing < this.lowestMarketPrice) this.lowestMarketPrice = sellInvestorPrice + this.investorOrderSpacing;
+
          // save equilibrium price
          this.priceHistory.push([msg.msgData[2], msg.msgData[3]]);
 
@@ -167,6 +178,9 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
 
       // Adds fundamental price change to history
       dataHistory.recordFPCchange = function (fpcMsg) {
+         if (fpcMsg.msgData[1] > this.highestMarketPrice) this.highestMarketPrice = fpcMsg.msgData[1];
+         if (fpcMsg.msgData[1] < this.lowestMarketPrice) this.lowestMarketPrice = fpcMsg.msgData[1];
+
          this.storeFundPrice(fpcMsg.msgData[0]);
          this.curFundPrice = [fpcMsg.msgData[0], fpcMsg.msgData[1], 0];
       };
@@ -184,6 +198,9 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       };
 
       dataHistory.recordProfitSegment = function (price, startTime, slope, uid, state) {
+         if (price > this.highestProfitPrice) this.highestProfitPrice = price;
+         if (price < this.lowestProfitPrice) this.lowestProfitPrice = price;
+
          if (this.playerData[uid].curProfitSegment != null) {
             this.storeProfitSegment(startTime, uid);
          }

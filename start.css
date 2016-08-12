@@ -25,6 +25,12 @@ body {
     line-height: 17px;
 }
 
+.zoom-disabled {
+    pointer-events: none;
+    cursor: default;
+    background-color: lightgray;
+}
+
 #slider {
     margin: auto;
     margin-top: 20px;
