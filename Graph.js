@@ -46,7 +46,12 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       graph.timePerPixel = 0;          // number of ms represented by one pixel
       graph.advanceTimeShown = 0;      // the amount of time shown to the right of the current time on the graph
 
-         graph.getCurOffsetTime = function () {
+      graph.marketZoomLevel = 4;       // current zoom level for each graph
+      graph.profitZoomLevel = 4;
+      graph.maxZoomLevel = 4;          // maximum allowed zoom level
+      graph.zoomAmount = 0;            // amount zoomed per click
+
+      graph.getCurOffsetTime = function () {
          return Date.now() - this.timeOffset;
       };
 
@@ -59,6 +64,36 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          this.timeInterval = this.contractedTimeInterval;
          this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
          this.advanceTimeShown = graph.timePerPixel * (graph.axisLabelWidth + graph.graphPaddingRight);
+      };
+      
+      graph.zoomMarket = function (zoomIn) {
+         if (zoomIn && this.marketZoomLevel < this.maxZoomLevel) {
+            this.maxPriceMarket -= this.zoomAmount;
+            this.minPriceMarket += this.zoomAmount;
+            this.marketZoomLevel++;
+            this.marketPriceLines = this.calcPriceGridLines(this.maxPriceMarket, this.minPriceMarket, this.marketPriceGridIncrement);
+         }
+         else if (!zoomIn && this.marketZoomLevel > 0) {
+            this.maxPriceMarket += this.zoomAmount;
+            this.minPriceMarket -= this.zoomAmount;
+            this.marketZoomLevel--;
+            this.marketPriceLines = this.calcPriceGridLines(this.maxPriceMarket, this.minPriceMarket, this.marketPriceGridIncrement);
+         }
+      };
+      
+      graph.zoomProfit = function (zoomIn) {
+         if (zoomIn && this.profitZoomLevel < this.maxZoomLevel) {
+            this.maxPriceProfit -= this.zoomAmount;
+            this.minPriceProfit += this.zoomAmount;
+            this.profitZoomLevel++;
+            this.profitPriceLines = this.calcPriceGridLines(this.maxPriceProfit, this.minPriceProfit, this.profitPriceGridIncrement);
+         }
+         else if (!zoomIn && this.profitZoomLevel > 0) {
+            this.maxPriceProfit += this.zoomAmount;
+            this.minPriceProfit -= this.zoomAmount;
+            this.profitZoomLevel--;
+            this.profitPriceLines = this.calcPriceGridLines(this.maxPriceProfit, this.minPriceProfit, this.profitPriceGridIncrement);
+         }
       };
 
       graph.calculateSize = function () {
@@ -494,6 +529,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          this.calculateSize();
          this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
          this.advanceTimeShown = graph.timePerPixel * (graph.axisLabelWidth + graph.graphPaddingRight);
+
+         this.zoomAmount = maxSpread / 2;
 
          this.marketPriceLines = this.calcPriceGridLines(this.maxPriceMarket, this.minPriceMarket, this.marketPriceGridIncrement);
          this.profitPriceLines = this.calcPriceGridLines(this.maxPriceProfit, this.minPriceProfit, this.profitPriceGridIncrement);

@@ -154,8 +154,6 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          // save equilibrium price
          this.priceHistory.push([msg.msgData[2], msg.msgData[3]]);
 
-         console.log(this.priceHistory);
-         
          // update display spread for all players
          for (var uid of this.group) {
             this.playerData[uid].displaySpread = this.playerData[uid].spread;

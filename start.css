@@ -2,6 +2,36 @@ body {
     padding-top: 73px;
 }
 
+.zoom-in {
+    cursor: pointer;
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 18px;
+    border: 1px solid rgb(200, 200, 200);
+    background-color: white;
+    font-weight: bold;
+    -webkit-user-select: none
+}
+
+.zoom-out {
+    cursor: pointer;
+    position: absolute;
+    top: 45px;
+    right: 40px;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 17px;
+    border: 1px solid rgb(200, 200, 200);
+    background-color: white;
+    font-weight: bold;
+    -webkit-user-select: none
+}
+
 #slider {
     margin: auto;
     margin-top: 20px;
@@ -72,6 +102,10 @@ body {
     height: 60%;
     background-color: white;
     border: 1px solid rgb(200, 200, 200,);
+}
+
+.status-table tr, th {
+    text-align: center;
 }
 
 /*styles for table state indication entries

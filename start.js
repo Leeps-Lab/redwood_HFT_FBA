@@ -230,6 +230,26 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                $scope.tradingGraph.setContractedGraph();
             });
 
+         $("#market-zoom-in")
+            .click(function () {
+               $scope.tradingGraph.zoomMarket(true);
+            });
+
+         $("#market-zoom-out")
+            .click(function () {
+               $scope.tradingGraph.zoomMarket(false);
+            });
+
+         $("#profit-zoom-in")
+            .click(function () {
+               $scope.tradingGraph.zoomProfit(true);
+            });
+
+         $("#profit-zoom-out")
+            .click(function () {
+               $scope.tradingGraph.zoomProfit(false);
+            });
+
          $scope.setState = function (newState) {
             $("#" + $scope.state).removeClass("state-selected").addClass("state-not-selected");
             $scope.state = newState;
