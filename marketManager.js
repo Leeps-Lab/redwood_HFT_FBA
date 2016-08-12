@@ -209,6 +209,7 @@ Redwood.factory("MarketManager", function () {
          var sellOrdersBefore = $.extend(true, [], this.FBABook.sellContracts);
 
          var equilibriumPrice = null;
+         var numTransactions = 0;
 
          // if buy and sell orders aren't empty, then there might be some transactions
          if (this.FBABook.buyContracts.length > 0 && this.FBABook.sellContracts.length > 0) {
@@ -247,11 +248,17 @@ Redwood.factory("MarketManager", function () {
             // every buy order above equilibrium is transacted and every sell order below equilibrium is transacted
             // push orders with price at equilibrium onto equal lists
             for (let order of this.FBABook.buyContracts) {
-               if (order.price > equilibriumPrice) order.transacted = true;
+               if (order.price > equilibriumPrice) {
+                  order.transacted = true;
+                  numTransactions++;
+               }
                else if (order.price == equilibriumPrice) equalBuyOrders.push(order);
             }
             for (let order of this.FBABook.sellContracts) {
-               if (order.price < equilibriumPrice) order.transacted = true;
+               if (order.price < equilibriumPrice) {
+                  order.transacted = true;
+                  numTransactions++;
+               }
                else if(order.price == equilibriumPrice) equalSellOrders.push(order);
             }
 
@@ -260,15 +267,18 @@ Redwood.factory("MarketManager", function () {
                // if equal, all orders are transacted
                for (let order of equalBuyOrders) {
                   order.transacted = true;
+                  numTransactions++;
                }
                for (let order of equalSellOrders) {
                   order.transacted = true;
+                  numTransactions++;
                }
             }
             else if(equalBuyOrders.length > equalSellOrders.length) {
                // if more buy orders, all sell orders are transacted
                for (let order of equalSellOrders) {
                   order.transacted = true;
+                  numTransactions++;
                }
 
                // sort buy orders so that orders from an older batch have priority, and orders from the same batch have random priority
@@ -282,12 +292,14 @@ Redwood.factory("MarketManager", function () {
                // first n buy orders get transacted where n = number of equal price sell orders
                for (let index = 0; index < equalSellOrders.length; index++) {
                   equalBuyOrders[index].transacted = true;
+                  numTransactions++;
                }
             }
             else {
                // if more sell orders, all buy orders are transacted
                for (let order of equalBuyOrders) {
                   order.transacted = true;
+                  numTransactions++;
                }
 
                // sort sell orders so that orders from an older batch have priority, and orders from the same batch have random priority
@@ -300,28 +312,16 @@ Redwood.factory("MarketManager", function () {
 
                for (let index = 0; index < equalBuyOrders.length; index++) {
                   equalSellOrders[index].transacted = true;
+                  numTransactions++;
                }
             }
          }
 
-         // if there are no transacted orders in the book, set the equilibrium price to null
-         // probably not the best way to do this
-         var anyTransactions = false;
-         for (let order of this.FBABook.buyContracts) {
-            if (order.transacted) {
-               anyTransactions = true;
-               break;
-            }
-         }
-         if (!anyTransactions) {
-            for (let order of this.FBABook.sellContracts) {
-               if (order.transacted) {
-                  anyTransactions = true;
-                  break;
-               }
-            }
-         }
-         if (!anyTransactions) equilibriumPrice = null;
+         // if there are no transacted orders in the book, set the equilibrium price to null so it isn't drawn
+         if (numTransactions === 0) equilibriumPrice = null;
+
+         // record number of transactions
+         this.groupManager.dataStore.storeNumTransactions(this.FBABook.batchNumber, numTransactions);
 
          // copy current market state into batch message
          var msg = new Message("ITCH", "BATCH", [$.extend(true, [], this.FBABook.buyContracts), $.extend(true, [], this.FBABook.sellContracts), this.FBABook.batchNumber, equilibriumPrice]);
