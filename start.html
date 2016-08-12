@@ -34,7 +34,7 @@
                                         <tr ng-repeat="(player, data) in dHistory.playerData">
                                             <td>{{player == dHistory.myId ? "You" : displayId[player]}}</td>
                                             <td ng-class="'state-label-' + data.state">{{data.state}}</td>
-                                            <td>{{data.state == "Maker" ? (player == dHistory.myId ? data.spread : data.displaySpread) : ""}}</td>
+                                            <td>{{data.state == "Maker" ? data.displaySpread : ""}}</td>
                                             <td>{{data.speed ? "On" : "Off"}}</td>
                                         </tr>
                                     </tbody>

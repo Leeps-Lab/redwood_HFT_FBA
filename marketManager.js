@@ -45,7 +45,7 @@ Redwood.factory("MarketManager", function () {
             case "EBUY":
                //if message is a market order
                if (message.msgData[1] == 214748.3647) {
-                  market.FBABook.insertBuy(message.msgData[0], 200000, message.timestamp, message.msgData[3], true, null);
+                  market.FBABook.insertBuy(message.msgData[0], 200000, message.timestamp, message.msgData[3], true);
                }
                //if order's price is out of bounds
                else if (message.msgData[1] > 199999.9900 || message.msgData[1] <= 0) {
@@ -53,21 +53,21 @@ Redwood.factory("MarketManager", function () {
                   break;
                }
                else {
-                  market.FBABook.insertBuy(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2], message.msgData[4]);
+                  market.FBABook.insertBuy(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2]);
                }
                break;
 
             // enter sell offer
             case "ESELL":
                if (message.msgData[1] == 214748.3647) {
-                  market.FBABook.insertSell(message.msgData[0], 0, message.timestamp, message.msgData[3], true, null);
+                  market.FBABook.insertSell(message.msgData[0], 0, message.timestamp, message.msgData[3], true);
                }
                else if (message.msgData[1] > 199999.9900 || message.msgData[1] <= 0) {
                   console.error("marketManager: invalid sell price of " + message.msgData[1]);
                   break;
                }
                else {
-                  market.FBABook.insertSell(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2], message.msgData[4]);
+                  market.FBABook.insertSell(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2]);
                }
                break;
 
@@ -83,12 +83,12 @@ Redwood.factory("MarketManager", function () {
 
             // update buy offer
             case "UBUY":
-               market.FBABook.insertBuy(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2], message.msgData[4]);
+               market.FBABook.insertBuy(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2]);
                break;
 
             // update sell offer
             case "USELL":
-               market.FBABook.insertSell(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2], message.msgData[4]);
+               market.FBABook.insertSell(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2]);
                break;
 
             // message not recognized
@@ -105,7 +105,7 @@ Redwood.factory("MarketManager", function () {
       market.FBABook.sellContracts = [];
 
       //inserts buy into buy orders data structure
-      market.FBABook.insertBuy = function (newId, newPrice, timestamp, originTimestamp, ioc, state) {
+      market.FBABook.insertBuy = function (newId, newPrice, timestamp, originTimestamp, ioc) {
          // if new order isn't from an investor, check to see if an order from this player is already in the book
          if (newId != 0) {
             var index = market.FBABook.buyContracts.findIndex(function (element) {
@@ -132,7 +132,6 @@ Redwood.factory("MarketManager", function () {
             timestamp: timestamp,
             originTimestamp: originTimestamp,
             ioc: ioc,
-            state: state,
             transacted: false,
             batchNumber: this.batchNumber,
             originBatch: this.batchNumber
@@ -141,7 +140,7 @@ Redwood.factory("MarketManager", function () {
       };
 
       //inserts sell into sell orders data structure
-      market.FBABook.insertSell = function (newId, newPrice, timestamp, originTimestamp, ioc, state) {
+      market.FBABook.insertSell = function (newId, newPrice, timestamp, originTimestamp, ioc) {
          // check to see if an order from this player is already in the book
          if (newId != 0) {
             var index = market.FBABook.sellContracts.findIndex(function (element) {
@@ -169,7 +168,6 @@ Redwood.factory("MarketManager", function () {
             timestamp: timestamp,
             originTimestamp: originTimestamp,
             ioc: ioc,
-            state: state,
             transacted: false,
             batchNumber: this.batchNumber,
             originBatch: this.batchNumber

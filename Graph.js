@@ -435,7 +435,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          var curCenterMarket = (this.maxPriceMarket + this.minPriceMarket) / 2;
 
          if (Math.abs(this.centerPriceMarket - curCenterMarket) > 1) {
-            this.marketPriceLines = this.calcPriceGridLines(this.maxPriceMarket, this.minPriceMarket, this.marketPriceGridIncrement);
             if (this.centerPriceMarket > curCenterMarket) {
                this.maxPriceMarket += this.graphAdjustSpeedMarket;
                this.minPriceMarket += this.graphAdjustSpeedMarket;
@@ -444,6 +443,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
                this.maxPriceMarket -= this.graphAdjustSpeedMarket;
                this.minPriceMarket -= this.graphAdjustSpeedMarket;
             }
+            this.marketPriceLines = this.calcPriceGridLines(this.maxPriceMarket, this.minPriceMarket, this.marketPriceGridIncrement);
          }
 
          //calc bounds for profit graph
@@ -456,7 +456,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          var curCenterProfit = (this.maxPriceProfit + this.minPriceProfit) / 2;
 
          if (Math.abs(this.centerPriceProfit - curCenterProfit) > 1) {
-            this.profitPriceLines = this.calcPriceGridLines(this.maxPriceProfit, this.minPriceProfit, this.profitPriceGridIncrement);
             if (this.centerPriceProfit > curCenterProfit) {
                this.maxPriceProfit += this.graphAdjustSpeedProfit;
                this.minPriceProfit += this.graphAdjustSpeedProfit;
@@ -465,6 +464,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
                this.maxPriceProfit -= this.graphAdjustSpeedProfit;
                this.minPriceProfit -= this.graphAdjustSpeedProfit;
             }
+            this.profitPriceLines = this.calcPriceGridLines(this.maxPriceProfit, this.minPriceProfit, this.profitPriceGridIncrement);
          }
       };
 
@@ -504,12 +504,9 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          this.drawPriceGridLines(graphRefr, this.marketPriceLines, this.marketSVG, this.mapMarketPriceToYAxis);
          this.drawPriceGridLines(graphRefr, this.profitPriceLines, this.profitSVG, this.mapProfitPriceToYAxis);
 
-
          this.drawMarket(graphRefr, dataHistory.pastFundPrices, dataHistory.curFundPrice, "price-line");
 
          this.drawAllBatches(graphRefr, dataHistory);
-         //this.drawOffers(graphRefr, dataHistory);
-         //this.drawTransactions(graphRefr, dataHistory.transactions, dataHistory.myId);
 
          this.drawPriceAxis(graphRefr, this.marketPriceLines, this.marketSVG, this.mapMarketPriceToYAxis);
          this.drawPriceAxis(graphRefr, this.profitPriceLines, this.profitSVG, this.mapProfitPriceToYAxis);
