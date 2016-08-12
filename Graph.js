@@ -468,8 +468,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             this.advanceTimeShown = graph.timePerPixel * (graph.axisLabelWidth + graph.graphPaddingRight);
 
             this.maxPriceMarket = Math.max(dataHistory.highestMarketPrice + 1, this.prevMaxPriceMarket);
-            this.minPriceMarket = Math.min(dataHistory.lowestMarketPrice + 1, this.prevMinPriceMarket);
-            this.maxPriceProfit = Math.max(dataHistory.highestProfitPrice - 1, this.prevMaxPriceProfit);
+            this.minPriceMarket = Math.min(dataHistory.lowestMarketPrice - 1, this.prevMinPriceMarket);
+            this.maxPriceProfit = Math.max(dataHistory.highestProfitPrice + 1, this.prevMaxPriceProfit);
             this.minPriceProfit = Math.min(dataHistory.lowestProfitPrice - 1, this.prevMinPriceProfit);
          }
 
