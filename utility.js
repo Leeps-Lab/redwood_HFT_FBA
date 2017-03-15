@@ -1,3 +1,24 @@
+// return the number of nanoseconds since midnight
+function getTime(){
+   var m = moment.tz("America/Los_Angeles"); 
+   var hours =   m.hours()       *(60*60)*1000000000;
+   var minutes = m.minutes()     *60*1000000000;
+   var seconds = m.seconds()     *1000000000;
+   var millis  = m.milliseconds()*1000000;
+   return hours+minutes+seconds+millis;
+}
+
+function printTime(nanoseconds){
+  var str = "";
+  var millis  = Math.floor((nanoseconds / 1000000) % 1000);
+  var seconds = Math.floor((nanoseconds / 1000000000) % 60);
+  var minutes = Math.floor(nanoseconds / (60*1000000000) % 60);
+  var hours   = Math.floor(nanoseconds / (60*60*1000000000) % 24);
+  str = "[" + hours + ":" + minutes + ":" + seconds + ":" + millis + "]";
+  return str;
+}
+
+
 // Message object. Used to communicate between group manager, subject manager, and market algorithm
 function Message(protocol, msgType, msgData) {
    this.protocol = protocol;

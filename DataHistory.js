@@ -17,7 +17,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       
       dataHistory.priceHistory = [];         // storage for all equilibrium prices
       dataHistory.investorOrderSpacing = maxSpread / 4;  // visual spacing between investor orders in dollars
-      dataHistory.myOrders = [];             // alternate order storage for graphing
+      dataHistory.myOrders = [];             // alternate order storage for  ing
       dataHistory.othersOrders = [];
       dataHistory.investorOrders = [];
 
@@ -204,6 +204,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          if (this.playerData[uid].curProfitSegment != null) {
             this.storeProfitSegment(startTime, uid);
          }
+         console.log(startTime, price, slope, state);
          this.playerData[uid].curProfitSegment = [startTime, price, slope, state];
       };
 
