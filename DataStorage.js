@@ -401,7 +401,8 @@ Redwood.factory("DataStorage", function () {
                // each row's cumulative profit is the previous row's profit plus dprofit, minus speed cost if applicable
                data[row + 1][index * 5 + 5] = data[row][index * 5 + 5] + data[row + 1][index * 5 + 4];
                if (data[row][index * 5 + 3] == "YES") {
-                  data[row + 1][index * 5 + 5] -= (data[row + 1][0] - data[row][0]) * this.speedCost / 1000;
+                  //data[row + 1][index * 5 + 5] -= (data[row + 1][0] - data[row][0]) * this.speedCost / 1000;
+                  data[row + 1][index * 5 + 5] -= (data[row + 1][0] - data[row][0]) * this.speedCost / 1000000000;
                }
             }
          }

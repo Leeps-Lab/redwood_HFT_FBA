@@ -20,8 +20,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             $scope.tradingGraph.draw($scope.dHistory);
 
             if ($scope.using_speed) {
-               $scope.dHistory.profit -= CLOCK_FREQUENCY * $scope.dHistory.speedCost / 1000
-               //$scope.dHistory.profit -= CLOCK_FREQUENCY * $scope.dHistory.speedCost / 1000000000
+               //$scope.dHistory.profit -= CLOCK_FREQUENCY * $scope.dHistory.speedCost / 1000
+               $scope.dHistory.profit -= CLOCK_FREQUENCY * $scope.dHistory.speedCost / 1000000000
             }
          };
 
@@ -65,8 +65,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
 
          //First function to run when page is loaded
          rs.on_load(function () {
-            rs.send("set_player_time_offset", Date.now());
-            //rs.send("set_player_time_offset", getTime());
+            //rs.send("set_player_time_offset", Date.now());
+            rs.send("set_player_time_offset", getTime());
             rs.send("Subject_Ready");
          });
 
@@ -117,7 +117,11 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                      return element.split(',');
                   });
 
-                  window.setTimeout($scope.processInputAction, $scope.inputData[0][0] + $scope.dHistory.startTime - $scope.tradingGraph.getCurOffsetTime(), 0);
+                  //*******************MAYBE PUT THIS BACK JASON*******************/
+                  //window.setTimeout($scope.processInputAction, $scope.inputData[0][0] + $scope.dHistory.startTime - $scope.tradingGraph.getCurOffsetTime(), 0);
+                  var delay = parseInt($scope.inputData[inputIndex + 1][0]) + ($scope.dHistory.startTime - $scope.tradingGraph.getCurOffsetTime())/1000000;
+                  console.log("delay: " + delay);
+                  window.setTimeout($scope.processInputAction, delay, inputIndex + 1);
                });
             }
          });
@@ -330,6 +334,11 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             }
 
             if (inputIndex >= $scope.inputData.length - 1) return;
-            window.setTimeout($scope.processInputAction, parseInt($scope.inputData[inputIndex + 1][0]) + $scope.dHistory.startTime - $scope.tradingGraph.getCurOffsetTime(), inputIndex + 1);
+
+            //*******************MAYBE PUT THIS BACK JASON*******************/
+            //window.setTimeout($scope.processInputAction, parseInt($scope.inputData[inputIndex + 1][0]) + $scope.dHistory.startTime - $scope.tradingGraph.getCurOffsetTime(), inputIndex + 1);
+            var delay = parseInt($scope.inputData[inputIndex + 1][0]) + ($scope.dHistory.startTime - $scope.tradingGraph.getCurOffsetTime())/1000000;
+            console.log("delay: " + delay);
+            window.setTimeout($scope.processInputAction, delay, inputIndex + 1);
          }
       }]);

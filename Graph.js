@@ -56,7 +56,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       graph.prevMinPriceProfit = 0;
 
       graph.getCurOffsetTime = function () {
-         return Date.now() - this.timeOffset;
+         //return Date.now() - this.timeOffset;
+         return getTime() - this.timeOffset;
       };
 
       graph.setExpandedGraph = function () {
@@ -76,7 +77,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
 
          this.expandedGraph = false;
          this.timeInterval = this.contractedTimeInterval;
-         this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
+         // this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
+         this.timePerPixel = graph.timeInterval * 1000000000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
          this.advanceTimeShown = graph.timePerPixel * (graph.axisLabelWidth + graph.graphPaddingRight);
       };
       
@@ -128,16 +130,19 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       graph.mapTimeToXAxis = function (timeStamp) {
          var percentOffset;
          if (this.timeSinceStart >= this.timeInterval) {
-            percentOffset = (timeStamp - (this.currentTime - (this.timeInterval * 1000))) / (this.timeInterval * 1000);
+            // percentOffset = (timeStamp - (this.currentTime - (this.timeInterval * 1000))) / (this.timeInterval * 1000);
+            percentOffset = (timeStamp - (this.currentTime - (this.timeInterval * 1000000000))) / (this.timeInterval * 1000000000);
          }
          else {
-            percentOffset = (timeStamp - this.adminStartTime) / (this.timeInterval * 1000);
+            // percentOffset = (timeStamp - this.adminStartTime) / (this.timeInterval * 1000);
+            percentOffset = (timeStamp - this.adminStartTime) / (this.timeInterval * 1000000000);
          }
          return (this.elementWidth - this.axisLabelWidth - this.graphPaddingRight) * percentOffset;
       };
 
       graph.millisToTime = function (timeStamp) {
-         var secs = (timeStamp - this.adminStartTime) / 1000;
+         // var secs = (timeStamp - this.adminStartTime) / 1000;
+         var secs = (timeStamp - this.adminStartTime) / 1000000000;
          var mins = Math.trunc(secs / 60);
          secs %= 60;
          return mins + ":" + ("00" + secs).substr(-2, 2);
@@ -221,7 +226,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
 
       graph.drawAllBatches = function (graphRefr, dataHistory) {
          // first batch that will be displayed on graph
-         var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength) - 1;
+         //var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength) - 1;
+         var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000000000 - this.adminStartTime) / this.batchLength) - 1;
          if (firstVisibleBatch < 0) firstVisibleBatch = 0;
 
          // draw others' filled order circles
@@ -303,7 +309,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             .enter()
             .append("line")
             .filter(function (d) {
-               return d[1] >= (graphRefr.currentTime - graphRefr.timeInterval * 1000);
+               // return d[1] >= (graphRefr.currentTime - graphRefr.timeInterval * 1000);
+               return d[1] >= (graphRefr.currentTime - graphRefr.timeInterval * 1000000000);
             })
             .attr("x1", function (d) {
                return graphRefr.mapTimeToXAxis(d[0]);
@@ -338,7 +345,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             .enter()
             .append("line")
             .filter(function (d) {
-               return d[1] >= (graphRefr.currentTime - graphRefr.timeInterval * 1000);
+               // return d[1] >= (graphRefr.currentTime - graphRefr.timeInterval * 1000);
+               return d[1] >= (graphRefr.currentTime - graphRefr.timeInterval * 1000000000);
             })
             .attr("x1", function (d) {
                return graphRefr.mapTimeToXAxis(d[0]);
@@ -358,7 +366,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             });
 
          if (currentData != null) {
-            var pricefinal = currentData[1] - ((graphRefr.currentTime - currentData[0]) * currentData[2] / 1000); //determines how far down the line has moved
+            // var pricefinal = currentData[1] - ((graphRefr.currentTime - currentData[0]) * currentData[2] / 1000); //determines how far down the line has moved
+            var pricefinal = currentData[1] - ((graphRefr.currentTime - currentData[0]) * currentData[2] / 1000000000); //determines how far down the line has moved
             this.profitSVG.append("line")
                .attr("x1", this.mapTimeToXAxis(currentData[0]))
                .attr("x2", this.curTimeX)
@@ -461,10 +470,12 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          var graphRefr = this;
 
          this.currentTime = this.getCurOffsetTime();
-         this.timeSinceStart = (this.currentTime - dataHistory.startTime) / 1000;
+         //this.timeSinceStart = (this.currentTime - dataHistory.startTime) / 1000;
+         this.timeSinceStart = (this.currentTime - dataHistory.startTime) / 1000000000;
          if (this.expandedGraph) {
             this.timeInterval = this.timeSinceStart;
-            this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
+            //this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
+            this.timePerPixel = graph.timeInterval * 1000000000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
             this.advanceTimeShown = graph.timePerPixel * (graph.axisLabelWidth + graph.graphPaddingRight);
 
             this.maxPriceMarket = Math.max(dataHistory.highestMarketPrice + 1, this.prevMaxPriceMarket);
@@ -483,8 +494,10 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          // or if left edge is more than a batch length past first batch line
          // Math.max expression finds time at left edge of screen
          if (this.currentTime + this.advanceTimeShown > this.batchLines[this.batchLines.length - 1] + this.batchLength ||
-             Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000) < this.batchLines[0] - this.batchLength) {
-            this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000, this.currentTime + this.advanceTimeShown, this.batchLength);
+             //Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000) < this.batchLines[0] - this.batchLength) {
+            Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000000000) < this.batchLines[0] - this.batchLength) {
+            //this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000, this.currentTime + this.advanceTimeShown, this.batchLength);
+            this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000000000, this.currentTime + this.advanceTimeShown, this.batchLength);
          }
 
          //Invoke all of the draw functions
@@ -514,14 +527,16 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          this.centerPriceProfit = (graph.maxPriceProfit + graph.minPriceProfit) / 2;
 
          this.calculateSize();
-         this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
+         //this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
+         this.timePerPixel = graph.timeInterval * 1000000000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
          this.advanceTimeShown = graph.timePerPixel * (graph.axisLabelWidth + graph.graphPaddingRight);
 
          this.zoomAmount = maxSpread / 2;
 
          this.marketPriceLines = this.calcPriceGridLines(this.maxPriceMarket, this.minPriceMarket, this.marketPriceGridIncrement);
          this.profitPriceLines = this.calcPriceGridLines(this.maxPriceProfit, this.minPriceProfit, this.profitPriceGridIncrement);
-         this.batchLines = this.calcBatchLines(this.adminStartTime, this.adminStartTime + this.timeInterval * 1000 + this.advanceTimeShown, this.batchLength);
+         //this.batchLines = this.calcBatchLines(this.adminStartTime, this.adminStartTime + this.timeInterval * 1000 + this.advanceTimeShown, this.batchLength);
+         this.batchLines = this.calcBatchLines(this.adminStartTime, this.adminStartTime + this.timeInterval * 1000000000 + this.advanceTimeShown, this.batchLength);
       };
 
       return graph;
