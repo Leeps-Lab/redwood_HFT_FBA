@@ -107,7 +107,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                var uid = buyOrder.id;
                if (uid == this.myId) this.profit += msg.msgData[4] - msg.msgData[3];
                
-               var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
+               var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); // changed from 1000
                this.recordProfitSegment(curProfit + msg.msgData[4] - msg.msgData[3], this.startTime + this.batchLength * msg.msgData[2], this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);
             }
 
@@ -141,7 +141,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                var uid = sellOrder.id;
                if (uid == this.myId) this.profit += msg.msgData[3] - msg.msgData[4];
                
-               var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
+               var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);//changed from 1000
                this.recordProfitSegment(curProfit + msg.msgData[3] - msg.msgData[4], this.startTime + this.batchLength * msg.msgData[2], this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);
             }
 
@@ -172,7 +172,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          this.playerData[uid].state = newState;
          this.calcLowestSpread();
 
-         var curProfit = this.playerData[uid].curProfitSegment[1] - ((timestamp - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
+         var curProfit = this.playerData[uid].curProfitSegment[1] - ((timestamp - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); //changed from 1000
          this.recordProfitSegment(curProfit, timestamp, this.playerData[uid].curProfitSegment[2], uid, newState);
       };
 
@@ -193,7 +193,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.storeSpeedChange = function (msg) {
          var uid = msg.msgData[0];
          this.playerData[uid].speed = msg.msgData[1];
-         var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
+         var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);   //changed from 1000
          this.recordProfitSegment(curProfit, msg.msgData[2], msg.msgData[1] ? this.speedCost : 0, uid, this.playerData[uid].state);
       };
 
@@ -213,7 +213,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             throw "Cannot store current profit segment because it is null";
          }
          //find end price by subtracting how far graph has descended from start price
-         var endPrice = this.playerData[uid].curProfitSegment[1] - ((endTime - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
+         var endPrice = this.playerData[uid].curProfitSegment[1] - ((endTime - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);  //changed from 1000
          this.playerData[uid].pastProfitSegments.push([this.playerData[uid].curProfitSegment[0], endTime, this.playerData[uid].curProfitSegment[1], endPrice, this.playerData[uid].curProfitSegment[3]]);
          this.playerData[uid].curProfitSegment = null;
       };

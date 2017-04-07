@@ -124,6 +124,7 @@ Redwood.controller("AdminCtrl",
             }
          };
 
+         var CLOCK_FREQUENCY = 50;   // Frequency of loop, measured in hz   //DOES THIS NEED TO BE HERE?!?!?!?!??!?!?
          $scope.groupManagers = {};
 
          var resetGroups = function () {
