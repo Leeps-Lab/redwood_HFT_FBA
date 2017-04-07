@@ -14,7 +14,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          $scope.using_speed = false;
          $scope.spread = 0;
          $scope.maxSpread = 1;
-         $scope.lastTime = 0;
+         $scope.lastTime = 0;       // the last time that the update loop ran. used for calculating profit decreases.
 
          //Loops at speed CLOCK_FREQUENCY in Hz, updates the graph
          $scope.update = function () {
@@ -71,12 +71,14 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          rs.on_load(function () {
             //rs.send("set_player_time_offset", Date.now());
             rs.send("set_player_time_offset", getTime());
-            console.log(getTime());
+            //console.log(getTime());
+            //console.log(getTime());                                      //WHY DOES THIS STILL PRINT 
             rs.send("Subject_Ready");
          });
 
          //Initializes experiment
          rs.recv("Experiment_Begin", function (uid, data) {
+            console.log("DEBUG received experiment_begin \n");
             $scope.groupNum = data.groupNumber;
             $scope.group = data.group;
             $scope.maxSpread = data.maxSpread;

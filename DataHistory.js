@@ -35,9 +35,11 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       }
 
       dataHistory.recvMessage = function (msg) {
-         if (this.debugMode) {
-            this.logger.logRecv(msg, "Market Algorithm");
-         }
+         // if (this.debugMode) {
+         //    this.logger.logRecv(msg, "Market Algorithm");
+         // }
+         console.log("[DEBUG] Data History recieved msg: ");
+         console.log(msg);
 
          switch (msg.msgType) {
             case "FPC"      :

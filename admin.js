@@ -10,7 +10,7 @@ Redwood.controller("AdminCtrl",
       "$interval",
       function ($rootScope, $scope, ra, marketManager, groupManager, marketAlgorithm, dataStorage, $http, $interval) {
 
-         var debugMode = false;   // change this to switch all the message loggers on and off
+         var debugMode = true;   // change this to switch all the message loggers on and off
 
          var Display = { //Display controller
 
@@ -169,7 +169,8 @@ Redwood.controller("AdminCtrl",
                   if (rows[i + 1] === "") continue;
                   var cells = rows[i + 1].split(",");
                   for (let j = 0; j < cells.length; j++) {
-                     $scope.priceChanges[i][j] = parseFloat(cells[j]);
+                     //$scope.priceChanges[i][j] = parseFloat(cells[j]);
+                     $scope.priceChanges[i][j] *= 1000000;              //ADDED 4/7/17
                   }
                }
 
@@ -187,7 +188,9 @@ Redwood.controller("AdminCtrl",
                      if (rows[i + 1] === "") continue;
                      var cells = rows[i + 1].split(",");
                      for (var j = 0; j < cells.length; j++) {
-                        $scope.investorArrivals[i][j] = parseFloat(cells[j]);
+                        //$scope.investorArrivals[i][j] = parseFloat(cells[j]);
+                        $scope.investorArrivals[i][j] *= 1000000;          //ADDED 4/7/17
+
                      }
                   }
 
@@ -308,8 +311,10 @@ Redwood.controller("AdminCtrl",
                   console.log("%cRUNNING IN TEST MODE", 'font-family: "Comic Sans MS"');
                   beginData.input_addresses = $scope.config.input_addresses.split(',');
                }
-
+               console.log(" TESTEST about to send Experiment_Begin \n");
                ra.sendCustom("Experiment_Begin", beginData, "admin", 1, groupNum);
+               console.log(" TESTEST sent custom experiment begin \n");
+               
                $scope.groupManagers[groupNum].startTime = $scope.startTime;
                $scope.groupManagers[groupNum].dataStore.init(startFP, $scope.startTime, $scope.config.maxSpread);
                //$scope.groupManagers[groupNum].market.timeoutID = window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, $scope.startTime + $scope.config.batchLength - Date.now(), $scope.startTime + $scope.config.batchLength);
@@ -326,6 +331,8 @@ Redwood.controller("AdminCtrl",
                //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - Date.now());
                //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - getTime());
                //$scope.groupManagers[groupNum].intervalPromise = $interval($scope.groupManagers[groupNum].update.bind($scope.groupManagers[groupNum]), CLOCK_FREQUENCY);
+               console.log("number 1: " + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0]);
+               console.log("number 2: " + getTime());
                var investorDelayTime = ($scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0]) - getTime();
                console.log("Initial Delay: " + investorDelayTime);
                window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, investorDelayTime / 1000000);
