@@ -324,8 +324,12 @@ Redwood.controller("AdminCtrl",
                   window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, $scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - getTime());
                }
                //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - Date.now());
-               window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - getTime());
+               //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - getTime());
                //$scope.groupManagers[groupNum].intervalPromise = $interval($scope.groupManagers[groupNum].update.bind($scope.groupManagers[groupNum]), CLOCK_FREQUENCY);
+               var investorDelayTime = ($scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0]) - getTime();
+               console.log("Initial Delay: " + investorDelayTime);
+               window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, investorDelayTime / 1000000);
+            }
             }
          });
 

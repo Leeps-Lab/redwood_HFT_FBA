@@ -198,7 +198,7 @@ Redwood.factory("GroupManager", function () {
          }
 
          //window.setTimeout(this.sendNextInvestorArrival, this.startTime + this.investorArrivals[this.investorIndex][0] - Date.now());
-         window.setTimeout(this.sendNextInvestorArrival, this.startTime + this.investorArrivals[this.investorIndex][0] - getTime());
+         window.setTimeout(this.sendNextInvestorArrival, (this.startTime + this.investorArrivals[this.investorIndex][0] - getTime()) / 1000000);
       }.bind(groupManager);
 
       return groupManager;
