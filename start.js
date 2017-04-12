@@ -20,8 +20,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             $scope.tradingGraph.draw($scope.dHistory);
 
             if ($scope.using_speed) {
-               $scope.dHistory.profit -= CLOCK_FREQUENCY * $scope.dHistory.speedCost / 1000
-               //$scope.dHistory.profit -= CLOCK_FREQUENCY * $scope.dHistory.speedCost / 1000000000
+               //$scope.dHistory.profit -= CLOCK_FREQUENCY * $scope.dHistory.speedCost / 1000
+               $scope.dHistory.profit -= CLOCK_FREQUENCY * $scope.dHistory.speedCost / 1000000000
             }
          };
 
@@ -65,8 +65,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
 
          //First function to run when page is loaded
          rs.on_load(function () {
-            rs.send("set_player_time_offset", Date.now());
-            //rs.send("set_player_time_offset", getTime());
+            //rs.send("set_player_time_offset", Date.now());
+            rs.send("set_player_time_offset", getTime());
             rs.send("Subject_Ready");
          });
 
