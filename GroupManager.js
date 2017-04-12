@@ -179,13 +179,19 @@ Redwood.factory("GroupManager", function () {
          }
 
          //window.setTimeout(this.sendNextPriceChange, this.startTime + this.priceChanges[this.priceIndex][0] - Date.now());
-         window.setTimeout(this.sendNextPriceChange, this.startTime + this.priceChanges[this.priceIndex][0] - getTime());
+         //window.setTimeout(this.sendNextPriceChange, this.startTime + this.priceChanges[this.priceIndex][0] - getTime());
+         window.setTimeout(this.sendNextPriceChange, (this.startTime + this.priceChanges[this.priceIndex][0] - getTime()) / 1000000);  //fom cda
       }.bind(groupManager);
 
       groupManager.sendNextInvestorArrival = function () {
          //this.dataStore.investorArrivals.push([Date.now() - this.startTime, this.investorArrivals[this.investorIndex][1] == 1 ? "BUY" : "SELL"]);
          this.dataStore.investorArrivals.push([getTime() - this.startTime, this.investorArrivals[this.investorIndex][1] == 1 ? "BUY" : "SELL"]);
          var msg2 = new Message("OUCH", this.investorArrivals[this.investorIndex][1] == 1 ? "EBUY" : "ESELL", [0, 214748.3647, true, this.startTime + this.investorArrivals[this.investorIndex][0]]);
+         console.log(msg2.asString());
+
+         //TO DO:!!!!!!! MODIFY THE PRICE OF AN ESELL MESSAGE TO BE 0
+
+
          msg2.delay = false;
          this.sendToMarket(msg2);
 
@@ -197,7 +203,8 @@ Redwood.factory("GroupManager", function () {
          }
 
          //window.setTimeout(this.sendNextInvestorArrival, this.startTime + this.investorArrivals[this.investorIndex][0] - Date.now());
-         window.setTimeout(this.sendNextInvestorArrival, this.startTime + this.investorArrivals[this.investorIndex][0] - getTime());
+         //window.setTimeout(this.sendNextInvestorArrival, this.startTime + this.investorArrivals[this.investorIndex][0] - getTime());
+         window.setTimeout(this.sendNextInvestorArrival, (this.startTime + this.investorArrivals[this.investorIndex][0] - getTime()) / 1000000);   //from cda
       }.bind(groupManager);
 
       return groupManager;

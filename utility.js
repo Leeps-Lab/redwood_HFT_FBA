@@ -27,7 +27,31 @@ function Message(protocol, msgType, msgData) {
    this.timeStamp = getTime();
    this.msgType = msgType;
    this.msgData = msgData;
-   this.asString = "Message using protocol: " + this.protocol + " generated at " + String(this.timeStamp);
+   //this.asString = "Message using protocol: " + this.protocol + " generated at " + String(this.timeStamp);
+   this.asString = function(){
+      var s = '';
+      //var s = msgType + " timestamp:" + printTime(this.timeStamp) + " subjID:" + msgData[0];
+      if(msgType == "C_EBUY" || msgType == "C_ESELL" || msgType == "C_UBUY" || msgType == "C_USELL"){
+        s += msgType + " timestamp:" + printTime(this.timeStamp) + " buyer/sellerID: " + msgData[0] + " price: " + msgData[1] + " time-order-entered: " + printTime(msgData[2]);
+      }
+      else if(msgType == "UBUY" || msgType == "USELL"){
+        s +=  msgType + " timestamp:" + printTime(this.timeStamp) + " buyer/sellerID:" + this.prevMsgId + "->" + this.msgId + " price: " + msgData[1];
+      }
+      else if (msgType == "C_TRA"){
+        s += msgType + " timestamp:" + printTime(this.timeStamp) + " buyerID:" + msgData[1] + " sellerID: " + msgData[2] + " price: " + msgData[3];
+      }
+      else if(msgType == "EBUY" || msgType == "ESELL"){
+        s += msgType + " timestamp:" + printTime(this.timeStamp) + " buyer/sellerID:" + msgData[0] + " price:" + msgData[1] + " IOC: " + msgData[2] + " msgID: " + this.msgId;
+      }
+      else{
+        s += msgType + " timestamp:" + printTime(this.timeStamp) + " subjID:" + msgData[0] + " msgID:" + this.msgId;
+      }
+      return s;
+   }
+   this.senderId;
+   this.msgId;
+   this.prevMsgId;
+   this.numShares = 0;
 }
 
 // Updates timestamp of message to current timestamp

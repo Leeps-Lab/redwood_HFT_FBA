@@ -78,6 +78,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          this.expandedGraph = false;
          this.timeInterval = this.contractedTimeInterval;
          this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
+         //this.timePerPixel = graph.timeInterval * 1000000000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
          this.advanceTimeShown = graph.timePerPixel * (graph.axisLabelWidth + graph.graphPaddingRight);
       };
       
