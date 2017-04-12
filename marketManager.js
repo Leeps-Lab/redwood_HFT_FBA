@@ -29,8 +29,7 @@ Redwood.factory("MarketManager", function () {
 
       // handle message from subjects
       market.recvMessage = function (message) {
-         //message.timestamp = Date.now();
-         message.timestamp = getTime();
+         message.timestamp = Date.now();
 
          if (this.debugMode) {
             this.logger.logRecv(message, "Group Manager");
@@ -353,8 +352,7 @@ Redwood.factory("MarketManager", function () {
          this.groupManager.dataStore.storeBuyOrderState(batchTime, this.FBABook.buyContracts, buyOrdersBefore);
          this.groupManager.dataStore.storeSellOrderState(batchTime, this.FBABook.sellContracts, sellOrdersBefore);
 
-         //this.timeoutID = window.setTimeout(market.FBABook.processBatch, batchTime + this.batchLength - Date.now(), batchTime + this.batchLength);
-         this.timeoutID = window.setTimeout(market.FBABook.processBatch, batchTime + this.batchLength - getTime(), batchTime + this.batchLength);
+         this.timeoutID = window.setTimeout(market.FBABook.processBatch, batchTime + this.batchLength - Date.now(), batchTime + this.batchLength);
       }.bind(market);
 
       // update functions are unused now, insert does both jobs

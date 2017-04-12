@@ -10,7 +10,7 @@ Redwood.controller("AdminCtrl",
       "$interval",
       function ($rootScope, $scope, ra, marketManager, groupManager, marketAlgorithm, dataStorage, $http, $interval) {
 
-         var debugMode = true;   // change this to switch all the message loggers on and off
+         var debugMode = false;   // change this to switch all the message loggers on and off
 
          var Display = { //Display controller
 
@@ -124,7 +124,6 @@ Redwood.controller("AdminCtrl",
             }
          };
 
-         var CLOCK_FREQUENCY = 50;   // Frequency of loop, measured in hz   //DOES THIS NEED TO BE HERE?!?!?!?!??!?!?
          $scope.groupManagers = {};
 
          var resetGroups = function () {
@@ -169,8 +168,7 @@ Redwood.controller("AdminCtrl",
                   if (rows[i + 1] === "") continue;
                   var cells = rows[i + 1].split(",");
                   for (let j = 0; j < cells.length; j++) {
-                     //$scope.priceChanges[i][j] = parseFloat(cells[j]);
-                     $scope.priceChanges[i][j] *= 1000000;              //ADDED 4/7/17
+                     $scope.priceChanges[i][j] = parseFloat(cells[j]);
                   }
                }
 
@@ -188,9 +186,7 @@ Redwood.controller("AdminCtrl",
                      if (rows[i + 1] === "") continue;
                      var cells = rows[i + 1].split(",");
                      for (var j = 0; j < cells.length; j++) {
-                        //$scope.investorArrivals[i][j] = parseFloat(cells[j]);
-                        $scope.investorArrivals[i][j] *= 1000000;          //ADDED 4/7/17
-
+                        $scope.investorArrivals[i][j] = parseFloat(cells[j]);
                      }
                   }
 
@@ -273,8 +269,7 @@ Redwood.controller("AdminCtrl",
 
          ra.recv("set_player_time_offset", function (uid, data) {
             if ($scope.playerTimeOffsets[uid] === undefined) {
-               //$scope.playerTimeOffsets[uid] = data - Date.now();
-               $scope.playerTimeOffsets[uid] = data - getTime();
+               $scope.playerTimeOffsets[uid] = data - Date.now();
             }
          });
 
@@ -288,8 +283,7 @@ Redwood.controller("AdminCtrl",
 
             // start experiment if all subjects are marked ready
             if ($scope.startSyncArrays[groupNum].allReady()) {
-               //$scope.startTime = Date.now();
-               $scope.startTime = getTime();
+               $scope.startTime = Date.now();
                var group = $scope.getGroup(groupNum);
                var startFP = $scope.priceChanges[0][1];
 
@@ -311,32 +305,21 @@ Redwood.controller("AdminCtrl",
                   console.log("%cRUNNING IN TEST MODE", 'font-family: "Comic Sans MS"');
                   beginData.input_addresses = $scope.config.input_addresses.split(',');
                }
-               console.log(" TESTEST about to send Experiment_Begin \n");
+
                ra.sendCustom("Experiment_Begin", beginData, "admin", 1, groupNum);
-               console.log(" TESTEST sent custom experiment begin \n");
-               
                $scope.groupManagers[groupNum].startTime = $scope.startTime;
                $scope.groupManagers[groupNum].dataStore.init(startFP, $scope.startTime, $scope.config.maxSpread);
-               //$scope.groupManagers[groupNum].market.timeoutID = window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, $scope.startTime + $scope.config.batchLength - Date.now(), $scope.startTime + $scope.config.batchLength);
-               $scope.groupManagers[groupNum].market.timeoutID = window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, $scope.startTime + $scope.config.batchLength - getTime(), $scope.startTime + $scope.config.batchLength);
+               $scope.groupManagers[groupNum].market.timeoutID = window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, $scope.startTime + $scope.config.batchLength - Date.now(), $scope.startTime + $scope.config.batchLength);
                for (var user of group) {
                   $scope.groupManagers[groupNum].marketAlgorithms[user].fundamentalPrice = startFP;
                }
 
                // if there are any price changes to send, start sending them
                if ($scope.priceChanges.length > 2) {
-                  //window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, $scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - Date.now());
-                  window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, $scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - getTime());
+                  window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, $scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - Date.now());
                }
-               //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - Date.now());
-               //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - getTime());
+               window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - Date.now());
                //$scope.groupManagers[groupNum].intervalPromise = $interval($scope.groupManagers[groupNum].update.bind($scope.groupManagers[groupNum]), CLOCK_FREQUENCY);
-               console.log("number 1: " + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0]);
-               console.log("number 2: " + getTime());
-               var investorDelayTime = ($scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0]) - getTime();
-               console.log("Initial Delay: " + investorDelayTime);
-               window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, investorDelayTime / 1000000);
-            }
             }
          });
 
@@ -359,8 +342,7 @@ Redwood.controller("AdminCtrl",
                var msg = new Message("OUCH", "EBUY", [0, 214748.3647, true]);
                msg.delay = false;
                for (var group in $scope.groupManagers) {
-                  //$scope.groupManagers[group].dataStore.investorArrivals.push([Date.now() - $scope.startTime, "BUY"]);
-                  $scope.groupManagers[group].dataStore.investorArrivals.push([getTime() - $scope.startTime, "BUY"]);
+                  $scope.groupManagers[group].dataStore.investorArrivals.push([Date.now() - $scope.startTime, "BUY"]);
                   $scope.groupManagers[group].sendToMarket(msg);
                }
             });
@@ -371,8 +353,7 @@ Redwood.controller("AdminCtrl",
                var msg = new Message("OUCH", "ESELL", [0, 214748.3647, true]);
                msg.delay = false;
                for (var group in $scope.groupManagers) {
-                  //$scope.groupManagers[group].dataStore.investorArrivals.push([Date.now() - $scope.startTime, "SELL"]);
-                  $scope.groupManagers[group].dataStore.investorArrivals.push([getTime() - $scope.startTime, "SELL"]);
+                  $scope.groupManagers[group].dataStore.investorArrivals.push([Date.now() - $scope.startTime, "SELL"]);
                   $scope.groupManagers[group].sendToMarket(msg);
                }
             });
@@ -384,8 +365,7 @@ Redwood.controller("AdminCtrl",
                var oldFP = $scope.groupManagers[1].marketAlgorithms[$scope.groups[0][0]].fundamentalPrice;
                var newFP = parseFloat( $("#fpc-input").val() );
                console.log(oldFP);
-               //var msg = new Message("ITCH", "FPC", [Date.now(), newFP, 0, newFP > oldFP]);
-               var msg = new Message("ITCH", "FPC", [getTime(), newFP, 0, newFP > oldFP]);
+               var msg = new Message("ITCH", "FPC", [Date.now(), newFP, 0, newFP > oldFP]);
                msg.delay = false;
                for (var group in $scope.groupManagers) {
                   $scope.groupManagers[group].dataStore.storeMsg(msg);
