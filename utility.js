@@ -23,7 +23,8 @@ function printTime(nanoseconds){
 function Message(protocol, msgType, msgData) {
    this.protocol = protocol;
    this.delay = false;
-   this.timeStamp = Date.now();
+   //this.timeStamp = Date.now();
+   this.timeStamp = getTime();
    this.msgType = msgType;
    this.msgData = msgData;
    this.asString = "Message using protocol: " + this.protocol + " generated at " + String(this.timeStamp);
@@ -31,7 +32,8 @@ function Message(protocol, msgType, msgData) {
 
 // Updates timestamp of message to current timestamp
 function updateMsgTime(msg) {
-   msg.timeStamp = Date.now();
+   //msg.timeStamp = Date.now();
+   msg.timeStamp = getTime();
 }
 
 // Returns packed message with "actionTime" tag used to simulate latency
@@ -43,7 +45,7 @@ function packMsg(msg, delay) {
    };
 }
 
-// Converts timestamp to readable time
+// Converts timestamp to readable time (OBSOLETE)
 function millisToTime(millis) {
    var date = new Date(millis);
    var str = '';
