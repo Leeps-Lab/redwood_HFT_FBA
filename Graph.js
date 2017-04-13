@@ -77,8 +77,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
 
          this.expandedGraph = false;
          this.timeInterval = this.contractedTimeInterval;
-         this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
-         //this.timePerPixel = graph.timeInterval * 1000000000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
+         //this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
+         this.timePerPixel = graph.timeInterval * 1000000000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
          this.advanceTimeShown = graph.timePerPixel * (graph.axisLabelWidth + graph.graphPaddingRight);
       };
       
@@ -226,7 +226,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
 
       graph.drawAllBatches = function (graphRefr, dataHistory) {
          // first batch that will be displayed on graph
-         var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength) - 1;
+         var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000000000 - this.adminStartTime) / this.batchLength) - 1;
+         //var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength) - 1;
          if (firstVisibleBatch < 0) firstVisibleBatch = 0;
 
          // draw others' filled order circles
@@ -496,7 +497,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
              Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000) < this.batchLines[0] - this.batchLength) {
             this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000, this.currentTime + this.advanceTimeShown, this.batchLength);
          }
-         // Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000000000) < this.batchLines[0] - this.batchLength) {
+         // if (this.currentTime + this.advanceTimeShown > this.batchLines[this.batchLines.length - 1] + this.batchLength ||
+         //    Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000000000) < this.batchLines[0] - this.batchLength) {
          //    this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000000000, this.currentTime + this.advanceTimeShown, this.batchLength);
          // }
 
@@ -528,6 +530,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
 
          this.calculateSize();
          this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
+         //this.timePerPixel = graph.timeInterval * 1000000000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
          this.advanceTimeShown = graph.timePerPixel * (graph.axisLabelWidth + graph.graphPaddingRight);
 
          this.zoomAmount = maxSpread / 2;
@@ -535,6 +538,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          this.marketPriceLines = this.calcPriceGridLines(this.maxPriceMarket, this.minPriceMarket, this.marketPriceGridIncrement);
          this.profitPriceLines = this.calcPriceGridLines(this.maxPriceProfit, this.minPriceProfit, this.profitPriceGridIncrement);
          this.batchLines = this.calcBatchLines(this.adminStartTime, this.adminStartTime + this.timeInterval * 1000 + this.advanceTimeShown, this.batchLength);
+         //this.batchLines = this.calcBatchLines(this.adminStartTime, this.adminStartTime + this.timeInterval * 1000000000 + this.advanceTimeShown, this.batchLength);
       };
 
       return graph;
