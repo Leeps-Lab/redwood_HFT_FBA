@@ -494,9 +494,23 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          // or if left edge is more than a batch length past first batch line
          // Math.max expression finds time at left edge of screen
          if (this.currentTime + this.advanceTimeShown > this.batchLines[this.batchLines.length - 1] + this.batchLength ||
-             Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000) < this.batchLines[0] - this.batchLength) {
-            this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000, this.currentTime + this.advanceTimeShown, this.batchLength);
+             Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000000000) < this.batchLines[0] - this.batchLength) {
+            this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000000000, this.currentTime + this.advanceTimeShown, this.batchLength * 1000000000);
+            console.log("MADE IT IN THIS DUMB IF STATEMENT!!\n");
          }
+         else{
+            console.log("failed if statement\n");
+         }
+
+         // var poop1 = this.currentTime - this.timeInterval * 1000;
+         // var poop2 = this.currentTime + this.advanceTimeShown;
+         // var poop3 = this.batchLines[0] - this.batchLength;
+         // var poop4 = this.batchLines[this.batchLines.length - 1] + this.batchLength;
+         // console.log(" adminStartTime: " + this.adminStartTime + "\n this.currentTime - this.timeInterval * 1000: " 
+         //    + poop1 + " \n this.currentTime + this.advanceTimeShown: " + poop2
+         //     + " \n this.batchLines[0] - this.batchLength: " + poop3 + 
+         //     "\n this.batchLines[this.batchLines.length - 1] + this.batchLength: " + poop4 + "\n");
+         
          // if (this.currentTime + this.advanceTimeShown > this.batchLines[this.batchLines.length - 1] + this.batchLength ||
          //    Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000000000) < this.batchLines[0] - this.batchLength) {
          //    this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000000000, this.currentTime + this.advanceTimeShown, this.batchLength);
