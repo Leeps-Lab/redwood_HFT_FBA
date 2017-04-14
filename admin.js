@@ -169,6 +169,9 @@ Redwood.controller("AdminCtrl",
                   var cells = rows[i + 1].split(",");
                   for (let j = 0; j < cells.length; j++) {
                      $scope.priceChanges[i][j] = parseFloat(cells[j]);
+                     if (j == 0) {
+                           $scope.priceChanges[i][j] *= 1000000;
+                     }
                   }
                }
 
@@ -187,6 +190,9 @@ Redwood.controller("AdminCtrl",
                      var cells = rows[i + 1].split(",");
                      for (var j = 0; j < cells.length; j++) {
                         $scope.investorArrivals[i][j] = parseFloat(cells[j]);
+                        if (j == 0) {
+                           $scope.investorArrivals[i][j] *= 1000000;
+                        }
                      }
                   }
 
@@ -313,7 +319,7 @@ Redwood.controller("AdminCtrl",
                $scope.groupManagers[groupNum].startTime = $scope.startTime;
                $scope.groupManagers[groupNum].dataStore.init(startFP, $scope.startTime, $scope.config.maxSpread);
                //$scope.groupManagers[groupNum].market.timeoutID = window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, $scope.startTime + $scope.config.batchLength - Date.now(), $scope.startTime + $scope.config.batchLength);
-               $scope.groupManagers[groupNum].market.timeoutID = window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, $scope.startTime + $scope.config.batchLength - getTime(), $scope.startTime + $scope.config.batchLength);
+               $scope.groupManagers[groupNum].market.timeoutID = window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, ($scope.startTime - getTime()) / 1000000 + $scope.config.batchLength, $scope.startTime + this.batchLength * 1000000);
                for (var user of group) {
                   $scope.groupManagers[groupNum].marketAlgorithms[user].fundamentalPrice = startFP;
                }
@@ -321,7 +327,7 @@ Redwood.controller("AdminCtrl",
                // if there are any price changes to send, start sending them
                if ($scope.priceChanges.length > 2) {
                   //window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, $scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - Date.now());
-                  window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, $scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - getTime());
+                  window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, ($scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - getTime()) / 1000000);
                }
                //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - Date.now());
                //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - getTime());

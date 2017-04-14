@@ -178,11 +178,12 @@ Redwood.factory("GroupManager", function () {
             return;
          }
 
+         console.log(this.priceChanges[this.priceIndex][0], this.startTime + this.priceChanges[this.priceIndex][0] - getTime());
          //window.setTimeout(this.sendNextPriceChange, this.startTime + this.priceChanges[this.priceIndex][0] - Date.now());
          //window.setTimeout(this.sendNextPriceChange, this.startTime + this.priceChanges[this.priceIndex][0] - getTime());
          window.setTimeout(this.sendNextPriceChange, (this.startTime + this.priceChanges[this.priceIndex][0] - getTime()) / 1000000);  //fom cda
          var poop = (this.startTime + this.investorArrivals[this.investorIndex][0] - getTime()) / 1000000;
-         console.log("/1000000: " + poop + "\n without division: " + poop + "\n");
+         console.log("price change time /1000000: " + poop + "\n without division: " + (poop * 1000000) + "\n");
       }.bind(groupManager);
 
       groupManager.sendNextInvestorArrival = function () {
@@ -208,7 +209,7 @@ Redwood.factory("GroupManager", function () {
          //window.setTimeout(this.sendNextInvestorArrival, this.startTime + this.investorArrivals[this.investorIndex][0] - getTime());
          window.setTimeout(this.sendNextInvestorArrival, (this.startTime + this.investorArrivals[this.investorIndex][0] - getTime()) / 1000000);   //from cda
          var poop = (this.startTime + this.investorArrivals[this.investorIndex][0] - getTime()) / 1000000;
-         console.log("investor time /1000000: " + poop + "\n without division: " + poop + "\n");
+         console.log("investor time /1000000: " + poop + "\n without division: " + (poop * 1000000) + "\n");
       }.bind(groupManager);
 
       return groupManager;

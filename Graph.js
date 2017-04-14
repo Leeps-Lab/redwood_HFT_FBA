@@ -496,10 +496,10 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          if (this.currentTime + this.advanceTimeShown > this.batchLines[this.batchLines.length - 1] + this.batchLength ||
              Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000000000) < this.batchLines[0] - this.batchLength) {
             this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000000000, this.currentTime + this.advanceTimeShown, this.batchLength * 1000000000);
-            console.log("MADE IT IN THIS DUMB IF STATEMENT!!\n");
+            //console.log("MADE IT IN THIS DUMB IF STATEMENT!!\n");
          }
          else{
-            console.log("failed if statement\n");
+            //console.log("failed if statement\n");
          }
 
          // var poop1 = this.currentTime - this.timeInterval * 1000;
