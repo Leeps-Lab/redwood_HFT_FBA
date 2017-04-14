@@ -163,7 +163,7 @@ Redwood.factory("GroupManager", function () {
             window.clearTimeout(this.market.timeoutID);
             return;
          }
-         
+         console.log("price change: " + printTime(getTime()) + "\n");
          // FPC message contains timestamp, new price, price index and a boolean reflecting the jump's direction
          //var msg = new Message("ITCH", "FPC", [Date.now(), this.priceChanges[this.priceIndex][1], this.priceIndex, this.priceChanges[this.priceIndex][1] > this.priceChanges[this.priceIndex - 1][1]]);
          var msg = new Message("ITCH", "FPC", [getTime(), this.priceChanges[this.priceIndex][1], this.priceIndex, this.priceChanges[this.priceIndex][1] > this.priceChanges[this.priceIndex - 1][1]]);
@@ -181,6 +181,8 @@ Redwood.factory("GroupManager", function () {
          //window.setTimeout(this.sendNextPriceChange, this.startTime + this.priceChanges[this.priceIndex][0] - Date.now());
          //window.setTimeout(this.sendNextPriceChange, this.startTime + this.priceChanges[this.priceIndex][0] - getTime());
          window.setTimeout(this.sendNextPriceChange, (this.startTime + this.priceChanges[this.priceIndex][0] - getTime()) / 1000000);  //fom cda
+         var poop = (this.startTime + this.investorArrivals[this.investorIndex][0] - getTime()) / 1000000;
+         console.log("/1000000: " + poop + "\n without division: " + poop + "\n");
       }.bind(groupManager);
 
       groupManager.sendNextInvestorArrival = function () {
@@ -205,6 +207,8 @@ Redwood.factory("GroupManager", function () {
          //window.setTimeout(this.sendNextInvestorArrival, this.startTime + this.investorArrivals[this.investorIndex][0] - Date.now());
          //window.setTimeout(this.sendNextInvestorArrival, this.startTime + this.investorArrivals[this.investorIndex][0] - getTime());
          window.setTimeout(this.sendNextInvestorArrival, (this.startTime + this.investorArrivals[this.investorIndex][0] - getTime()) / 1000000);   //from cda
+         var poop = (this.startTime + this.investorArrivals[this.investorIndex][0] - getTime()) / 1000000;
+         console.log("investor time /1000000: " + poop + "\n without division: " + poop + "\n");
       }.bind(groupManager);
 
       return groupManager;
