@@ -44,6 +44,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                this.recordFPCchange(msg);
                break;
             case "BATCH"    :
+               //console.log(msg);
                this.recordBatch(msg);
                break;
             case "C_TRA"    :
@@ -108,8 +109,8 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                if (uid == this.myId) this.profit += msg.msgData[4] - msg.msgData[3];
                
                //var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
-               var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);
-               this.recordProfitSegment(curProfit + msg.msgData[4] - msg.msgData[3], this.startTime + this.batchLength * msg.msgData[2], this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);
+               var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] * 1000000 - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);   //changed 4/17/17 to batchlength*1000000
+               this.recordProfitSegment(curProfit + msg.msgData[4] - msg.msgData[3], this.startTime + this.batchLength * msg.msgData[2] * 1000000, this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);         //changed 4/17/17 to batchlength*1000000
             }
 
             // split orders up into my orders, others' orders and investor orders
@@ -143,8 +144,8 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                if (uid == this.myId) this.profit += msg.msgData[3] - msg.msgData[4];
                
                //var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
-               var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);
-               this.recordProfitSegment(curProfit + msg.msgData[3] - msg.msgData[4], this.startTime + this.batchLength * msg.msgData[2], this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);
+               var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] * 1000000 - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);  //changed 4/17/17 to batchlength*1000000
+               this.recordProfitSegment(curProfit + msg.msgData[3] - msg.msgData[4], this.startTime + this.batchLength * msg.msgData[2] * 1000000, this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);                  //changed 4/17/17 to batchlength*1000000
             }
 
             if (sellOrder.id == dataHistory.myId) {

@@ -170,10 +170,10 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          return lines;
       };
 
-      graph.drawBatchLines = function (graphRefr, svgToUpdate) {
+      graph.drawBatchLines = function (graphRefr, svgToUpdate) {  
          //Draw rectangles for time grid lines
          svgToUpdate.selectAll("line.batch-line")
-            .data(this.batchLines)
+            .data(this.batchLines)         
             .enter()
             .append("line")
             .attr("x1", function (d) {
@@ -226,7 +226,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
 
       graph.drawAllBatches = function (graphRefr, dataHistory) {
          // first batch that will be displayed on graph
-         var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000000000 - this.adminStartTime) / this.batchLength) - 1;
+         var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000000000 - this.adminStartTime) / (this.batchLength*1000000)) - 1;  //changed to *1000000 4/17/17
+         console.log(firstVisibleBatch);
          //var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength) - 1;
          if (firstVisibleBatch < 0) firstVisibleBatch = 0;
 
@@ -250,8 +251,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          for (var batchIndex = firstVisibleBatch; batchIndex < dataHistory.priceHistory.length; batchIndex++) {
             if (dataHistory.priceHistory[batchIndex][1] != null) {
                this.marketSVG.append("line")
-                  .attr("x1", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * dataHistory.priceHistory[batchIndex][0]) - 8)
-                  .attr("x2", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * dataHistory.priceHistory[batchIndex][0]) + 8)
+                  .attr("x1", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * dataHistory.priceHistory[batchIndex][0] * 1000000) - 8) //changed to *1000000 4/17/17
+                  .attr("x2", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * dataHistory.priceHistory[batchIndex][0] * 1000000) + 8) //changed to *1000000 4/17/17
                   .attr("y1", this.mapMarketPriceToYAxis(dataHistory.priceHistory[batchIndex][1]))
                   .attr("y2", this.mapMarketPriceToYAxis(dataHistory.priceHistory[batchIndex][1]))
                   .attr("class", "equilibrium-price-line")
@@ -268,10 +269,10 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
                return d.batchNumber >= firstVisibleBatch;
             })
             .attr("x1", function (d) {
-               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) - 8;
+               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength * 1000000) - 8;  //changed to *1000000 4/17/17
             })
             .attr("x2", function (d) {
-               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength) + 8;
+               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength * 1000000) + 8;  //changed to *1000000 4/17/17
             })
             .attr("y1", function (d) {
                return graphRefr.mapMarketPriceToYAxis(d.price); // + (d.isBuy ? -6 : 6);
@@ -291,7 +292,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
                return d.transacted && d.batchNumber >= firstVisibleBatch;
             })
             .attr("cx", function (d) {
-               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength);
+               console.log(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength * 1000000);
+               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength * 1000000);   //changed to *1000000 4/17/17
             })
             .attr("cy", function (d) {
                return graphRefr.mapMarketPriceToYAxis(d.price);
@@ -493,28 +495,15 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          // recalculate if right edge of graph is more than a batch length past last batch line
          // or if left edge is more than a batch length past first batch line
          // Math.max expression finds time at left edge of screen
-         if (this.currentTime + this.advanceTimeShown > this.batchLines[this.batchLines.length - 1] + this.batchLength ||
-             Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000000000) < this.batchLines[0] - this.batchLength) {
-            this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000000000, this.currentTime + this.advanceTimeShown, this.batchLength * 1000000000);
+         if (this.currentTime + this.advanceTimeShown > this.batchLines[this.batchLines.length - 1] + this.batchLength * 1000000 ||
+             Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000000000) < this.batchLines[0] - this.batchLength * 1000000) {
+            this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000000000, this.currentTime + this.advanceTimeShown, this.batchLength * 1000000);      ////changed to *1000000 4/17/17 line 497
             //console.log("MADE IT IN THIS DUMB IF STATEMENT!!\n");
          }
          else{
-            //console.log("failed if statement\n");
+            console.log("failed if statement\n");
          }
 
-         // var poop1 = this.currentTime - this.timeInterval * 1000;
-         // var poop2 = this.currentTime + this.advanceTimeShown;
-         // var poop3 = this.batchLines[0] - this.batchLength;
-         // var poop4 = this.batchLines[this.batchLines.length - 1] + this.batchLength;
-         // console.log(" adminStartTime: " + this.adminStartTime + "\n this.currentTime - this.timeInterval * 1000: " 
-         //    + poop1 + " \n this.currentTime + this.advanceTimeShown: " + poop2
-         //     + " \n this.batchLines[0] - this.batchLength: " + poop3 + 
-         //     "\n this.batchLines[this.batchLines.length - 1] + this.batchLength: " + poop4 + "\n");
-         
-         // if (this.currentTime + this.advanceTimeShown > this.batchLines[this.batchLines.length - 1] + this.batchLength ||
-         //    Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000000000) < this.batchLines[0] - this.batchLength) {
-         //    this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000000000, this.currentTime + this.advanceTimeShown, this.batchLength);
-         // }
 
          //Invoke all of the draw functions
          this.drawBatchLines(graphRefr, this.marketSVG);
@@ -552,7 +541,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          this.marketPriceLines = this.calcPriceGridLines(this.maxPriceMarket, this.minPriceMarket, this.marketPriceGridIncrement);
          this.profitPriceLines = this.calcPriceGridLines(this.maxPriceProfit, this.minPriceProfit, this.profitPriceGridIncrement);
          //this.batchLines = this.calcBatchLines(this.adminStartTime, this.adminStartTime + this.timeInterval * 1000 + this.advanceTimeShown, this.batchLength);
-         this.batchLines = this.calcBatchLines(this.adminStartTime, this.adminStartTime + this.timeInterval * 1000000000 + this.advanceTimeShown, this.batchLength * 1000000000);
+         this.batchLines = this.calcBatchLines(this.adminStartTime, this.adminStartTime + this.timeInterval * 1000000000 + this.advanceTimeShown, this.batchLength * 1000000);      ///changed to *1000000 from * 1000000000 4/17/17
       };
 
       return graph;

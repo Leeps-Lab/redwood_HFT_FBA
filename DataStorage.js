@@ -80,7 +80,7 @@ Redwood.factory("DataStorage", function () {
       };
 
       dataStorage.storeNumTransactions = function (batchNumber, transactions) {
-         this.numTransactions.push([batchNumber * this.batchLength, transactions]);
+         this.numTransactions.push([batchNumber * this.batchLength * 1000000, transactions]);   //changed to *1000000 4/17/17
       };
 
       dataStorage.storeEqPrice = function (timestamp, price) {
@@ -122,12 +122,14 @@ Redwood.factory("DataStorage", function () {
       dataStorage.storeBatch = function (buyOrders, sellOrders, batchNumber, equilibriumPrice, fundPrice) {
          for (let order of buyOrders) {
             if (order.id != 0 && order.transacted) {
-               this.profitChanges.push([batchNumber * this.batchLength, fundPrice - equilibriumPrice, order.id]);
+               //this.profitChanges.push([batchNumber * this.batchLength, fundPrice - equilibriumPrice, order.id]);
+               this.profitChanges.push([this.startTime + batchNumber * this.batchLength * 1000000, fundPrice - equilibriumPrice, order.id]);    //changed 4/17/17
             }
          }
          for (let order of sellOrders) {
             if (order.id != 0 && order.transacted) {
-               this.profitChanges.push([batchNumber * this.batchLength, equilibriumPrice - fundPrice, order.id]);
+               //this.profitChanges.push([batchNumber * this.batchLength, equilibriumPrice - fundPrice, order.id]);
+               this.profitChanges.push([this.startTime + batchNumber * this.batchLength * 1000000, equilibriumPrice - fundPrice, order.id]);    //changed 4/17/17
             }
          }
       };
