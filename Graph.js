@@ -499,7 +499,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          if (this.currentTime + this.advanceTimeShown > this.batchLines[this.batchLines.length - 1] + this.batchLength * 1000000 ||
             Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000000000) < this.batchLines[0] - this.batchLength * 1000000) {
             this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000000000, this.currentTime + this.advanceTimeShown, this.batchLength * 1000000);      ////changed to *1000000 4/17/17 line 497
-            console.log("MADE IT IN THIS DUMB IF STATEMENT!!\n");
+            //console.log("MADE IT IN THIS DUMB IF STATEMENT!!\n");
          }
          else{
             //console.log("failed if statement\n");
