@@ -208,8 +208,8 @@ Redwood.factory("GroupManager", function () {
          //window.setTimeout(this.sendNextInvestorArrival, this.startTime + this.investorArrivals[this.investorIndex][0] - Date.now());
          //window.setTimeout(this.sendNextInvestorArrival, this.startTime + this.investorArrivals[this.investorIndex][0] - getTime());
          window.setTimeout(this.sendNextInvestorArrival, (this.startTime + this.investorArrivals[this.investorIndex][0] - getTime()) / 1000000);   //from cda
-         var poop = (this.startTime + this.investorArrivals[this.investorIndex][0] - getTime()) / 1000000;
-         console.log("investor time /1000000: " + poop + "\n without division: " + (poop * 1000000) + "\n");
+         //var poop = (this.startTime + this.investorArrivals[this.investorIndex][0] - getTime()) / 1000000;
+         //console.log("investor time /1000000: " + poop + "\n without division: " + (poop * 1000000) + "\n");
       }.bind(groupManager);
 
       return groupManager;

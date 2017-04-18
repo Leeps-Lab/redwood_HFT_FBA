@@ -292,7 +292,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
                return d.transacted && d.batchNumber >= firstVisibleBatch;
             })
             .attr("cx", function (d) {
-               console.log(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength * 1000000);
+               //console.log(getTime(),graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength * 1000000);
                return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength * 1000000);   //changed to *1000000 4/17/17
             })
             .attr("cy", function (d) {
@@ -495,13 +495,15 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          // recalculate if right edge of graph is more than a batch length past last batch line
          // or if left edge is more than a batch length past first batch line
          // Math.max expression finds time at left edge of screen
+         //console.log(this.advanceTimeShown);
          if (this.currentTime + this.advanceTimeShown > this.batchLines[this.batchLines.length - 1] + this.batchLength * 1000000 ||
-             Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000000000) < this.batchLines[0] - this.batchLength * 1000000) {
+            Math.max(this.adminStartTime, this.currentTime - this.timeInterval * 1000000000) < this.batchLines[0] - this.batchLength * 1000000) {
             this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000000000, this.currentTime + this.advanceTimeShown, this.batchLength * 1000000);      ////changed to *1000000 4/17/17 line 497
-            //console.log("MADE IT IN THIS DUMB IF STATEMENT!!\n");
+            console.log("MADE IT IN THIS DUMB IF STATEMENT!!\n");
          }
          else{
-            console.log("failed if statement\n");
+            //console.log("failed if statement\n");
+            //this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000000000, this.currentTime + this.advanceTimeShown, this.batchLength * 1000000);    //remember to take this out 4/17/17
          }
 
 
