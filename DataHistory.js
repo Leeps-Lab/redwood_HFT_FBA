@@ -53,6 +53,20 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             case "C_USPEED" :
                this.storeSpeedChange(msg);
                break;
+            case "C_UBUY"   :
+            case "C_EBUY"   :
+               //this.recordBuyOffer(msg);
+               break;
+            case "C_USELL"  :
+            case "C_ESELL"  :
+               //this.recordSellOffer(msg);
+               break;
+            case "C_RBUY"   :
+               //this.storeBuyOffer(msg.msgData[1], msg.msgData[0]);
+               break;
+            case "C_RSELL"  :
+               //this.storeSellOffer(msg.msgData[1], msg.msgData[0]);
+               break;      
             case "C_UMAKER" :
                this.recordStateChange("Maker", msg.msgData[0], msg.msgData[1]);
                break;
@@ -175,8 +189,8 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          this.playerData[uid].state = newState;
          this.calcLowestSpread();
 
-         //var curProfit = this.playerData[uid].curProfitSegment[1] - ((timestamp - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
-         var curProfit = this.playerData[uid].curProfitSegment[1] - ((timestamp - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);
+         // var curProfit = this.playerData[uid].curProfitSegment[1] - ((timestamp - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);        
+         var curProfit = this.playerData[uid].curProfitSegment[1] - ((timestamp - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);     
          this.recordProfitSegment(curProfit, timestamp, this.playerData[uid].curProfitSegment[2], uid, newState);
       };
 
@@ -192,6 +206,10 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.storeFundPrice = function (endTime) {
          this.pastFundPrices.push([this.curFundPrice[0], endTime, this.curFundPrice[1]]);
          this.curFundPrice = null;
+      };
+
+      dataHistory.storeTransaction = function (msg) {
+         console.log("fuckfuckfuck");
       };
 
       dataHistory.storeSpeedChange = function (msg) {

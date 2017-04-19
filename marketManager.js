@@ -354,6 +354,7 @@ Redwood.factory("MarketManager", function () {
          this.groupManager.dataStore.storeSellOrderState(batchTime, this.FBABook.sellContracts, sellOrdersBefore);
 
          //this.timeoutID = window.setTimeout(market.FBABook.processBatch, batchTime + this.batchLength - Date.now(), batchTime + this.batchLength);
+         console.log((batchTime - getTime()) / 1000000 + this.batchLength);
          this.timeoutID = window.setTimeout(market.FBABook.processBatch, (batchTime - getTime()) / 1000000 + this.batchLength, batchTime + this.batchLength * 1000000);
       }.bind(market);
 
