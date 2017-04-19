@@ -152,6 +152,11 @@ Redwood.controller("AdminCtrl",
 
             //INITIALIZE ADMIN FOR EXPERIMENT   **************************************
 
+            var marketFlag = "LOCAL";
+                                       // LOCAL  = use local market (i.e. this.market)
+                                       // REMOTE = use remote market by making websockets connection
+                                       // DEBUG  = use debug market (i.e. this.debugMarket)
+
             $scope.config = ra.get_config(1, 0);
 
             $scope.priceChanges = [];
@@ -226,7 +231,8 @@ Redwood.controller("AdminCtrl",
                         investorArrivals: $scope.investorArrivals,
                         groupNumber: groupNum,
                         memberIDs: group,
-                        isDebug: debugMode
+                        isDebug: debugMode,
+                        mFlag: marketFlag
                      };
                      $scope.groupManagers[groupNum] = groupManager.createGroupManager(groupArgs, ra.sendCustom);
                      $scope.groupManagers[groupNum].market = marketManager.createMarketManager(ra.sendCustom, groupNum, $scope.groupManagers[groupNum], debugMode, $scope.config.batchLength);
@@ -311,7 +317,7 @@ Redwood.controller("AdminCtrl",
                };
 
                if($scope.config.hasOwnProperty("input_addresses")) {
-                  console.log("%cRUNNING IN TEST MODE", 'font-family: "Comic Sans MS"');
+                  //console.log("%cRUNNING IN TEST MODE", 'font-family: "Comic Sans MS"');
                   beginData.input_addresses = $scope.config.input_addresses.split(',');
                }
 

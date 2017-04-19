@@ -227,7 +227,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       graph.drawAllBatches = function (graphRefr, dataHistory) {
          // first batch that will be displayed on graph
          var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000000000 - this.adminStartTime) / (this.batchLength*1000000)) - 1;  //changed to *1000000 4/17/17
-         console.log(firstVisibleBatch);
+         //console.log(firstVisibleBatch);
          //var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength) - 1;
          if (firstVisibleBatch < 0) firstVisibleBatch = 0;
 
