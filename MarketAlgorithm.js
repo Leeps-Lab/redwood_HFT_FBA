@@ -14,6 +14,10 @@ Redwood.factory("MarketAlgorithm", function () {
       marketAlgorithm.groupId = subjectArgs.groupId;
       marketAlgorithm.groupManager = groupManager;   //Sends message to group manager, function obtained as parameter
       marketAlgorithm.fundamentalPrice = 0;
+      marketAlgorithm.oldFundamentalPrice = 0;
+      marketAlgorithm.currentMsgId = 1;
+      marketAlgorithm.currentBuyId = 0;
+      marketAlgorithm.currentSellId = 0;
 
       marketAlgorithm.isDebug = subjectArgs.isDebug;
       if (marketAlgorithm.isDebug) {
@@ -46,14 +50,18 @@ Redwood.factory("MarketAlgorithm", function () {
 
       // sends out remove buy and sell messages for exiting market
       marketAlgorithm.exitMarket = function () {
-         var nMsg = new Message("OUCH", "RBUY", [this.myId]);
-         nMsg.delay = !this.using_speed;
-         var nMsg2 = new Message("OUCH", "RSELL", [this.myId]);
-         nMsg2.delay = !this.using_speed;
-         this.sendToGroupManager(nMsg);
-         this.sendToGroupManager(nMsg2);
+         this.sendToGroupManager(this.removeBuyOfferMsg());
+         this.sendToGroupManager(this.removeSellOfferMsg());
          this.buyEntered = false;
          this.sellEntered = false;
+         // var nMsg = new Message("OUCH", "RBUY", [this.myId]);
+         // nMsg.delay = !this.using_speed;
+         // var nMsg2 = new Message("OUCH", "RSELL", [this.myId]);
+         // nMsg2.delay = !this.using_speed;
+         // this.sendToGroupManager(nMsg);
+         // this.sendToGroupManager(nMsg2);
+         // this.buyEntered = false;
+         // this.sellEntered = false;
       };
 
       // Handle message sent to the market algorithm
@@ -69,6 +77,10 @@ Redwood.factory("MarketAlgorithm", function () {
             // update fundamental price variable
             this.fundamentalPrice = msg.msgData[1];
 
+            //Calculate if the new fundamental price is greater than the old price
+            var positiveChange = (this.fundamentalPrice - this.oldFundamentalPrice) > 0 ? true : false;
+            console.log(printTime(getTime()) + " Old Fundamental Price: " + this.oldFundamentalPrice + " Current Fundamental Price: " + this.fundamentalPrice + " positiveChange: " + positiveChange +  " UserID: " + this.myId + "\n");
+
             //send player state to group manager
             var nMsg3;
             if (this.state == "state_out") {
@@ -78,39 +90,78 @@ Redwood.factory("MarketAlgorithm", function () {
             else if (this.state == "state_maker") {
                nMsg3 = new Message("SYNC_FP", "UOFFERS", [this.myId, this.using_speed, []]);
                nMsg3.timeStamp = msg.msgData[0]; // for debugging test output only
-               if (this.buyEntered) {
-                  nMsg3.msgData[2].push(this.updateBuyOfferMsg());
+
+               //prevent maker from sniping themself
+               if(positiveChange){                       //the price moved up -> update sell order before buy order
+                  if (this.buyEntered) {
+                     nMsg3.msgData[2].push(this.updateSellOfferMsg());
+                  }
+                  if (this.sellEntered) {
+                     nMsg3.msgData[2].push(this.updateBuyOfferMsg());
+                  }
                }
-               if (this.sellEntered) {
-                  nMsg3.msgData[2].push(this.updateSellOfferMsg());
+               else{                                     //the price moved down -> update buy order before sell order
+                  if (this.buyEntered) {
+                     nMsg3.msgData[2].push(this.updateBuyOfferMsg());
+                  }
+                  if (this.sellEntered) {
+                     nMsg3.msgData[2].push(this.updateSellOfferMsg());
+                  }
                }
+               
             }
             else if (this.state == "state_snipe") {
                nMsg3 = new Message("SYNC_FP", "SNIPE", [this.myId, this.using_speed, []]);
                nMsg3.timeStamp = msg.msgData[0]; // for debugging test output only
 
-               var snipeEnterMsg;
-               var snipeRemoveMsg;
-               if (msg.msgData[3]) {
-                  //snipeEnterMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice, true, Date.now()]);
-                  snipeEnterMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice, true, getTime()]);
-                  snipeRemoveMsg = new Message("OUCH", "RSELL", [this.myId]);    // if I'm inserting a new buy snipe message, also make sure I don't have any stale snipe sell messages
+               if(positiveChange){     //the new price is greater than the old price -> generate snipe buy message
+                  snipeBuyMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice, true, getTime()]);        
+                  snipeBuyMsg.delay = !this.using_speed;
+                  snipeBuyMsg.msgId = this.currentMsgId;
+                  this.currentBuyId = this.currentMsgId;
+                  this.currentMsgId++;
+                  nMsg3.msgData[2].push(snipeBuyMsg);
+                  console.log("snipeBuyMsg: " + snipeBuyMsg.asString() + "\n");
                }
-               else {
-                  //snipeEnterMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice, true, Date.now()]);
-                  snipeEnterMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice, true, getTime()]);
-                  snipeRemoveMsg = new Message("OUCH", "RBUY", [this.myId]);
+               else{                   //the new price is less than the old price -> generate snipe sell message
+                  snipeSellMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice, true, getTime()]);
+                  snipeSellMsg.delay = !this.using_speed;
+                  snipeSellMsg.msgId = this.currentMsgId;
+                  this.currentSellId = this.currentMsgId;
+                  this.currentMsgId++;
+                  nMsg3.msgData[2].push(snipeSellMsg);
+                  console.log("snipeSellMsg: " + snipeSellMsg.asString() + "\n");
                }
-               snipeEnterMsg.delay = !this.using_speed;
-               snipeRemoveMsg.delay = !this.using_speed;
-               nMsg3.msgData[2].push(snipeRemoveMsg, snipeEnterMsg);
             }
+            // else if (this.state == "state_snipe") {
+            //    nMsg3 = new Message("SYNC_FP", "SNIPE", [this.myId, this.using_speed, []]);
+            //    nMsg3.timeStamp = msg.msgData[0]; // for debugging test output only
+
+            //    var snipeEnterMsg;
+            //    var snipeRemoveMsg;
+            //    if (msg.msgData[3]) {
+            //       //snipeEnterMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice, true, Date.now()]);
+            //       snipeEnterMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice, true, getTime()]);
+            //       snipeRemoveMsg = new Message("OUCH", "RSELL", [this.myId]);    // if I'm inserting a new buy snipe message, also make sure I don't have any stale snipe sell messages
+            //    }
+            //    else {
+            //       //snipeEnterMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice, true, Date.now()]);
+            //       snipeEnterMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice, true, getTime()]);
+            //       snipeRemoveMsg = new Message("OUCH", "RBUY", [this.myId]);
+            //    }
+            //    snipeEnterMsg.delay = !this.using_speed;
+            //    snipeRemoveMsg.delay = !this.using_speed;
+            //    nMsg3.msgData[2].push(snipeRemoveMsg, snipeEnterMsg);
+            // }
             else {
                console.error("invalid state");
                return;
             }
 
             this.sendToGroupManager(nMsg3);
+
+            //Set the old fundamental price to the current fundamental price for checking +/- change
+            this.oldFundamentalPrice = this.fundamentalPrice;
 
             // send message to data history recording price change
             var nmsg = new Message("DATA", "FPC", msg.msgData);
@@ -195,6 +246,10 @@ Redwood.factory("MarketAlgorithm", function () {
          //var nMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice - this.spread / 2, false, Date.now()]);
          var nMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice - this.spread / 2, false, getTime()]);
          nMsg.delay = !this.using_speed;
+         nMsg.senderId = this.myId;
+         nMsg.msgId = this.currentMsgId;
+         this.currentBuyId = this.currentMsgId;
+         this.currentMsgId++;
          return nMsg;
       };
 
@@ -202,6 +257,10 @@ Redwood.factory("MarketAlgorithm", function () {
          //var nMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice + this.spread / 2, false, Date.now()]);
          var nMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice + this.spread / 2, false, getTime()]);
          nMsg.delay = !this.using_speed;
+         nMsg.senderId = this.myId;
+         nMsg.msgId = this.currentMsgId;
+         this.currentSellId = this.currentMsgId;
+         this.currentMsgId++;
          return nMsg;
       };
 
@@ -209,6 +268,11 @@ Redwood.factory("MarketAlgorithm", function () {
          //var nMsg = new Message("OUCH", "UBUY", [this.myId, this.fundamentalPrice - this.spread / 2, false, Date.now()]);
          var nMsg = new Message("OUCH", "UBUY", [this.myId, this.fundamentalPrice - this.spread / 2, false, getTime()]);
          nMsg.delay = !this.using_speed;
+         nMsg.senderId = this.myId;
+         nMsg.msgId = this.currentMsgId;
+         nMsg.prevMsgId = this.currentBuyId;
+         this.currentBuyId = this.currentMsgId;
+         this.currentMsgId++;
          return nMsg;
       };
 
@@ -216,8 +280,29 @@ Redwood.factory("MarketAlgorithm", function () {
          //var nMsg = new Message("OUCH", "USELL", [this.myId, this.fundamentalPrice + this.spread / 2, false, Date.now()]);
          var nMsg = new Message("OUCH", "USELL", [this.myId, this.fundamentalPrice + this.spread / 2, false, getTime()]);
          nMsg.delay = !this.using_speed;
+         nMsg.senderId = this.myId;
+         nMsg.msgId = this.currentMsgId;
+         nMsg.prevMsgId = this.currentSellId;
+         this.currentSellId = this.currentMsgId;
+         this.currentMsgId++;
          return nMsg;
       };
+
+      marketAlgorithm.removeBuyOfferMsg = function() {
+         var nMsg = new Message("OUCH", "RBUY", [this.myId]);
+         nMsg.delay = !this.using_speed;
+         nMsg.senderId = this.myId;
+         nMsg.msgId = this.currentBuyId;
+         return nMsg;
+      }
+
+      marketAlgorithm.removeSellOfferMsg = function() {
+         var nMsg = new Message("OUCH", "RSELL", [this.myId]);
+         nMsg.delay = !this.using_speed;
+         nMsg.senderId = this.myId;
+         nMsg.msgId = this.currentSellId;
+         return nMsg;
+      }
 
       return marketAlgorithm;
    };

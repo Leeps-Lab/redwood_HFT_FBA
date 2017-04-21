@@ -230,7 +230,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          //console.log(firstVisibleBatch);
          //var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength) - 1;
          if (firstVisibleBatch < 0) firstVisibleBatch = 0;
-         console.log(firstVisibleBatch);
          // draw others' filled order circles
          this.drawBatchCircles(graphRefr, dataHistory.othersOrders, "others-filled-orders", firstVisibleBatch);
          this.drawBatchCircles(graphRefr, dataHistory.investorOrders, "others-filled-orders", firstVisibleBatch);
