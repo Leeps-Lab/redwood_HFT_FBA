@@ -31,17 +31,18 @@ Redwood.factory("GroupManager", function () {
       groupManager.outboundMarketLog = "";          // string of debug info for messages outbound to market
       groupManager.inboundMarketLog = "";           // string of debug info for messages inbound from market
 
-      if (groupManager.isDebug) {
-         // add the logging terminal to the ui section of the html
-         $("#ui").append('<div class="terminal-wrap"><div class="terminal-head">Group ' + groupManager.groupNumber +
-            ' Message Log</div><div id="group-' + groupManager.groupNumber + '-log" class="terminal"></div></div>');
-         groupManager.logger = new MessageLogger("Group Manager " + String(groupManager.groupNumber), "#5555FF", "group-" + groupManager.groupNumber + "-log");
-      }
+      // if (groupManager.isDebug) {
+      //    // add the logging terminal to the ui section of the html
+      //    $("#ui").append('<div class="terminal-wrap"><div class="terminal-head">Group ' + groupManager.groupNumber +
+      //       ' Message Log</div><div id="group-' + groupManager.groupNumber + '-log" class="terminal"></div></div>');
+      //    groupManager.logger = new MessageLogger("Group Manager " + String(groupManager.groupNumber), "#5555FF", "group-" + groupManager.groupNumber + "-log");
+      // }
 
       if(groupManager.marketFlag === "REMOTE"/*ZACH, D/N MODIFY!*/){
 
          // open websocket with market
-         groupManager.marketURI = "ws://54.202.196.170:8000/";
+         groupManager.marketURI = "ws://54.202.196.170:8000/";                      //PUT THIS BACK FOR VAGRANT TESTING
+         //groupManager.marketURI = "ws://54.149.235.92:8000/";
          groupManager.socket = new WebSocket(groupManager.marketURI, ['binary', 'base64']);
          groupManager.socket.onopen = function(event) {
             //groupManager.socket.send("Confirmed Opened Websocket connection");
@@ -169,7 +170,7 @@ Redwood.factory("GroupManager", function () {
          // add message to log
          this.outboundMarketLog += leepsMsg.asString() + "\n";
          //console.log("Outbound messages:\n" + this.outboundMarketLog);
-         console.log("Outbound Message: " + leepsMsg.asString() + "\n");
+         //console.log("Outbound Message: " + leepsMsg.asString() + "\n");
          this.outboundMarketLog = "";
 
          //If no delay send msg now, otherwise send after delay
@@ -211,12 +212,13 @@ Redwood.factory("GroupManager", function () {
       groupManager.recvFromMarket = function (msg) {
 
          // add message to log
-         //this.inboundMarketLog += msg.asString() + "\n";
-         //console.log("Inbound Messages:\n" + this.inboundMarketLog);
+         this.inboundMarketLog += msg.asString() + "\n";
+         console.log("Inbound Messages:\n" + this.inboundMarketLog);
          //console.log("Inbound Message: " + msg.asString() + "\n");
+         this.inboundMarketLog = "";
 
-         if(msg.msgType === "C_TRA" || msg.msgType === "BATCH"){     //TEST 4/18/17
-            console.log("c_tra / batch");
+         if(msg.msgType === "C_TRA" || msg.msgType === "BATCH"){     
+            //console.log("c_tra / batch");
             this.sendToMarketAlgorithms(msg);
          }
          else {
@@ -229,17 +231,18 @@ Redwood.factory("GroupManager", function () {
 
       groupManager.sendToLocalMarket = function(leepsMsg){
          console.log("sending to local market");
-         console.log(leepsMsg.asString());
+         //console.log(leepsMsg.asString());
          this.market.recvMessage(leepsMsg);
       }
 
       groupManager.sendToRemoteMarket = function(leepsMsg){
 
-         if(leepsMsg.msgType === "EBUY"){
+         //if(leepsMsg.msgType === "EBUY"){
             //console.log("Flag 5:");
-            console.log(leepsMsg);
-         }
-
+         //   console.log(leepsMsg);
+         //}
+         console.log("sending to remote server:\n");
+         console.log(leepsMsg.asString());
          var msg = leepsMsgToOuch(leepsMsg);
          this.socket.send(msg);
       }

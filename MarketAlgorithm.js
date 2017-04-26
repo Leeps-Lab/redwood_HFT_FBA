@@ -79,7 +79,7 @@ Redwood.factory("MarketAlgorithm", function () {
 
             //Calculate if the new fundamental price is greater than the old price
             var positiveChange = (this.fundamentalPrice - this.oldFundamentalPrice) > 0 ? true : false;
-            console.log(printTime(getTime()) + " Old Fundamental Price: " + this.oldFundamentalPrice + " Current Fundamental Price: " + this.fundamentalPrice + " positiveChange: " + positiveChange +  " UserID: " + this.myId + "\n");
+            //console.log(printTime(getTime()) + " Old Fundamental Price: " + this.oldFundamentalPrice + " Current Fundamental Price: " + this.fundamentalPrice + " positiveChange: " + positiveChange +  " UserID: " + this.myId + "\n");
 
             //send player state to group manager
             var nMsg3;

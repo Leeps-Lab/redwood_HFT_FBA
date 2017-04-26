@@ -109,7 +109,7 @@ function leepsMsgToOuch(leepsMsg){
       // Customer Type
       ouchMsg[48] = charToByte('R');
 
-      console.log(leepsMsg.msgType + ": " + printOuchMsg(ouchMsg));
+      //console.log(leepsMsg.msgType + ": " + printOuchMsg(ouchMsg));
       return ouchMsg;
    }
    else if(leepsMsg.msgType === "RBUY" || leepsMsg.msgType === "RSELL")
