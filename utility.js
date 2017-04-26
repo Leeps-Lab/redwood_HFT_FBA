@@ -43,6 +43,9 @@ function Message(protocol, msgType, msgData) {
       else if(msgType == "EBUY" || msgType == "ESELL"){
         s += msgType + " timestamp:" + printTime(this.timeStamp) + " buyer/sellerID:" + msgData[0] + " price:" + msgData[1] + " IOC: " + msgData[2] + " msgID: " + this.msgId;
       }
+      else if(msgType == "BATCH"){
+         s += msgType + " timestamp:" + printTime(this.timeStamp) + " delay: " + this.delay + " batch#: " + msgData[2] + " msgId:" + this.msgId;
+      }
       else{
         s += msgType + " timestamp:" + printTime(this.timeStamp) + " subjID:" + msgData[0] + " msgID:" + this.msgId;
       }

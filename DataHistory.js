@@ -45,6 +45,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                break;
             case "BATCH"    :
                //console.log(msg);
+               console.log("batch in datah history");
                this.recordBatch(msg);
                break;
             case "C_TRA"    :

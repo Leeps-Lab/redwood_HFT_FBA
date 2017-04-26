@@ -41,8 +41,8 @@ Redwood.factory("GroupManager", function () {
       if(groupManager.marketFlag === "REMOTE"/*ZACH, D/N MODIFY!*/){
 
          // open websocket with market
-         groupManager.marketURI = "ws://54.202.196.170:8000/";                      //PUT THIS BACK FOR VAGRANT TESTING
-         //groupManager.marketURI = "ws://54.149.235.92:8000/";
+         //groupManager.marketURI = "ws://54.202.196.170:8000/";                      //PUT THIS BACK FOR VAGRANT TESTING
+         groupManager.marketURI = "ws://54.149.235.92:8000/";
          groupManager.socket = new WebSocket(groupManager.marketURI, ['binary', 'base64']);
          groupManager.socket.onopen = function(event) {
             //groupManager.socket.send("Confirmed Opened Websocket connection");
@@ -50,7 +50,7 @@ Redwood.factory("GroupManager", function () {
 
          // recieves messages from remote market
          groupManager.socket.onmessage = function(event) {
-            
+            console.log("Received msg from server");
             // create reader to read "blob" object
             var reader = new FileReader();
             reader.addEventListener("loadend", function() {
@@ -66,6 +66,7 @@ Redwood.factory("GroupManager", function () {
 
                for(ouchMsg of ouchMsgArray){
                   // translate the message and pass it to the recieve function
+                  console.log(ouchToLeepsMsg(ouchMsg));
                   groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
                }
             });
@@ -213,16 +214,20 @@ Redwood.factory("GroupManager", function () {
 
          // add message to log
          this.inboundMarketLog += msg.asString() + "\n";
-         console.log("Inbound Messages:\n" + this.inboundMarketLog);
+         //console.log("Inbound Messages:\n" + this.inboundMarketLog);
+         //console.log(msg);
          //console.log("Inbound Message: " + msg.asString() + "\n");
          this.inboundMarketLog = "";
 
          if(msg.msgType === "C_TRA" || msg.msgType === "BATCH"){     
             //console.log("c_tra / batch");
+            console.log("Flag2")
+            console.log(msg.asString());
             this.sendToMarketAlgorithms(msg);
          }
          else {
-            console.log(msg);
+            console.log("not c_tra or batch");
+            console.log(msg.asString());
             if(msg.msgData[0] > 0) {
                this.marketAlgorithms[msg.msgData[0]].recvFromGroupManager(msg);
             }
@@ -297,7 +302,7 @@ Redwood.factory("GroupManager", function () {
             window.clearTimeout(this.market.timeoutID);
             return;
          }
-         console.log("price change: " + printTime(getTime()) + "\n");
+         //console.log("price change: " + printTime(getTime()) + "\n");
          // FPC message contains timestamp, new price, price index and a boolean reflecting the jump's direction
          //var msg = new Message("ITCH", "FPC", [Date.now(), this.priceChanges[this.priceIndex][1], this.priceIndex, this.priceChanges[this.priceIndex][1] > this.priceChanges[this.priceIndex - 1][1]]);
          var msg = new Message("ITCH", "FPC", [getTime(), this.priceChanges[this.priceIndex][1], this.priceIndex, this.priceChanges[this.priceIndex][1] > this.priceChanges[this.priceIndex - 1][1]]);
