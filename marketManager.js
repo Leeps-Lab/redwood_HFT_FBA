@@ -327,8 +327,8 @@ Redwood.factory("MarketManager", function () {
 
          // copy current market state into batch message
          var msg = new Message("ITCH", "BATCH", [$.extend(true, [], this.FBABook.buyContracts), $.extend(true, [], this.FBABook.sellContracts), this.FBABook.batchNumber, equilibriumPrice]);
-         console.log("flag1");
-         console.log(msg);
+         //console.log("flag1");
+         //console.log(msg.asString());
          this.sendToGroupManager(msg);
          
          // move non-ioc and non-transacted order to next batch

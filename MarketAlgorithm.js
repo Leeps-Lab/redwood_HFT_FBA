@@ -121,7 +121,7 @@ Redwood.factory("MarketAlgorithm", function () {
                   this.currentBuyId = this.currentMsgId;
                   this.currentMsgId++;
                   nMsg3.msgData[2].push(snipeBuyMsg);
-                  console.log("snipeBuyMsg: " + snipeBuyMsg.asString() + "\n");
+                  //console.log("snipeBuyMsg: " + snipeBuyMsg.asString() + "\n");
                }
                else{                   //the new price is less than the old price -> generate snipe sell message
                   snipeSellMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice, true, getTime()]);
@@ -130,7 +130,7 @@ Redwood.factory("MarketAlgorithm", function () {
                   this.currentSellId = this.currentMsgId;
                   this.currentMsgId++;
                   nMsg3.msgData[2].push(snipeSellMsg);
-                  console.log("snipeSellMsg: " + snipeSellMsg.asString() + "\n");
+                  //console.log("snipeSellMsg: " + snipeSellMsg.asString() + "\n");
                }
             }
             // else if (this.state == "state_snipe") {
@@ -222,6 +222,8 @@ Redwood.factory("MarketAlgorithm", function () {
          
          // the market sent the outcome of a batch
          if (msg.msgType == "BATCH") {
+            //console.log("flag 3");
+            //console.log(msg.asString());
             // if I'm a maker, check to see if one of my orders was filled
             if (this.state == "state_maker") {
                for (let order of msg.msgData[0]) {
@@ -240,6 +242,7 @@ Redwood.factory("MarketAlgorithm", function () {
             msg.msgData.push(this.fundamentalPrice);
             this.sendToDataHistory(msg);
          }
+         
       };
 
       marketAlgorithm.enterBuyOfferMsg = function () {

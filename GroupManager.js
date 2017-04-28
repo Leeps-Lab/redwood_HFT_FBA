@@ -41,8 +41,8 @@ Redwood.factory("GroupManager", function () {
       if(groupManager.marketFlag === "REMOTE"/*ZACH, D/N MODIFY!*/){
 
          // open websocket with market
-         //groupManager.marketURI = "ws://54.202.196.170:8000/";                      //PUT THIS BACK FOR VAGRANT TESTING
-         groupManager.marketURI = "ws://54.149.235.92:8000/";
+         groupManager.marketURI = "ws://54.202.196.170:8000/";                      //PUT THIS BACK FOR VAGRANT TESTING
+         //groupManager.marketURI = "ws://54.149.235.92:8000/";
          groupManager.socket = new WebSocket(groupManager.marketURI, ['binary', 'base64']);
          groupManager.socket.onopen = function(event) {
             //groupManager.socket.send("Confirmed Opened Websocket connection");
@@ -66,7 +66,8 @@ Redwood.factory("GroupManager", function () {
 
                for(ouchMsg of ouchMsgArray){
                   // translate the message and pass it to the recieve function
-                  console.log(ouchToLeepsMsg(ouchMsg));
+                  //console.log(ouchMsg);
+                  console.log(ouchToLeepsMsg(ouchMsg).asString());
                   groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
                }
             });
@@ -153,6 +154,7 @@ Redwood.factory("GroupManager", function () {
          if (msg.protocol === "OUCH") {
             groupManager.sendToMarket(msg);
          }
+
       };
 
       // this sends message to market with specified amount of delay
@@ -221,13 +223,13 @@ Redwood.factory("GroupManager", function () {
 
          if(msg.msgType === "C_TRA" || msg.msgType === "BATCH"){     
             //console.log("c_tra / batch");
-            console.log("Flag2")
-            console.log(msg.asString());
+            //console.log("Flag2")
+            //console.log(msg.asString());
             this.sendToMarketAlgorithms(msg);
          }
          else {
-            console.log("not c_tra or batch");
-            console.log(msg.asString());
+            //console.log("not c_tra or batch");
+            //console.log(msg.asString());
             if(msg.msgData[0] > 0) {
                this.marketAlgorithms[msg.msgData[0]].recvFromGroupManager(msg);
             }
@@ -321,7 +323,7 @@ Redwood.factory("GroupManager", function () {
          //window.setTimeout(this.sendNextPriceChange, this.startTime + this.priceChanges[this.priceIndex][0] - Date.now());
          //window.setTimeout(this.sendNextPriceChange, this.startTime + this.priceChanges[this.priceIndex][0] - getTime());
          window.setTimeout(this.sendNextPriceChange, (this.startTime + this.priceChanges[this.priceIndex][0] - getTime()) / 1000000);  //fom cda
-         var poop = (this.startTime + this.investorArrivals[this.investorIndex][0] - getTime()) / 1000000;
+         //var poop = (this.startTime + this.investorArrivals[this.investorIndex][0] - getTime()) / 1000000;
          // console.log("price change time /1000000: " + poop + "\n without division: " + (poop * 1000000) + "\n");
       }.bind(groupManager);
 
@@ -332,10 +334,12 @@ Redwood.factory("GroupManager", function () {
          // create the outside investor leeps message
          var msgType = this.investorArrivals[this.investorIndex][1] === 1 ? "EBUY" : "ESELL";
          if(msgType === "EBUY"){
-            var msg2 = new Message("OUCH", "EBUY", [0, 214748.3647, true, getTime()]);
+            //var msg2 = new Message("OUCH", "EBUY", [0, 214748.3647, true, getTime()]);     
+            var msg2 = new Message("OUCH", "EBUY", [0, 214748.3647, false, getTime()]);      //make not ioc until darrell fixes  
          }
          else if(msgType === "ESELL"){
-            var msg2 = new Message("OUCH", "ESELL", [0, 0, true, getTime()]);
+            //var msg2 = new Message("OUCH", "ESELL", [0, 0, true, getTime()]);
+            var msg2 = new Message("OUCH", "ESELL", [0, 0, false, getTime()]);                //make not ioc until darrell fixes
          }
          //var msg2 = new Message("OUCH", this.investorArrivals[this.investorIndex][1] == 1 ? "EBUY" : "ESELL", [0, 214748.3647, true, this.startTime + this.investorArrivals[this.investorIndex][0]]);
          //console.log(msg2.asString());

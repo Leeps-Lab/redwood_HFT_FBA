@@ -53,9 +53,9 @@ function leepsMsgToOuch(leepsMsg){
       else if(leepsMsg.msgType === "ESELL"){
          ouchMsg[5] = charToByte('S');
       }
-      console.log("Order ID: (Before):" + leepsMsg.msgId);
-      console.log(leepsMsg);
-      console.log("Order ID: (After ):" + decimalToByteArray(leepsMsg.msgId, 9));
+      //console.log("Order ID: (Before):" + leepsMsg.msgId);
+      //console.log(leepsMsg);
+      //console.log("Order ID: (After ):" + decimalToByteArray(leepsMsg.msgId, 9));
       spliceInArray(decimalToByteArray(leepsMsg.msgId, 9), ouchMsg, 9, 6);
 
       // Buy/Sell indicator
@@ -81,7 +81,8 @@ function leepsMsgToOuch(leepsMsg){
          spliceInArray(intToByteArray(0), ouchMsg, 4, 32);
       }
       else{
-         spliceInArray(intToByteArray(99999), ouchMsg, 4, 32);
+          spliceInArray(intToByteArray(3), ouchMsg, 4, 32);
+         //spliceInArray(intToByteArray(99999), ouchMsg, 4, 32);
       }
 
       // Firm
@@ -131,7 +132,7 @@ function leepsMsgToOuch(leepsMsg){
       else if(leepsMsg.msgType === "RSELL"){
          ouchMsg[5] = charToByte('S');
       }
-      console.log("Order ID: " + decimalToByteArray(leepsMsg.msgId, 9));
+      //console.log("Order ID: " + decimalToByteArray(leepsMsg.msgId, 9));
       spliceInArray(decimalToByteArray(leepsMsg.msgId, 9), ouchMsg, 9, 6);
 
       // Shares
@@ -158,7 +159,7 @@ function leepsMsgToOuch(leepsMsg){
       else if(leepsMsg.msgType === "USELL"){
          ouchMsg[5] = charToByte('S');
       }
-      console.log("Order ID: " + decimalToByteArray(leepsMsg.prevMsgId, 9));
+      //console.log("Order ID: " + decimalToByteArray(leepsMsg.prevMsgId, 9));
       spliceInArray(decimalToByteArray(leepsMsg.prevMsgId, 9), ouchMsg, 9, 6);
 
       // Replacement Order Token
@@ -173,7 +174,7 @@ function leepsMsgToOuch(leepsMsg){
       else if(leepsMsg.msgType === "USELL"){
          ouchMsg[19] = charToByte('S');
       }
-      console.log("Order ID: " + decimalToByteArray(leepsMsg.msgId, 9));
+      //console.log("Order ID: " + decimalToByteArray(leepsMsg.msgId, 9));
       spliceInArray(decimalToByteArray(leepsMsg.msgId, 9), ouchMsg, 9, 20);
 
       // Shares
@@ -354,6 +355,12 @@ function ouchToLeepsMsg(ouchMsg){
 
     //console.log(msg);
     return msg;
+  }
+  if(ouchMsg.charAt[0] === 'I'){
+    console.log("ITCH MESSAGE RECEIEVED");
+  }
+  else{
+      console.log("Not a supported msg format");
   }
 
 }

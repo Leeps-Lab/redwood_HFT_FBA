@@ -152,7 +152,7 @@ Redwood.controller("AdminCtrl",
 
             //INITIALIZE ADMIN FOR EXPERIMENT   **************************************
 
-            var marketFlag = "LOCAL";
+            var marketFlag = "REMOTE";
                                        // LOCAL  = use local market (i.e. this.market)
                                        // REMOTE = use remote market by making websockets connection
                                        // DEBUG  = use debug market (i.e. this.debugMarket)
@@ -325,7 +325,7 @@ Redwood.controller("AdminCtrl",
                $scope.groupManagers[groupNum].startTime = $scope.startTime;
                $scope.groupManagers[groupNum].dataStore.init(startFP, $scope.startTime, $scope.config.maxSpread);
                //$scope.groupManagers[groupNum].market.timeoutID = window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, $scope.startTime + $scope.config.batchLength - Date.now(), $scope.startTime + $scope.config.batchLength);
-               $scope.groupManagers[groupNum].market.timeoutID = window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, ($scope.startTime - getTime()) / 1000000 + $scope.config.batchLength, $scope.startTime + $scope.config.batchLength * 1000000);
+ //UNCOMMENT LATER              //$scope.groupManagers[groupNum].market.timeoutID = window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, ($scope.startTime - getTime()) / 1000000 + $scope.config.batchLength, $scope.startTime + $scope.config.batchLength * 1000000);
                for (var user of group) {
                   $scope.groupManagers[groupNum].marketAlgorithms[user].fundamentalPrice = startFP;
                }
