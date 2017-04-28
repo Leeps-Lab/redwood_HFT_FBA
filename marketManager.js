@@ -76,21 +76,43 @@ Redwood.factory("MarketManager", function () {
             // remove buy offer
             case "RBUY":
                market.FBABook.removeBuy(message.msgData[0]);
+               //ADDED 4/28/17!!!
+               var msg = new Message("ITCH", "C_CANC", [message.msgData[0], message.timestamp]);
+               msg.timeStamp = message.timestamp; // for test output only
+               msg.buyOrdersBeforeState = message.buyOrdersBeforeState;
+               msg.msgId = message.msgId;
+               this.sendToGroupManager(msg);
                break;
 
             // remove sell offer
             case "RSELL":
                market.FBABook.removeSell(message.msgData[0]);
+               //ADDED 4/28/17!!!
+               var msg = new Message("ITCH", "C_CANC", [message.msgData[0], message.timestamp]);
+               msg.timeStamp = message.timestamp; // for test output only
+               msg.sellOrdersBeforeState = message.sellOrdersBeforeState;
+               msg.msgId = message.msgId;
+               this.sendToGroupManager(msg);
                break;
 
             // update buy offer
             case "UBUY":
                market.FBABook.insertBuy(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2]);
+               //ADDED 4/28/17!!!
+               var msg = new Message("ITCH", "C_UBUY", [message.msgData[0], message.msgData[1], message.timestamp]);
+               msg.timeStamp = message.timestamp; // for test output only
+               msg.buyOrdersBeforeState = message.buyOrdersBeforeState;
+               this.sendToGroupManager(msg);
                break;
 
             // update sell offer
             case "USELL":
                market.FBABook.insertSell(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2]);
+               //ADDED 4/28/17!!!
+               var msg = new Message("ITCH", "C_USELL", [message.msgData[0], message.msgData[1], message.timestamp]);
+               msg.timeStamp = message.timestamp; // for test output only
+               msg.sellOrdersBeforeState = message.sellOrdersBeforeState;
+               this.sendToGroupManager(msg);
                break;
 
             // message not recognized

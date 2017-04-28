@@ -44,11 +44,13 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                this.recordFPCchange(msg);
                break;
             case "BATCH"    :
-               console.log("batch in datah history");
-               console.log(msg);
+               //console.log("batch in datah history");
+               //onsole.log(msg);
                this.recordBatch(msg);
                break;
             case "C_TRA"    :
+               console.log("C_TRA message");
+               console.log(msg);
                this.storeTransaction(msg);
                break;
             case "C_USPEED" :
@@ -56,17 +58,17 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                break;
             case "C_UBUY"   :
             case "C_EBUY"   :
-               //this.recordBuyOffer(msg);
+               this.recordBuyOffer(msg);
                break;
             case "C_USELL"  :
             case "C_ESELL"  :
-               //this.recordSellOffer(msg);
+               this.recordSellOffer(msg);
                break;
             case "C_RBUY"   :
-               //this.storeBuyOffer(msg.msgData[1], msg.msgData[0]);
+               this.storeBuyOffer(msg.msgData[1], msg.msgData[0]);
                break;
             case "C_RSELL"  :
-               //this.storeSellOffer(msg.msgData[1], msg.msgData[0]);
+               this.storeSellOffer(msg.msgData[1], msg.msgData[0]);
                break;      
             case "C_UMAKER" :
                this.recordStateChange("Maker", msg.msgData[0], msg.msgData[1]);
@@ -210,7 +212,85 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       };
 
       dataHistory.storeTransaction = function (msg) {
-         console.log("fuckfuckfuck");
+         if (msg.msgData[3] == this.myId) {
+            // if I'm the buyer
+            this.profit += msg.msgData[2] - msg.msgData[1];
+         }
+         else if (msg.msgData[4] == this.myId) {
+            //if I'm the seller
+            this.profit += msg.msgData[1] - msg.msgData[2];
+         }
+
+         if (msg.msgData[3] != 0) {
+            if (this.playerData[msg.msgData[3]].curBuyOffer !== null) this.storeBuyOffer(msg.msgData[0], msg.msgData[3]);
+
+            var uid = msg.msgData[3];
+            var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.msgData[0] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); //changed from 1000
+            this.recordProfitSegment(curProfit + msg.msgData[2] - msg.msgData[1], msg.msgData[0], this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);
+         }
+         if (msg.msgData[4] != 0) {
+            if (this.playerData[msg.msgData[4]].curSellOffer !== null) this.storeSellOffer(msg.msgData[0], msg.msgData[4]);
+
+            var uid = msg.msgData[4];
+            var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.msgData[0] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); //changed from 1000
+            this.recordProfitSegment(curProfit + msg.msgData[1] - msg.msgData[2], msg.msgData[0], this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);
+         }
+         this.transactions.push(msg.msgData);
+      };
+
+      //records a new buy offer
+      dataHistory.recordBuyOffer = function (buyMsg) {
+         if(this.playerData[buyMsg.msgData[0]].state == 'Snipe'){                                   //TEST -> don't want to graph snipe offer
+            console.log("Tried to record buy offer, state: "  + this.playerData[buyMsg.msgData[0]].state);
+            return;
+         }
+         //Check if current buy offer needs to be stored
+         console.log(this.playerData[buyMsg.msgData[0]].curBuyOffer);
+         if (this.playerData[buyMsg.msgData[0]].curBuyOffer != null) {
+            this.storeBuyOffer(buyMsg.msgData[2], buyMsg.msgData[0]);
+            console.log("Data being stored: " + buyMsg.msgData[2] + " : " + buyMsg.msgData[0]);
+            console.log("Local timestamp: " + getTime());
+         }
+         //Push on new buy offer
+         this.playerData[buyMsg.msgData[0]].curBuyOffer = [buyMsg.msgData[2], buyMsg.msgData[1]];   // [timestamp, price]
+
+         // check to see if new buy price is lowest price so far
+         if (buyMsg.msgData[1] < this.lowestMarketPrice) this.lowestMarketPrice = buyMsg.msgData[1];
+      };
+
+      // Records a new Sell offer
+      dataHistory.recordSellOffer = function (sellMsg) {
+         if(this.playerData[sellMsg.msgData[0]].state == 'Snipe'){                                 //TEST -> don't want to graph snipe offer
+            console.log("Tried to record sell offer, state: "  + this.playerData[sellMsg.msgData[0]].state);
+            return;
+         }
+         //Check if current sell offer needs to be stored
+         if (this.playerData[sellMsg.msgData[0]].curSellOffer != null) {
+            this.storeSellOffer(sellMsg.msgData[2], sellMsg.msgData[0]);
+         }
+         //Push on new sell offer
+         this.playerData[sellMsg.msgData[0]].curSellOffer = [sellMsg.msgData[2], sellMsg.msgData[1]];   // [timestamp, price]
+
+         // check to see if new sell price is highest price so far
+         if (sellMsg.msgData[1] > this.highestMarketPrice) this.highestMarketPrice = sellMsg.msgData[1];
+      };
+
+      // Shifts buy offer from currently being active into the history
+      dataHistory.storeBuyOffer = function (endTime, uid) {
+         if (this.playerData[uid].curBuyOffer == null) {
+            throw "Cannot shift " + uid + "'s buy offer because it is null";
+         }
+         this.playerData[uid].pastBuyOffers.push([this.playerData[uid].curBuyOffer[0], endTime, this.playerData[uid].curBuyOffer[1]]);  // [startTimestamp, endTimestamp, price]
+         this.playerData[uid].curBuyOffer = null;
+      };
+
+      // Shifts sell offer from currently being active into the history
+      dataHistory.storeSellOffer = function (endTime, uid) {
+         if (this.playerData[uid].curSellOffer == null) {
+            throw "Cannot shift " + uid + "'s sell offer because it is null";
+         }
+         this.playerData[uid].pastSellOffers.push([this.playerData[uid].curSellOffer[0], endTime, this.playerData[uid].curSellOffer[1]]);  // [startTimestamp, endTimestamp, price]
+         this.playerData[uid].curSellOffer = null;
       };
 
       dataHistory.storeSpeedChange = function (msg) {

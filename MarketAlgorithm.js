@@ -242,7 +242,98 @@ Redwood.factory("MarketAlgorithm", function () {
             msg.msgData.push(this.fundamentalPrice);
             this.sendToDataHistory(msg);
          }
-         
+
+         // Confirmation that a buy offer has been placed in market
+         if (msg.msgType == "C_EBUY") {
+            if (msg.msgData[0] == this.myId) {
+               var nMsg = new Message("DATA", "C_EBUY", msg.msgData);
+               this.sendToAllDataHistories(nMsg);
+            }
+         }
+
+         // Confirmation that a sell offer has been placed in market
+         if (msg.msgType == "C_ESELL") {
+            if (msg.msgData[0] == this.myId) {
+               var nMsg = new Message("DATA", "C_ESELL", msg.msgData);
+               this.sendToAllDataHistories(nMsg);
+            }
+         }
+
+         if(msg.msgType === "C_CANC"){
+
+            // Confirmation that a buy offer has been removed from market
+            if (msg.msgId === this.currentBuyId) {
+               if (msg.msgData[0] == this.myId) {
+                  var nMsg = new Message("DATA", "C_RBUY", msg.msgData);
+                  this.sendToAllDataHistories(nMsg);
+                  this.currentBuyId = 0;
+               }
+            }
+
+            // Confirmation that a sell offer has been placed in market
+            if (msg.msgId === this.currentSellId) {
+               if (msg.msgData[0] == this.myId) {
+                  var nMsg = new Message("DATA", "C_RSELL", msg.msgData);
+                  this.sendToAllDataHistories(nMsg);
+                  this.currentSellId = 0;
+               }
+            }
+         }
+
+         // Confirmation that a buy offer has been updated
+         if (msg.msgType == "C_UBUY") {
+            if (msg.msgData[0] == this.myId) {
+               var nMsg = new Message("DATA", "C_UBUY", msg.msgData);
+               this.sendToAllDataHistories(nMsg);
+            }
+         }
+
+         // Confirmation that a sell offer has been updated
+         if (msg.msgType == "C_USELL") {
+            if (msg.msgData[0] == this.myId) {
+               var nMsg = new Message("DATA", "C_USELL", msg.msgData);
+               this.sendToAllDataHistories(nMsg);
+            }
+         }
+
+         // Confirmation that a transaction has taken place
+         if (msg.msgType == "C_TRA") {
+
+            // for remote market, figure out if this is a buy or sell
+            // TODO MAKE THIS WHOLE PROCESS CLEANER so that this check does not have to be done
+            /*if(msg.msgData[1] === this.myId || msg.msgData[2] === this.myId){
+               
+               // if this order token matches my current buy token
+               if(msg.msgId === this.currentBuyId){
+                  this.msgData[2] = -1;   // do not consider this a sell
+               }
+
+               // if this order token matches my current sell token
+               if(msg.msgId === this.currentSellId){
+                  this.msgData[1] = -1;   // do not consider this a buy
+               }
+            }*/
+
+            //send data message to dataHistory containing [timestamp, price, fund-price, buyer, seller]
+            //pick the buyer to send the message unless the buyer is an outside investor, then use the seller
+            if (msg.msgData[2] === this.myId || (msg.msgData[1] === this.myId && msg.msgData[2] == 0)) {
+               var nMsg = new Message("DATA", "C_TRA", [msg.msgData[0], msg.msgData[3], this.fundamentalPrice, msg.msgData[1], msg.msgData[2]]);
+               this.sendToAllDataHistories(nMsg);
+            }
+
+            if (this.state == "state_maker") {
+               if (msg.msgData[1] === this.myId)
+               {
+                  this.currentBuyId = 0;
+                  this.sendToGroupManager(this.enterBuyOfferMsg());
+               }
+               if (msg.msgData[2] === this.myId) 
+               {
+                  this.currentSellId = 0;
+                  this.sendToGroupManager(this.enterSellOfferMsg());
+               }
+            }
+         }
       };
 
       marketAlgorithm.enterBuyOfferMsg = function () {
