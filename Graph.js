@@ -379,16 +379,16 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       };
 
       // unused in FBA
-      /*graph.drawOffers = function (graphRefr, dataHistory) {
-         for (var user of dataHistory.group) {
-            if (user !== dataHistory.myId) {
-               this.drawMarket(graphRefr, dataHistory.playerData[user].pastBuyOffers, dataHistory.playerData[user].curBuyOffer, "others-buy-offer");
-               this.drawMarket(graphRefr, dataHistory.playerData[user].pastSellOffers, dataHistory.playerData[user].curSellOffer, "others-sell-offer");
-            }
-         }
-         this.drawMarket(graphRefr, dataHistory.playerData[dataHistory.myId].pastBuyOffers, dataHistory.playerData[dataHistory.myId].curBuyOffer, "my-buy-offer");
-         this.drawMarket(graphRefr, dataHistory.playerData[dataHistory.myId].pastSellOffers, dataHistory.playerData[dataHistory.myId].curSellOffer, "my-sell-offer");
-      };*/
+      // graph.drawOffers = function (graphRefr, dataHistory) {
+      //    for (var user of dataHistory.group) {
+      //       if (user !== dataHistory.myId) {
+      //          this.drawMarket(graphRefr, dataHistory.playerData[user].pastBuyOffers, dataHistory.playerData[user].curBuyOffer, "others-buy-offer");
+      //          this.drawMarket(graphRefr, dataHistory.playerData[user].pastSellOffers, dataHistory.playerData[user].curSellOffer, "others-sell-offer");
+      //       }
+      //    }
+      //    this.drawMarket(graphRefr, dataHistory.playerData[dataHistory.myId].pastBuyOffers, dataHistory.playerData[dataHistory.myId].curBuyOffer, "my-buy-offer");
+      //    this.drawMarket(graphRefr, dataHistory.playerData[dataHistory.myId].pastSellOffers, dataHistory.playerData[dataHistory.myId].curSellOffer, "my-sell-offer");
+      // };
 
       graph.drawAllProfit = function (graphRefr, dataHistory) {
          for (var user of dataHistory.group) {
@@ -514,7 +514,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          this.drawPriceGridLines(graphRefr, this.profitPriceLines, this.profitSVG, this.mapProfitPriceToYAxis);
 
          this.drawMarket(graphRefr, dataHistory.pastFundPrices, dataHistory.curFundPrice, "price-line");
-
+         //this.drawOffers(graphRefr, dataHistory);        //ADDED AS TEST 5/1/17
          this.drawAllBatches(graphRefr, dataHistory);
 
          this.drawPriceAxis(graphRefr, this.marketPriceLines, this.marketSVG, this.mapMarketPriceToYAxis);

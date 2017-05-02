@@ -16,8 +16,8 @@ Redwood.factory("MarketAlgorithm", function () {
       marketAlgorithm.fundamentalPrice = 0;
       marketAlgorithm.oldFundamentalPrice = 0;
       marketAlgorithm.currentMsgId = 1;
-      marketAlgorithm.currentBuyId = 0;
-      marketAlgorithm.currentSellId = 0;
+      marketAlgorithm.currentBuyId = 0;         //CHANGED TO 1 5/1/17
+      marketAlgorithm.currentSellId = 0;        //CHANGED TO 1 5/1/17
 
       marketAlgorithm.isDebug = subjectArgs.isDebug;
       if (marketAlgorithm.isDebug) {

@@ -372,7 +372,7 @@ Redwood.controller("AdminCtrl",
          $("#sell-investor")
             .button()
             .click(function () {
-               var msg = new Message("OUCH", "ESELL", [0, 214748.3647, true]);
+               var msg = new Message("OUCH", "ESELL", [0, 214748.3647, true]);      
                msg.delay = false;
                for (var group in $scope.groupManagers) {
                   //$scope.groupManagers[group].dataStore.investorArrivals.push([Date.now() - $scope.startTime, "SELL"]);

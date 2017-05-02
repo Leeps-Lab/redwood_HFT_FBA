@@ -109,6 +109,7 @@ Redwood.factory("MarketManager", function () {
             case "USELL":
                market.FBABook.insertSell(message.msgData[0], message.msgData[1], message.timestamp, message.msgData[3], message.msgData[2]);
                //ADDED 4/28/17!!!
+               console.log("USELL in MM");
                var msg = new Message("ITCH", "C_USELL", [message.msgData[0], message.msgData[1], message.timestamp]);
                msg.timeStamp = message.timestamp; // for test output only
                msg.sellOrdersBeforeState = message.sellOrdersBeforeState;

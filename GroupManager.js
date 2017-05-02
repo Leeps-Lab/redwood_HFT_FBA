@@ -50,7 +50,7 @@ Redwood.factory("GroupManager", function () {
 
          // recieves messages from remote market
          groupManager.socket.onmessage = function(event) {
-            console.log("Received msg from server");
+            //console.log("Received msg from server");
             // create reader to read "blob" object
             var reader = new FileReader();
             reader.addEventListener("loadend", function() {
@@ -67,7 +67,7 @@ Redwood.factory("GroupManager", function () {
                for(ouchMsg of ouchMsgArray){
                   // translate the message and pass it to the recieve function
                   //console.log(ouchMsg);
-                  console.log(ouchToLeepsMsg(ouchMsg).asString());
+                  //console.log(ouchToLeepsMsg(ouchMsg).asString());
                   groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
                }
             });
@@ -221,10 +221,13 @@ Redwood.factory("GroupManager", function () {
          //console.log("Inbound Message: " + msg.asString() + "\n");
          this.inboundMarketLog = "";
 
+         if(msg.msgType === "C_USELL" || msg.msgType === "C_UBUY" || msg.msgType === "C_CANC"){   
+            console.log("Receiving from Remote");
+            console.log(msg);
+         }
          if(msg.msgType === "C_TRA" || msg.msgType === "BATCH"){     
-            //console.log("c_tra / batch");
-            //console.log("Flag2")
-            //console.log(msg.asString());
+            console.log("Receiving from Remote");
+            console.log(msg.asString());
             this.sendToMarketAlgorithms(msg);
          }
          else {
@@ -244,12 +247,13 @@ Redwood.factory("GroupManager", function () {
 
       groupManager.sendToRemoteMarket = function(leepsMsg){
 
-         if(leepsMsg.msgType === "USELL"){
+         if(leepsMsg.msgType === "USELL" || leepsMsg.msgType === "UBUY"){
             //console.log("Flag 5:");
+            console.log("Sending to Remote");
             console.log(leepsMsg);
          }
-         console.log("sending to remote server:\n");
-         console.log(leepsMsg.asString());
+         //console.log("sending to remote server:\n");
+         //console.log(leepsMsg.asString());
          var msg = leepsMsgToOuch(leepsMsg);
          this.socket.send(msg);
       }
@@ -339,13 +343,13 @@ Redwood.factory("GroupManager", function () {
          }
          else if(msgType === "ESELL"){
             //var msg2 = new Message("OUCH", "ESELL", [0, 0, true, getTime()]);
-            var msg2 = new Message("OUCH", "ESELL", [0, 0, false, getTime()]);                //make not ioc until darrell fixes
+            var msg2 = new Message("OUCH", "ESELL", [0, 214748.3647, false, getTime()]);                //make not ioc until darrell fixes
          }
          //var msg2 = new Message("OUCH", this.investorArrivals[this.investorIndex][1] == 1 ? "EBUY" : "ESELL", [0, 214748.3647, true, this.startTime + this.investorArrivals[this.investorIndex][0]]);
          //console.log(msg2.asString());
 
          msg2.msgId = this.curMsgId;
-         this.curMsgId ++;
+         this.curMsgId++;
          msg2.delay = false;
          this.sendToMarket(msg2);
 
