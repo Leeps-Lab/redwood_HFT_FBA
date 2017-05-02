@@ -233,7 +233,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          // draw others' filled order circles
          this.drawBatchCircles(graphRefr, dataHistory.othersOrders, "others-filled-orders", firstVisibleBatch);
          this.drawBatchCircles(graphRefr, dataHistory.investorOrders, "others-filled-orders", firstVisibleBatch);
-
          // filter out positive and negative orders for my orders
          this.drawBatchCircles(graphRefr, dataHistory.myOrders.filter(function (element) {
             return element.positive;

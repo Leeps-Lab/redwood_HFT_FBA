@@ -82,11 +82,11 @@ function leepsMsgToOuch(leepsMsg){
       }
       else{
         if(ouchMsg[4] == charToByte(String.fromCharCode(64))){
-          console.log("INVESTOROORORRORORRORO");
+          //console.log("INVESTOROORORRORORRORO");
           spliceInArray(intToByteArray(3), ouchMsg, 4, 32);         
         }
         else{
-          console.log("NOT INVESTOR");
+          //console.log("NOT INVESTOR");
           spliceInArray(intToByteArray(99999), ouchMsg, 4, 32);
         }
       }
