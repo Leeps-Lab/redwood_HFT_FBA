@@ -244,10 +244,10 @@ Redwood.factory("GroupManager", function () {
 
       groupManager.sendToRemoteMarket = function(leepsMsg){
 
-         //if(leepsMsg.msgType === "EBUY"){
+         if(leepsMsg.msgType === "USELL"){
             //console.log("Flag 5:");
-         //   console.log(leepsMsg);
-         //}
+            console.log(leepsMsg);
+         }
          console.log("sending to remote server:\n");
          console.log(leepsMsg.asString());
          var msg = leepsMsgToOuch(leepsMsg);

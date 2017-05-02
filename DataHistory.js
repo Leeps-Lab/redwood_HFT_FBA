@@ -10,6 +10,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.group = group;
       dataHistory.curFundPrice = [startTime, startFP, 0];
       dataHistory.pastFundPrices = [];
+      dataHistory.transactions = [];    //entries look like [timestamp, myTransaction]
       dataHistory.profit = startingWealth;
       dataHistory.speedCost = speedCost;
       dataHistory.maxSpread = maxSpread;
@@ -38,7 +39,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          if (this.debugMode) {
             this.logger.logRecv(msg, "Market Algorithm");
          }
-
+         console.log(msg);
          switch (msg.msgType) {
             case "FPC"      :
                this.recordFPCchange(msg);
@@ -49,8 +50,6 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                this.recordBatch(msg);
                break;
             case "C_TRA"    :
-               console.log("C_TRA message");
-               console.log(msg);
                this.storeTransaction(msg);
                break;
             case "C_USPEED" :
@@ -93,11 +92,15 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          for (var uid of this.group) {
             this.playerData[uid] = {
                speed: false,
+               curBuyOffer: null,
+               curSellOffer: null,
+               pastBuyOffers: [],
+               pastSellOffers: [],
+               displaySpread: this.maxSpread / 2,                         // the player's spread at the time of the last batch
                state: "Out",
                spread: this.maxSpread / 2,
-               displaySpread: this.maxSpread / 2,                         // the player's spread at the time of the last batch
                curProfitSegment: [this.startTime, this.profit, 0, "Out"], // [start time, start profit, slope, state]
-               pastProfitSegments: []                                     // [start time, end time, start price, end price, state]
+               pastProfitSegments: []                              // [start time, end time, start price, end price, state]
             };
          }
       };
@@ -222,17 +225,21 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          }
 
          if (msg.msgData[3] != 0) {
+            //checks if the player that receieved the buy transaction has a current buy offer
             if (this.playerData[msg.msgData[3]].curBuyOffer !== null) this.storeBuyOffer(msg.msgData[0], msg.msgData[3]);
 
             var uid = msg.msgData[3];
             var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.msgData[0] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); //changed from 1000
+            console.log(curProfit);
             this.recordProfitSegment(curProfit + msg.msgData[2] - msg.msgData[1], msg.msgData[0], this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);
          }
+         //checks if the player that receieved the buy transaction has a current sell offer
          if (msg.msgData[4] != 0) {
             if (this.playerData[msg.msgData[4]].curSellOffer !== null) this.storeSellOffer(msg.msgData[0], msg.msgData[4]);
 
             var uid = msg.msgData[4];
             var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.msgData[0] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); //changed from 1000
+            console.log(curProfit);
             this.recordProfitSegment(curProfit + msg.msgData[1] - msg.msgData[2], msg.msgData[0], this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);
          }
          this.transactions.push(msg.msgData);
@@ -245,7 +252,6 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             return;
          }
          //Check if current buy offer needs to be stored
-         console.log(this.playerData[buyMsg.msgData[0]].curBuyOffer);
          if (this.playerData[buyMsg.msgData[0]].curBuyOffer != null) {
             this.storeBuyOffer(buyMsg.msgData[2], buyMsg.msgData[0]);
             console.log("Data being stored: " + buyMsg.msgData[2] + " : " + buyMsg.msgData[0]);

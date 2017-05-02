@@ -31,7 +31,7 @@ Redwood.factory("MarketManager", function () {
       market.recvMessage = function (message) {
          //message.timestamp = Date.now();
          message.timestamp = getTime();
-
+         console.log("MarketManager flag", message);
          if (this.debugMode) {
             this.logger.logRecv(message, "Group Manager");
          }

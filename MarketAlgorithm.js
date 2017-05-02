@@ -361,6 +361,7 @@ Redwood.factory("MarketAlgorithm", function () {
       marketAlgorithm.updateBuyOfferMsg = function () {
          //var nMsg = new Message("OUCH", "UBUY", [this.myId, this.fundamentalPrice - this.spread / 2, false, Date.now()]);
          var nMsg = new Message("OUCH", "UBUY", [this.myId, this.fundamentalPrice - this.spread / 2, false, getTime()]);
+         //var nMsg = new Message("OUCH", "UBUY", [this.myId, this.fundamentalPrice - this.spread / 2, getTime()]);             //test 5/1/17
          nMsg.delay = !this.using_speed;
          nMsg.senderId = this.myId;
          nMsg.msgId = this.currentMsgId;
@@ -373,6 +374,7 @@ Redwood.factory("MarketAlgorithm", function () {
       marketAlgorithm.updateSellOfferMsg = function () {
          //var nMsg = new Message("OUCH", "USELL", [this.myId, this.fundamentalPrice + this.spread / 2, false, Date.now()]);
          var nMsg = new Message("OUCH", "USELL", [this.myId, this.fundamentalPrice + this.spread / 2, false, getTime()]);
+         //var nMsg = new Message("OUCH", "USELL", [this.myId, this.fundamentalPrice + this.spread / 2, getTime()]);            //test 5/1/17
          nMsg.delay = !this.using_speed;
          nMsg.senderId = this.myId;
          nMsg.msgId = this.currentMsgId;
