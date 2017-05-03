@@ -319,7 +319,17 @@ Redwood.factory("MarketAlgorithm", function () {
             if (msg.msgData[2] === this.myId || (msg.msgData[1] === this.myId && msg.msgData[2] == 0)) {
                var nMsg = new Message("DATA", "C_TRA", [msg.msgData[0], msg.msgData[3], this.fundamentalPrice, msg.msgData[1], msg.msgData[2]]);
                this.sendToAllDataHistories(nMsg);
-            }
+               //var batchMsg = new Message("ITCH", "BATCH", [msg.msgData[0], msg.msgData[3], this.fundamentalPrice, msg.msgData[1], msg.msgData[2]]);
+               //this.sendToAllDataHistories(batchMsg);
+            } 
+
+            //test 5/1/17
+            //if(msg.msgData[1] == 0 && msg.msgData[2] == 0){
+            //   console.log("test batch");
+            //   var nMsg = new Message("ITCH", "BATCH", [msg.msgData[0], msg.msgData[3], this.fundamentalPrice, msg.msgData[1], msg.msgData[2]]);
+               //var msg = new Message("ITCH", "BATCH", [$.extend(true, [], this.FBABook.buyContracts), $.extend(true, [], this.FBABook.sellContracts), this.FBABook.batchNumber, equilibriumPrice]);
+            //   this.sendToAllDataHistories(nMsg);
+            //}
 
             if (this.state == "state_maker") {
                if (msg.msgData[1] === this.myId)

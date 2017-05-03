@@ -45,9 +45,9 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                this.recordFPCchange(msg);
                break;
             case "BATCH"    :
-               //console.log("batch in datah history");
+               console.log("batch in datah history");
                //onsole.log(msg);
-               this.recordBatch(msg);
+               //this.recordBatch(msg);
                break;
             case "C_TRA"    :
                this.storeTransaction(msg);
@@ -191,6 +191,68 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          }
       };
 
+      // var order = {
+      //       id: newId,
+      //       price: newPrice,
+      //       timestamp: timestamp,
+      //       originTimestamp: originTimestamp,
+      //       ioc: ioc,
+      //       transacted: false,
+      //       batchNumber: this.batchNumber,
+      //       originBatch: this.batchNumber
+      //    };
+
+      /*dataHistory.recordBatch = function (msg) {                  //msg is in form [timestamp, price, fund-price, buyer, seller]
+         if(msg.msgData[3] == this.myId){                            //I transacted as a buyer
+            var buyOrder = {
+               id: msg.msgData[3],
+               price: msg.msgData[1],
+               timestamp: msg.msgData[0],
+               ioc: false,
+               positive: false,     //ADDED 
+               transacted: true,
+               batchNumber: 1000,   //change
+               originBatch: 1000
+            };
+
+            buyOrder.positive = msg.msgData[2] - msg.msgData[1] >= 0;   //check if order was positive
+            this.myOrders.push(buyOrder);                               //push my order to graph
+
+
+            var sellInvestorOrder = {                             //This investor sold to the buyer
+               id: 0,
+               price: msg.msgData[1],
+               timestamp: msg.msgData[0],
+               ioc: true,
+               positive: false,     //ADDED 
+               transacted: true,
+               batchNumber: 1000,   //change
+               originBatch: 1000
+            };
+
+            sellInvestorOrder.push(price: msg.msgData[1] + this.investorOrderSpacing);   //calculate the investor spacing
+            this.investorOrders.push(sellInvestorOrder);                   //push the investor I transcated with
+         }
+         else if(msg.msgData[4] == this.myId){                    //I transacted as a seller
+            //push my order to graph
+            var sellInvestorPrice = msg.msgData[1];
+            buyInvestorPrice -= this.investorOrderSpacing;        //calculate the investor spacing
+            this.investorOrders.push(buyOrder);                   //push the investor I transcated with
+         }
+         else{                                     //Another user transacted -> I push to update my graph
+            if(msg.msgData[3] === 0){              //This other user transacted as a seller
+               //push their order to graph
+               //calculate the investor spacing
+               //push the investor I transcated with
+            }
+            else if(msg.msgData[4] === 0){         //This other user transacted as a buyer
+               //push my order to graph
+               //calculate the investor spacing
+               //push the investor I transcated with
+            }
+         }
+      };*/
+
       dataHistory.recordStateChange = function (newState, uid, timestamp) {
          this.playerData[uid].state = newState;
          this.calcLowestSpread();
@@ -214,11 +276,24 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          this.curFundPrice = null;
       };
 
-      dataHistory.storeTransaction = function (msg) {
+      dataHistory.storeTransaction = function (msg) {    //[timestamp, price, fund-price, buyer, seller]
          if (msg.msgData[3] == this.myId) {
             // if I'm the buyer
             this.profit += msg.msgData[2] - msg.msgData[1];
+
+            //ADDED 5/2/17 for graphing*************************************
+            var isPositive = msg.msgData[2] - msg.msgData[1] >= 0;         //calculate if positive
+            var investorPrice = msg.msgData[1] + this.investorOrderSpacing;    //price of transaction + spacing
+            this.investorOrders.push({id: 0, price: investorPrice, timestamp: msg.msgData[0], 
+               originTimeStamp: msg.msgData[0], ioc: true, transacted: true, 
+               batchNumber: market.FBABook.batchNumber, originBatch: market.FBABook.batchNumber});
+            market.FBABook.batchNumber++;
+
+            this.myOrders.push({id: this.myId, price: investorPrice, timestamp: msg.msgData[0], 
+               originTimeStamp: msg.msgData[0], ioc: true, transacted: true, 
+               batchNumber: market.FBABook.batchNumber, originBatch: market.FBABook.batchNumber});
          }
+
          else if (msg.msgData[4] == this.myId) {
             //if I'm the seller
             this.profit += msg.msgData[1] - msg.msgData[2];
@@ -230,7 +305,6 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
 
             var uid = msg.msgData[3];
             var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.msgData[0] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); //changed from 1000
-            console.log(curProfit);
             this.recordProfitSegment(curProfit + msg.msgData[2] - msg.msgData[1], msg.msgData[0], this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);
          }
          //checks if the player that receieved the buy transaction has a current sell offer
@@ -239,7 +313,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
 
             var uid = msg.msgData[4];
             var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.msgData[0] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); //changed from 1000
-            console.log(curProfit);
+            //console.log(curProfit);
             this.recordProfitSegment(curProfit + msg.msgData[1] - msg.msgData[2], msg.msgData[0], this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);
          }
          this.transactions.push(msg.msgData);
@@ -314,7 +388,6 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          if (this.playerData[uid].curProfitSegment != null) {
             this.storeProfitSegment(startTime, uid);
          }
-         console.log(startTime, price, slope, state);
          this.playerData[uid].curProfitSegment = [startTime, price, slope, state];
       };
 

@@ -228,6 +228,7 @@ Redwood.factory("GroupManager", function () {
          if(msg.msgType === "C_TRA" || msg.msgType === "BATCH"){     
             console.log("Receiving from Remote");
             console.log(msg.asString());
+            console.log(msg);
             this.sendToMarketAlgorithms(msg);
          }
          else {
