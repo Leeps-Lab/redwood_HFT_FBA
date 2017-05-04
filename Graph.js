@@ -231,13 +231,25 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          //var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength) - 1;
          if (firstVisibleBatch < 0) firstVisibleBatch = 0;
          // draw others' filled order circles
-         this.drawBatchCircles(graphRefr, dataHistory.othersOrders, "others-filled-orders", firstVisibleBatch);
-         this.drawBatchCircles(graphRefr, dataHistory.investorOrders, "others-filled-orders", firstVisibleBatch);
+
+         //this.drawBatchCircles(graphRefr, dataHistory.othersOrders, "others-filled-orders", firstVisibleBatch);
+         //this.drawBatchCircles(graphRefr, dataHistory.investorOrders, "others-filled-orders", firstVisibleBatch);
+         this.drawBatchCircles(graphRefr, dataHistory.investorTransactions, "others-filled-orders", firstVisibleBatch);
+         this.drawBatchCircles(graphRefr, dataHistory.otherTransactions, "others-filled-orders", firstVisibleBatch);
+
          // filter out positive and negative orders for my orders
-         this.drawBatchCircles(graphRefr, dataHistory.myOrders.filter(function (element) {
+         // this.drawBatchCircles(graphRefr, dataHistory.myOrders.filter(function (element) {
+         //    return element.positive;
+         // }), "my-filled-orders-positive", firstVisibleBatch);
+         // this.drawBatchCircles(graphRefr, dataHistory.myOrders.filter(function (element) {
+         //    return !element.positive;
+         // }), "my-filled-orders-negative", firstVisibleBatch);
+
+         // filter out positive and negative orders for my orders
+         this.drawBatchCircles(graphRefr, dataHistory.myTransactions.filter(function (element) {
             return element.positive;
          }), "my-filled-orders-positive", firstVisibleBatch);
-         this.drawBatchCircles(graphRefr, dataHistory.myOrders.filter(function (element) {
+         this.drawBatchCircles(graphRefr, dataHistory.myTransactions.filter(function (element) {
             return !element.positive;
          }), "my-filled-orders-negative", firstVisibleBatch);
          

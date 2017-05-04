@@ -16,6 +16,10 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.maxSpread = maxSpread;
       dataHistory.batchLength = batchLength;
       
+      dataHistory.investorTransactions =[];
+      dataHistory.otherTransactions = [];
+      dataHistory.myTransactions = [];
+
       dataHistory.priceHistory = [];         // storage for all equilibrium prices
       dataHistory.investorOrderSpacing = maxSpread / 4;  // visual spacing between investor orders in dollars
       dataHistory.myOrders = [];             // alternate order storage for  ing
@@ -191,68 +195,6 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          }
       };
 
-      // var order = {
-      //       id: newId,
-      //       price: newPrice,
-      //       timestamp: timestamp,
-      //       originTimestamp: originTimestamp,
-      //       ioc: ioc,
-      //       transacted: false,
-      //       batchNumber: this.batchNumber,
-      //       originBatch: this.batchNumber
-      //    };
-
-      /*dataHistory.recordBatch = function (msg) {                  //msg is in form [timestamp, price, fund-price, buyer, seller]
-         if(msg.msgData[3] == this.myId){                            //I transacted as a buyer
-            var buyOrder = {
-               id: msg.msgData[3],
-               price: msg.msgData[1],
-               timestamp: msg.msgData[0],
-               ioc: false,
-               positive: false,     //ADDED 
-               transacted: true,
-               batchNumber: 1000,   //change
-               originBatch: 1000
-            };
-
-            buyOrder.positive = msg.msgData[2] - msg.msgData[1] >= 0;   //check if order was positive
-            this.myOrders.push(buyOrder);                               //push my order to graph
-
-
-            var sellInvestorOrder = {                             //This investor sold to the buyer
-               id: 0,
-               price: msg.msgData[1],
-               timestamp: msg.msgData[0],
-               ioc: true,
-               positive: false,     //ADDED 
-               transacted: true,
-               batchNumber: 1000,   //change
-               originBatch: 1000
-            };
-
-            sellInvestorOrder.push(price: msg.msgData[1] + this.investorOrderSpacing);   //calculate the investor spacing
-            this.investorOrders.push(sellInvestorOrder);                   //push the investor I transcated with
-         }
-         else if(msg.msgData[4] == this.myId){                    //I transacted as a seller
-            //push my order to graph
-            var sellInvestorPrice = msg.msgData[1];
-            buyInvestorPrice -= this.investorOrderSpacing;        //calculate the investor spacing
-            this.investorOrders.push(buyOrder);                   //push the investor I transcated with
-         }
-         else{                                     //Another user transacted -> I push to update my graph
-            if(msg.msgData[3] === 0){              //This other user transacted as a seller
-               //push their order to graph
-               //calculate the investor spacing
-               //push the investor I transcated with
-            }
-            else if(msg.msgData[4] === 0){         //This other user transacted as a buyer
-               //push my order to graph
-               //calculate the investor spacing
-               //push the investor I transcated with
-            }
-         }
-      };*/
-
       dataHistory.recordStateChange = function (newState, uid, timestamp) {
          this.playerData[uid].state = newState;
          this.calcLowestSpread();
@@ -276,27 +218,79 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          this.curFundPrice = null;
       };
 
+      // var order = {
+      //       id: newId,
+      //       price: newPrice,
+      //       timestamp: timestamp,
+      //       originTimestamp: originTimestamp,
+      //       ioc: ioc,
+      //       transacted: false,
+      //       batchNumber: this.batchNumber,
+      //       originBatch: this.batchNumber
+      //    };
+      dataHistory.calcClosestBatch = function (myTimestamp){
+         var timeElapsed = myTimestamp - this.startTime;
+         console.log(Math.floor(timeElapsed / (this.batchLength * 1000000)));
+         return Math.round(timeElapsed / (this.batchLength * 1000000));
+      };
       dataHistory.storeTransaction = function (msg) {    //[timestamp, price, fund-price, buyer, seller]
-         if (msg.msgData[3] == this.myId) {
-            // if I'm the buyer
-            this.profit += msg.msgData[2] - msg.msgData[1];
-
+         var myTransaction = {};       
+         var investorTransaction = {};
+         var otherTransaction = {};        
+         console.log(msg.msgData[1]);
+         if (msg.msgData[3] == this.myId) {                                      //I'm the buyer
+            this.profit += msg.msgData[2] - msg.msgData[1];                      //fundPrice - myPrice
             //ADDED 5/2/17 for graphing*************************************
-            var isPositive = msg.msgData[2] - msg.msgData[1] >= 0;         //calculate if positive
-            var investorPrice = msg.msgData[1] + this.investorOrderSpacing;    //price of transaction + spacing
-            this.investorOrders.push({id: 0, price: investorPrice, timestamp: msg.msgData[0], 
-               originTimeStamp: msg.msgData[0], ioc: true, transacted: true, 
-               batchNumber: market.FBABook.batchNumber, originBatch: market.FBABook.batchNumber});
-            market.FBABook.batchNumber++;
 
-            this.myOrders.push({id: this.myId, price: investorPrice, timestamp: msg.msgData[0], 
-               originTimeStamp: msg.msgData[0], ioc: true, transacted: true, 
-               batchNumber: market.FBABook.batchNumber, originBatch: market.FBABook.batchNumber});
+            //push info on my transaction to graph
+            myTransaction.isPositive = msg.msgData[2] - msg.msgData[1] >= 0;         //calculate +/- transaction
+            myTransaction.price = msg.msgData[1];
+            myTransaction.transacted = true;
+            myTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0]);   
+            this.myTransactions.push(myTransaction);
+
+            //push info on the investor I transacted with to graph
+            investorTransaction.price = msg.msgData[1] + this.investorOrderSpacing;    //investor has price of transaction + spacing
+            investorTransaction.transacted = true;
+            investorTransaction.batchNumber = myTransaction.batchNumber; 
+            this.investorTransactions.push(investorTransaction);
          }
 
          else if (msg.msgData[4] == this.myId) {
             //if I'm the seller
             this.profit += msg.msgData[1] - msg.msgData[2];
+
+            //ADDED 5/2/17 for graphing*************************************
+
+            //push info on my transaction to graph
+            myTransaction.isPositive = msg.msgData[1] - msg.msgData[2] >= 0;         //calculate +/- transaction
+            myTransaction.price = msg.msgData[1];
+            myTransaction.transacted = true;
+            myTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0]); 
+            this.myTransactions.push(myTransaction);
+
+            //push info on the investor I transacted with to graph
+            investorTransaction.price = msg.msgData[1] - this.investorOrderSpacing;    //investor has price of transaction + spacing
+            investorTransaction.transacted = true;
+            investorTransaction.batchNumber = myTransaction.batchNumber; 
+            this.investorTransactions.push(investorTransaction);
+         }
+         else if(msg.msgData[3] != this.myId && msg.msgData[4] != this.myId){
+            //someone else transacted, I need to push to otherTransactions
+            //ADDED 5/2/17 for graphing*************************************
+
+            //push info on other user's transaction to graph
+            otherTransaction.isPositive = msg.msgData[1] - msg.msgData[2] >= 0;         //calculate +/- transaction
+            otherTransaction.price = msg.msgData[1];
+            otherTransaction.transacted = true;
+            otherTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0]); 
+            this.otherTransactions.push(myTransaction);
+
+            //push info on the investor I transacted with to graph
+            investorTransaction.price = msg.msgData[1] - this.investorOrderSpacing;    //investor has price of transaction + spacing
+            investorTransaction.transacted = true;
+            investorTransaction.batchNumber = otherTransaction.batchNumber; 
+            this.investorTransactions.push(investorTransaction);
          }
 
          if (msg.msgData[3] != 0) {
@@ -320,7 +314,24 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       };
 
       //records a new buy offer
-      dataHistory.recordBuyOffer = function (buyMsg) {
+      dataHistory.recordBuyOffer = function (buyMsg) { //[id,price,timestamp]
+         //Store updated message to graph batch ticks
+         var myUpdate = {};
+         //var investorUpdate = {};
+         var otherUpdate = {};
+
+         if(buyMsg.msgData[0] == this.myId){    //this was my message
+            myUpdate.batchNumber = this.calcClosestBatch(buyMsg.msgData[2]);
+            myUpdate.price = buyMsg.msgData[1];
+            //this.myOrders.push(myUpdate);
+         }
+         else{    //this was someone elses update msg
+            otherUpdate.batchNumber = this.calcClosestBatch(buyMsg.msgData[2]);
+            otherUpdate.price = buyMsg.msgData[1];
+            //this.othersOrders.push(otherUpdate);
+         }
+         
+
          if(this.playerData[buyMsg.msgData[0]].state == 'Snipe'){                                   //TEST -> don't want to graph snipe offer
             console.log("Tried to record buy offer, state: "  + this.playerData[buyMsg.msgData[0]].state);
             return;
@@ -336,10 +347,29 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
 
          // check to see if new buy price is lowest price so far
          if (buyMsg.msgData[1] < this.lowestMarketPrice) this.lowestMarketPrice = buyMsg.msgData[1];
+
+         window.setTimeout(this.myOrders.push(myUpdate),this.batchLength*1000000);
+         window.setTimeout(this.othersOrders.push(otherUpdate),this.batchLength*1000000);
       };
 
       // Records a new Sell offer
       dataHistory.recordSellOffer = function (sellMsg) {
+         //Store updated message to graph batch ticks
+         var myUpdate = {};
+         //var investorUpdate = {};
+         var otherUpdate = {};
+
+         if(sellMsg.msgData[0] == this.myId){    //this was my message
+            myUpdate.batchNumber = this.calcClosestBatch(sellMsg.msgData[2]);
+            myUpdate.price = sellMsg.msgData[1];
+            //this.myOrders.push(myUpdate);
+         }
+         else{ //this was someone else's update msg
+            otherUpdate.batchNumber = this.calcClosestBatch(sellMsg.msgData[2]);
+            otherUpdate.price = sellMsg.msgData[1];
+            //this.othersOrders.push(otherUpdate);
+         }
+
          if(this.playerData[sellMsg.msgData[0]].state == 'Snipe'){                                 //TEST -> don't want to graph snipe offer
             console.log("Tried to record sell offer, state: "  + this.playerData[sellMsg.msgData[0]].state);
             return;
@@ -353,6 +383,9 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
 
          // check to see if new sell price is highest price so far
          if (sellMsg.msgData[1] > this.highestMarketPrice) this.highestMarketPrice = sellMsg.msgData[1];
+
+         window.setTimeout(this.myOrders.push(myUpdate),this.batchLength*1000000);
+         window.setTimeout(this.othersOrders.push(otherUpdate),this.batchLength*1000000);
       };
 
       // Shifts buy offer from currently being active into the history
