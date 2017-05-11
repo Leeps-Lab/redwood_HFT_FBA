@@ -216,7 +216,6 @@ function leepsMsgToOuch(leepsMsg){
 
 // converts from the OUCH 4.2 formatted message to the in-house leeps message format
 function ouchToLeepsMsg(ouchMsg){
-  
   // Acctepted message
   if(ouchMsg.charAt(0) === 'A'){
 
@@ -362,12 +361,18 @@ function ouchToLeepsMsg(ouchMsg){
     //console.log(msg);
     return msg;
   }
-  if(ouchMsg.charAt[0] === 'I'){
-    console.log("ITCH MESSAGE RECEIEVED");
+
+  if(ouchMsg.charAt(0) === 'S'){
+    var batchType = ouchMsg.charAt(9);  //B for start of batch, P for end of batch
+    var timeStamp = string256ToInt(ouchMsg.substring(1,9));  
+    var msg = new Message("ITCH", "BATCH", [batchType, timeStamp]);
+    return msg;
   }
-  else{
-      console.log("Not a supported msg format");
-  }
+
+
+  // else{
+  //     console.log("Not a supported msg format");
+  // }
 
 }
 

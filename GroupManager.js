@@ -31,6 +31,7 @@ Redwood.factory("GroupManager", function () {
       groupManager.outboundMarketLog = "";          // string of debug info for messages outbound to market
       groupManager.inboundMarketLog = "";           // string of debug info for messages inbound from market
 
+      groupManager.currentFundPrice = 0;
       // if (groupManager.isDebug) {
       //    // add the logging terminal to the ui section of the html
       //    $("#ui").append('<div class="terminal-wrap"><div class="terminal-head">Group ' + groupManager.groupNumber +
@@ -61,14 +62,18 @@ Redwood.factory("GroupManager", function () {
                var ouchStr = String.fromCharCode.apply(null, new Uint8Array(reader.result));
                //logStringAsNums(ouchStr);
 
-               // split the string in case messages are conjoined
-               var ouchMsgArray = splitMessages(ouchStr);
-
-               for(ouchMsg of ouchMsgArray){
-                  // translate the message and pass it to the recieve function
-                  //console.log(ouchMsg);
-                  //console.log(ouchToLeepsMsg(ouchMsg).asString());
-                  groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
+               if(ouchStr.charAt(0) == 'S'){      //special batch msg -> no need to split
+                  groupManager.recvFromMarket(ouchToLeepsMsg(ouchStr));
+               }
+               else{
+                  // split the string in case messages are conjoined
+                  var ouchMsgArray = splitMessages(ouchStr);
+                  //console.log("Received from Server: \n");
+                  for(ouchMsg of ouchMsgArray){
+                     // translate the message and pass it to the recieve function
+                     //console.log(ouchToLeepsMsg(ouchMsg).asString());
+                     groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
+                  }
                }
             });
             reader.readAsArrayBuffer(event.data);
@@ -215,20 +220,21 @@ Redwood.factory("GroupManager", function () {
       groupManager.recvFromMarket = function (msg) {
 
          // add message to log
-         this.inboundMarketLog += msg.asString() + "\n";
+         //this.inboundMarketLog += msg.asString() + "\n";
          //console.log("Inbound Messages:\n" + this.inboundMarketLog);
          //console.log(msg);
-         //console.log("Inbound Message: " + msg.asString() + "\n");
-         this.inboundMarketLog = "";
+         console.log("Inbound Message: " + msg.asString() + "\n");
+         //this.inboundMarketLog = "";
 
          if(msg.msgType === "C_USELL" || msg.msgType === "C_UBUY" || msg.msgType === "C_CANC"){   
-            console.log("Receiving from Remote");
-            console.log(msg);
+            //console.log("Receiving from Remote");
+            //console.log(msg);
          }
+         //console.log("Receiving from Remote");
          if(msg.msgType === "C_TRA" || msg.msgType === "BATCH"){     
-            console.log("Receiving from Remote");
-            console.log(msg.asString());
-            console.log(msg);
+            //console.log("Receiving from Remote");
+            //console.log(msg.asString());
+            //console.log(msg);
             this.sendToMarketAlgorithms(msg);
          }
          else {
@@ -248,10 +254,10 @@ Redwood.factory("GroupManager", function () {
 
       groupManager.sendToRemoteMarket = function(leepsMsg){
 
-         if(leepsMsg.msgType === "USELL" || leepsMsg.msgType === "UBUY"){
+         if(leepsMsg.msgType === "ESELL" || leepsMsg.msgType === "EBUY"){
             //console.log("Flag 5:");
-            console.log("Sending to Remote");
-            console.log(leepsMsg);
+            //console.log("Sending to Remote");
+            //console.log(leepsMsg);
          }
          //console.log("sending to remote server:\n");
          //console.log(leepsMsg.asString());
@@ -317,12 +323,15 @@ Redwood.factory("GroupManager", function () {
          this.dataStore.storeMsg(msg);
          this.sendToMarketAlgorithms(msg);
 
+         this.currentFundPrice = this.priceChanges[this.priceIndex][1]; //for knowing investor price
+
          this.priceIndex++;
 
          if (this.priceIndex >= this.priceChanges.length) {
             console.log("reached end of price changes array");
             return;
          }
+
 
          //console.log(this.priceChanges[this.priceIndex][0], this.startTime + this.priceChanges[this.priceIndex][0] - getTime());
          //window.setTimeout(this.sendNextPriceChange, this.startTime + this.priceChanges[this.priceIndex][0] - Date.now());
@@ -339,12 +348,14 @@ Redwood.factory("GroupManager", function () {
          // create the outside investor leeps message
          var msgType = this.investorArrivals[this.investorIndex][1] === 1 ? "EBUY" : "ESELL";
          if(msgType === "EBUY"){
-            //var msg2 = new Message("OUCH", "EBUY", [0, 214748.3647, true, getTime()]);     
-            var msg2 = new Message("OUCH", "EBUY", [0, 214748.3647, false, getTime()]);      //make not ioc until darrell fixes  
+            //var msg2 = new Message("OUCH", "EBUY", [0, 214748.3647, false, getTime()]);      //make not ioc until darrell fixes  
+            var msg2 = new Message("OUCH", "EBUY", [0, this.currentFundPrice + 1, false, getTime()]);      //make not ioc until darrell fixes  
+            //var msg2 = new Message("OUCH", "EBUY", [0, 101, false, getTime()]);      //kristian test
          }
          else if(msgType === "ESELL"){
-            //var msg2 = new Message("OUCH", "ESELL", [0, 0, true, getTime()]);
-            var msg2 = new Message("OUCH", "ESELL", [0, 214748.3647, false, getTime()]);                //make not ioc until darrell fixes
+            var msg2 = new Message("OUCH", "ESELL", [0, 0, false, getTime()]);
+            //var msg2 = new Message("OUCH", "ESELL", [0, 214748.3647, false, getTime()]);                //make not ioc until darrell fixes
+            //var msg2 = new Message("OUCH", "ESELL", [0, 99, false, getTime()]);                //make not ioc until darrell fixes
          }
          //var msg2 = new Message("OUCH", this.investorArrivals[this.investorIndex][1] == 1 ? "EBUY" : "ESELL", [0, 214748.3647, true, this.startTime + this.investorArrivals[this.investorIndex][0]]);
          //console.log(msg2.asString());
@@ -356,7 +367,7 @@ Redwood.factory("GroupManager", function () {
 
          this.investorIndex++;
 
-         if (this.investorIndex >= this.investorArrivals.length) {
+         if (this.investorIndex == this.investorArrivals.length) {
             console.log("reached end of investors array");
             return;
          }

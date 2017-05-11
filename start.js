@@ -125,6 +125,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                   console.log("delay: " + delay);
                   window.setTimeout($scope.processInputAction, delay, 0);  //from cda
                   //window.setTimeout($scope.processInputAction, $scope.inputData[0][0] + $scope.dHistory.startTime - $scope.tradingGraph.getCurOffsetTime(), 0);
+                  //console.log($scope.config.batchLength*1000000);
+                  //window.setTimeout($scope.dHistory.pushToBatches, $scope.config.batchLength*1000000);
                });
             }
          });

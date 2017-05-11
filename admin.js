@@ -186,11 +186,11 @@ Redwood.controller("AdminCtrl",
                   var rows = response.data.split("\n");
 
                   //Parse investor arrival changes CSV
-                  for (var i = 0; i < rows.length - 2; i++) {
+                  for (var i = 0; i < rows.length - 1; i++) {
                      $scope.investorArrivals[i] = [];
                   }
 
-                  for (var i = 0; i < rows.length - 2; i++) {
+                  for (var i = 0; i < rows.length - 1; i++) {
                      if (rows[i + 1] === "") continue;
                      var cells = rows[i + 1].split(",");
                      for (var j = 0; j < cells.length; j++) {
@@ -341,8 +341,10 @@ Redwood.controller("AdminCtrl",
                var investorDelayTime = ($scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0]) - getTime();     //from cda
                console.log("Initial Delay: " + investorDelayTime);      //from cda
                window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, investorDelayTime / 1000000);  //from cda
+               //window.setTimeout($scope.dHistory.pushToBatches, $scope.config.batchLength*1000000);
             }
          });
+         
 
          ra.recv("To_Group_Manager", function (uid, msg) {
             var groupNum = $scope.idToGroup[uid];
