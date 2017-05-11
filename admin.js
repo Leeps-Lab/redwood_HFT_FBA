@@ -297,53 +297,63 @@ Redwood.controller("AdminCtrl",
             // start experiment if all subjects are marked ready
             if ($scope.startSyncArrays[groupNum].allReady()) {
                //$scope.startTime = Date.now();
-               $scope.startTime = getTime();
 
-               var group = $scope.getGroup(groupNum);
-               var startFP = $scope.priceChanges[0][1];
+               // calculate how long we have to wait so that start time coincides with a batch
+               let delay = ($scope.groupManagers[groupNum].lastbatchTime - getTime()) / 1000000 + $scope.config.batchLength;
 
-               //send out start message with start time and information about group then start groupManager
-               var beginData = {
-                  startTime: $scope.startTime,
-                  startFP: startFP,
-                  groupNumber: groupNum,
-                  group: group,
-                  isDebug: debugMode,
-                  speedCost: $scope.config.speedCost,
-                  startingWealth: $scope.config.startingWealth,
-                  maxSpread: $scope.config.maxSpread,
-                  playerTimeOffsets: $scope.playerTimeOffsets,
-                  batchLength: $scope.config.batchLength
-               };
-
-               if($scope.config.hasOwnProperty("input_addresses")) {
-                  //console.log("%cRUNNING IN TEST MODE", 'font-family: "Comic Sans MS"');
-                  beginData.input_addresses = $scope.config.input_addresses.split(',');
-               }
-
-               ra.sendCustom("Experiment_Begin", beginData, "admin", 1, groupNum);
-               $scope.groupManagers[groupNum].startTime = $scope.startTime;
-               $scope.groupManagers[groupNum].dataStore.init(startFP, $scope.startTime, $scope.config.maxSpread);
-               //$scope.groupManagers[groupNum].market.timeoutID = window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, $scope.startTime + $scope.config.batchLength - Date.now(), $scope.startTime + $scope.config.batchLength);
- //UNCOMMENT LATER              //$scope.groupManagers[groupNum].market.timeoutID = window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, ($scope.startTime - getTime()) / 1000000 + $scope.config.batchLength, $scope.startTime + $scope.config.batchLength * 1000000);
-               for (var user of group) {
-                  $scope.groupManagers[groupNum].marketAlgorithms[user].fundamentalPrice = startFP;
-               }
-
-               // if there are any price changes to send, start sending them
-               if ($scope.priceChanges.length > 2) {
-                  //window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, $scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - Date.now());
-                  window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, ($scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - getTime()) / 1000000);
-               }
-               //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - Date.now());
-               //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - getTime());
-               //$scope.groupManagers[groupNum].intervalPromise = $interval($scope.groupManagers[groupNum].update.bind($scope.groupManagers[groupNum]), CLOCK_FREQUENCY);
-               var investorDelayTime = ($scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0]) - getTime();     //from cda
-               console.log("Initial Delay: " + investorDelayTime);      //from cda
-               window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, investorDelayTime / 1000000);  //from cda
-               //window.setTimeout($scope.dHistory.pushToBatches, $scope.config.batchLength*1000000);
+               console.log(delay);
+               window.setTimeout(startExperiment, delay, groupNum);
             }
          });
+
+         // setup game state and send begin messages to clients
+         var startExperiment = function(groupNum){
+            $scope.startTime = getTime();
+
+            var group = $scope.getGroup(groupNum);
+            var startFP = $scope.priceChanges[0][1];
+
+            //send out start message with start time and information about group then start groupManager
+            var beginData = {
+               startTime: $scope.startTime,
+               startFP: startFP,
+               groupNumber: groupNum,
+               group: group,
+               isDebug: debugMode,
+               speedCost: $scope.config.speedCost,
+               startingWealth: $scope.config.startingWealth,
+               maxSpread: $scope.config.maxSpread,
+               playerTimeOffsets: $scope.playerTimeOffsets,
+               batchLength: $scope.config.batchLength
+            };
+
+            if($scope.config.hasOwnProperty("input_addresses")) {
+               //console.log("%cRUNNING IN TEST MODE", 'font-family: "Comic Sans MS"');
+               beginData.input_addresses = $scope.config.input_addresses.split(',');
+            }
+
+            ra.sendCustom("Experiment_Begin", beginData, "admin", 1, groupNum);
+            $scope.groupManagers[groupNum].startTime = $scope.startTime;
+            $scope.groupManagers[groupNum].dataStore.init(startFP, $scope.startTime, $scope.config.maxSpread);
+            //$scope.groupManagers[groupNum].market.timeoutID = window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, $scope.startTime + $scope.config.batchLength - Date.now(), $scope.startTime + $scope.config.batchLength);
+//UNCOMMENT LATER              //$scope.groupManagers[groupNum].market.timeoutID = window.setTimeout($scope.groupManagers[groupNum].market.FBABook.processBatch, ($scope.startTime - getTime()) / 1000000 + $scope.config.batchLength, $scope.startTime + $scope.config.batchLength * 1000000);
+            for (var user of group) {
+               $scope.groupManagers[groupNum].marketAlgorithms[user].fundamentalPrice = startFP;
+            }
+
+            // if there are any price changes to send, start sending them
+            if ($scope.priceChanges.length > 2) {
+               //window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, $scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - Date.now());
+               window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, ($scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - getTime()) / 1000000);
+            }
+            //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - Date.now());
+            //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - getTime());
+            //$scope.groupManagers[groupNum].intervalPromise = $interval($scope.groupManagers[groupNum].update.bind($scope.groupManagers[groupNum]), CLOCK_FREQUENCY);
+            var investorDelayTime = ($scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0]) - getTime();     //from cda
+            console.log("Initial Delay: " + investorDelayTime);      //from cda
+            window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, investorDelayTime / 1000000);  //from cda
+            //window.setTimeout($scope.dHistory.pushToBatches, $scope.config.batchLength*1000000);
+         };
          
 
          ra.recv("To_Group_Manager", function (uid, msg) {

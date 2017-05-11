@@ -54,7 +54,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             case "BATCH"    :
                console.log("batch in datah history");
                //console.log(msg);
-               this.recordBatch(msg);
+               this.pushToBatches();
                break;
             case "C_TRA"    :
                this.storeTransaction(msg);
@@ -201,6 +201,13 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.recordBatch = function (msg) {
          if(msg.msgData[0] === "B"){   //we only care about the start of a batch
             console.log(this.batchNumber);
+            //calculate when the next batch occurs
+            var nextTime = msg.msgData[1] + this.batchLength * 1000000;
+
+            //calculate how long I have until the next batch
+            var timeLeft = nextTime - getTime();
+
+            //what to do with this??!?!?!?!?!!?
             this.batchNumber++;
          }
       }
@@ -228,7 +235,6 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          this.curFundPrice = null;
       };
       dataHistory.calcClosestBatch = function (myTimestamp,isUpdateMessage){
-         return this.batchNumber;
          var timeElapsed = myTimestamp - this.startTime;
          if(isUpdateMessage){
             return Math.ceil(timeElapsed / (this.batchLength * 1000000));
@@ -320,17 +326,18 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       //records a new buy offer
       dataHistory.recordBuyOffer = function (buyMsg) { //[id,price,timestamp]
          //Store updated message to graph batch ticks
-
-         if(buyMsg.msgData[0] == this.myId){    //this was my message
-            this.myUpdate.batchNumber = this.calcClosestBatch(buyMsg.msgData[2],true);
-            this.myUpdate.price = buyMsg.msgData[1];
-            //this.myOrders.push(myUpdate);
-         }
-         else{    //this was someone elses update msg
-            this.otherUpdate.batchNumber = this.calcClosestBatch(buyMsg.msgData[2],true);
-            this.otherUpdate.price = buyMsg.msgData[1];
-            //this.othersOrders.push(otherUpdate);
-         }
+         // var thisUpdate = {};
+         // var theirUpdate = {};
+         // if(buyMsg.msgData[0] == this.myId){    //this was my message
+         //    thisUpdate.batchNumber = this.calcClosestBatch(buyMsg.msgData[2],true);
+         //    thisUpdate.price = buyMsg.msgData[1];
+         //    this.myOrders.push(thisUpdate);
+         // }
+         // else{    //this was someone elses update msg
+         //    theirUpdate.batchNumber = this.calcClosestBatch(buyMsg.msgData[2],true);
+         //    theirUpdate.price = buyMsg.msgData[1];
+         //    this.othersOrders.push(otherUpdate);
+         // }
          
 
          if(this.playerData[buyMsg.msgData[0]].state == 'Snipe'){                                   //TEST -> don't want to graph snipe offer
@@ -358,22 +365,52 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          this.myOrders.push(this.myUpdate);
          this.othersOrders.push(this.otherUpdate);
 
-      }.bind(dataHistory);
+         for (let uid of this.playerData) {
+            if (this.playerData.curBuyOffer != null) {
+               let update = {
+                  batchNumber: this.calcClosestBatch(this.playerData.curBuyOffer[0], false),
+                  price: this.playerData.curBuyOffer[1]
+               };
+               if (uid == this.myId) {
+                  this.myOrders.push(update);
+               }
+               else {
+                  this.othersOrders.push(update);
+               }
+            }
+
+            if (this.playerData.curSellOffer != null) {
+               let update = {
+                  batchNumber: this.calcClosestBatch(this.playerData.curSellOffer[0], false),
+                  price: this.playerData.curSellOffer[1]
+               };
+               if (uid == this.myId) {
+                  this.myOrders.push(update);
+               }
+               else {
+                  this.othersOrders.push(update);
+               }
+            }
+
+         }
+
+      };
 
       // Records a new Sell offer
       dataHistory.recordSellOffer = function (sellMsg) {
          //Store updated message to graph batch ticks
-
-         if(sellMsg.msgData[0] == this.myId){    //this was my message
-            this.myUpdate.batchNumber = this.calcClosestBatch(sellMsg.msgData[2],true);
-            this.myUpdate.price = sellMsg.msgData[1];
-            //this.myOrders.push(myUpdate);
-         }
-         else{ //this was someone else's update msg
-            this.otherUpdate.batchNumber = this.calcClosestBatch(sellMsg.msgData[2],true);
-            this.otherUpdate.price = sellMsg.msgData[1];
-            //this.othersOrders.push(otherUpdate);
-         }
+         // var thisUpdate = {};
+         // var theirUpdate = {};
+         // if(sellMsg.msgData[0] == this.myId){    //this was my message
+         //    thisUpdate.batchNumber = this.calcClosestBatch(sellMsg.msgData[2],true);
+         //    thisUpdate.price = sellMsg.msgData[1];
+         //    this.myOrders.push(thisUpdate);
+         // }
+         // else{ //this was someone else's update msg
+         //    theirUpdate.batchNumber = this.calcClosestBatch(sellMsg.msgData[2],true);
+         //    theirUpdate.price = sellMsg.msgData[1];
+         //    this.othersOrders.push(theirUpdate);
+         // }
 
          if(this.playerData[sellMsg.msgData[0]].state == 'Snipe'){                                 //TEST -> don't want to graph snipe offer
             console.log("Tried to record sell offer, state: "  + this.playerData[sellMsg.msgData[0]].state);

@@ -17,6 +17,7 @@ Redwood.factory("GroupManager", function () {
       groupManager.priceIndex = 1;                                // index of last price index to occur. start at 1 because start FP is handled differently
       groupManager.investorIndex = 0;                             // index of last investor arrival to occur
       groupManager.intervalPromise = null;                        // promise for canceling interval when experiment ends
+      groupManager.lastbatchTime = 0;
 
       groupManager.groupNumber = groupArgs.groupNumber;
       groupManager.memberIDs = groupArgs.memberIDs; // array that contains id number for each subject in this group
@@ -63,7 +64,14 @@ Redwood.factory("GroupManager", function () {
                //logStringAsNums(ouchStr);
 
                if(ouchStr.charAt(0) == 'S'){      //special batch msg -> no need to split
-                  groupManager.recvFromMarket(ouchToLeepsMsg(ouchStr));
+                  
+                  //adding for synchronization for admin
+                  var msg = ouchToLeepsMsg(ouchStr);
+                  groupManager.lastbatchTime = msg.msgData[1];
+                  groupManager.recvFromMarket(msg);
+                  console.log(msg.asString());
+                  //read batchTime from admin (polling)
+                  //
                }
                else{
                   // split the string in case messages are conjoined
