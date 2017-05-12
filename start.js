@@ -272,6 +272,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             if ($scope.isDebug) {
                $scope.logger.logRecv(msg, "Market Algorithm");
             }
+            if ($scope.dHistory === undefined) return;
             $scope.dHistory.recvMessage(msg);
          });
 
@@ -280,6 +281,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             if ($scope.isDebug) {
                $scope.logger.logRecv(msg, "Market Algorithm");
             }
+            if ($scope.dHistory === undefined) return;
             $scope.dHistory.recvMessage(msg);
          });
 

@@ -234,10 +234,6 @@ Redwood.factory("GroupManager", function () {
          console.log("Inbound Message: " + msg.asString() + "\n");
          //this.inboundMarketLog = "";
 
-         if(msg.msgType === "C_USELL" || msg.msgType === "C_UBUY" || msg.msgType === "C_CANC"){   
-            //console.log("Receiving from Remote");
-            //console.log(msg);
-         }
          //console.log("Receiving from Remote");
          if(msg.msgType === "C_TRA" || msg.msgType === "BATCH"){     
             //console.log("Receiving from Remote");
@@ -250,6 +246,9 @@ Redwood.factory("GroupManager", function () {
             //console.log(msg.asString());
             if(msg.msgData[0] > 0) {
                this.marketAlgorithms[msg.msgData[0]].recvFromGroupManager(msg);
+            }
+            else {
+               this.sendToAllDataHistories(msg);
             }
          }
       };
