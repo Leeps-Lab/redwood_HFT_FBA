@@ -250,7 +250,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          var myTransaction = {};       
          var investorTransaction = {};
          var otherTransaction = {};        
-         console.log(msg.msgData[2] - msg.msgData[1]);
+         //console.log(msg.msgData[2] - msg.msgData[1]);
          if (msg.msgData[3] == this.myId) {                                      //I'm the buyer
             this.profit += msg.msgData[2] - msg.msgData[1];                      //fundPrice - myPrice
             //ADDED 5/2/17 for graphing*************************************

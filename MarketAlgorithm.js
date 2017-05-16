@@ -15,9 +15,9 @@ Redwood.factory("MarketAlgorithm", function () {
       marketAlgorithm.groupManager = groupManager;   //Sends message to group manager, function obtained as parameter
       marketAlgorithm.fundamentalPrice = 0;
       marketAlgorithm.oldFundamentalPrice = 0;
-      marketAlgorithm.currentMsgId = 0;
-      marketAlgorithm.currentBuyId = 0;         //CHANGED TO 1 5/1/17
-      marketAlgorithm.currentSellId = 0;        //CHANGED TO 1 5/1/17
+      marketAlgorithm.currentMsgId = 1;
+      marketAlgorithm.currentBuyId = 1;         //CHANGED TO 1 5/1/17
+      marketAlgorithm.currentSellId = 1;        //CHANGED TO 1 5/1/17
 
       marketAlgorithm.isDebug = subjectArgs.isDebug;
       if (marketAlgorithm.isDebug) {

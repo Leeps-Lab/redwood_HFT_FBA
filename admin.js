@@ -165,11 +165,11 @@ Redwood.controller("AdminCtrl",
                var rows = response.data.split("\n");
 
                //Parse price changes CSV
-               for (let i = 0; i < rows.length - 2; i++) {
+               for (let i = 0; i < rows.length - 1; i++) {
                   $scope.priceChanges[i] = [];
                }
 
-               for (let i = 0; i < rows.length - 2; i++) {
+               for (let i = 0; i < rows.length - 1; i++) {
                   if (rows[i + 1] === "") continue;
                   var cells = rows[i + 1].split(",");
                   for (let j = 0; j < cells.length; j++) {
@@ -349,9 +349,11 @@ Redwood.controller("AdminCtrl",
             //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - Date.now());
             //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - getTime());
             //$scope.groupManagers[groupNum].intervalPromise = $interval($scope.groupManagers[groupNum].update.bind($scope.groupManagers[groupNum]), CLOCK_FREQUENCY);
-            var investorDelayTime = ($scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0]) - getTime();     //from cda
-            console.log("Initial Delay: " + investorDelayTime);      //from cda
-            window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, investorDelayTime / 1000000);  //from cda
+            if ($scope.investorArrivals.length > 1) {
+               var investorDelayTime = ($scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0]) - getTime();     //from cda
+               console.log("Initial Delay: " + investorDelayTime);      //from cda
+               window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, investorDelayTime / 1000000);  //from cda
+            }
             //window.setTimeout($scope.dHistory.pushToBatches, $scope.config.batchLength*1000000);
          };
          

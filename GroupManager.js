@@ -69,7 +69,7 @@ Redwood.factory("GroupManager", function () {
                   var msg = ouchToLeepsMsg(ouchStr);
                   groupManager.lastbatchTime = msg.msgData[1];
                   groupManager.recvFromMarket(msg);
-                  console.log(msg.asString());
+                  //console.log(msg.asString());
                   //read batchTime from admin (polling)
                   //
                }
@@ -186,7 +186,7 @@ Redwood.factory("GroupManager", function () {
          // add message to log
          this.outboundMarketLog += leepsMsg.asString() + "\n";
          //console.log("Outbound messages:\n" + this.outboundMarketLog);
-         //console.log("Outbound Message: " + leepsMsg.asString() + "\n");
+         console.log("Outbound Message: " + leepsMsg.asString() + "\n");
          this.outboundMarketLog = "";
 
          //If no delay send msg now, otherwise send after delay
@@ -334,7 +334,7 @@ Redwood.factory("GroupManager", function () {
 
          this.priceIndex++;
 
-         if (this.priceIndex >= this.priceChanges.length) {
+         if (this.priceIndex == this.priceChanges.length) {
             console.log("reached end of price changes array");
             return;
          }
