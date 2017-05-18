@@ -109,12 +109,12 @@ Redwood.factory("GroupManager", function () {
       };
 
       groupManager.sendToDataHistory = function (msg, uid) {
-         //this.dataStore.storeMsg(msg);
+         this.dataStore.storeMsg(msg);
          this.rssend("To_Data_History_" + uid, msg);
       };
 
       groupManager.sendToAllDataHistories = function (msg) {
-         //this.dataStore.storeMsg(msg);
+         this.dataStore.storeMsg(msg);
          this.rssend("To_All_Data_Histories", msg);
       };
 
@@ -355,8 +355,8 @@ Redwood.factory("GroupManager", function () {
          // create the outside investor leeps message
          var msgType = this.investorArrivals[this.investorIndex][1] === 1 ? "EBUY" : "ESELL";
          if(msgType === "EBUY"){
-            //var msg2 = new Message("OUCH", "EBUY", [0, 214748.3647, false, getTime()]);      //make not ioc until darrell fixes  
-            var msg2 = new Message("OUCH", "EBUY", [0, this.currentFundPrice + 1, false, getTime()]);      //make not ioc until darrell fixes  
+            var msg2 = new Message("OUCH", "EBUY", [0, 214748.3647, false, getTime()]);      //make not ioc until darrell fixes  
+            //var msg2 = new Message("OUCH", "EBUY", [0, this.currentFundPrice + 1, false, getTime()]);      //make not ioc until darrell fixes  
             //var msg2 = new Message("OUCH", "EBUY", [0, 101, false, getTime()]);      //kristian test
          }
          else if(msgType === "ESELL"){

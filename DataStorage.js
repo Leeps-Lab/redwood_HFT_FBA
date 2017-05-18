@@ -56,7 +56,7 @@ Redwood.factory("DataStorage", function () {
 
       dataStorage.storeMsg = function (message) {
          switch (message.msgType) {
-            case "USPEED" :
+            case "USPEED"  :
                this.storeSpeedChange(message.msgData[2], message.msgData[1] ? "YES" : "NO", message.msgData[0]);
                break;
             case "UOUT" :
@@ -72,10 +72,24 @@ Redwood.factory("DataStorage", function () {
                this.storeSpreadChange(message.msgData[2], message.msgData[1], message.msgData[0]);
                break;
             case "BATCH" :
-               this.storeBatch(message.msgData[0], message.msgData[1], message.msgData[2], message.msgData[3], message.msgData[4]);
+               //this.storeBatch(message.msgData[0], message.msgData[1], message.msgData[2], message.msgData[3], message.msgData[4]);
+               break;
+            case "C_TRA" :
+               //added 5/17/17 to update profits of users in CSV
+               this.storeTransaction(message.timeStamp, message.msgData[1], message.msgData[2], message.msgData[3], message.msgData[4]);
                break;
             case "FPC" :
                this.storeFPC(message.timeStamp, message.msgData[1])
+         }
+      };
+
+      dataStorage.storeTransaction = function (timestamp, price, fundPrice, buyer, seller) {
+         if (buyer != 0) {
+            this.profitChanges.push([timestamp - this.startTime, fundPrice - price, buyer]);
+         }
+
+         if (seller != 0) {
+            this.profitChanges.push([timestamp - this.startTime, price - fundPrice, seller]);
          }
       };
 
@@ -122,14 +136,12 @@ Redwood.factory("DataStorage", function () {
       dataStorage.storeBatch = function (buyOrders, sellOrders, batchNumber, equilibriumPrice, fundPrice) {
          for (let order of buyOrders) {
             if (order.id != 0 && order.transacted) {
-               //this.profitChanges.push([batchNumber * this.batchLength, fundPrice - equilibriumPrice, order.id]);
-               this.profitChanges.push([this.startTime + batchNumber * this.batchLength * 1000000, fundPrice - equilibriumPrice, order.id]);    //changed 4/17/17
+               this.profitChanges.push([this.startTime + batchNumber * this.batchLength * 1000000, fundPrice - equilibriumPrice, order.id]);    
             }
          }
          for (let order of sellOrders) {
             if (order.id != 0 && order.transacted) {
-               //this.profitChanges.push([batchNumber * this.batchLength, equilibriumPrice - fundPrice, order.id]);
-               this.profitChanges.push([this.startTime + batchNumber * this.batchLength * 1000000, equilibriumPrice - fundPrice, order.id]);    //changed 4/17/17
+               this.profitChanges.push([this.startTime + batchNumber * this.batchLength * 1000000, equilibriumPrice - fundPrice, order.id]);    
             }
          }
       };
@@ -416,7 +428,7 @@ Redwood.factory("DataStorage", function () {
          data[0].push("num_transactions", "eq_price", "buy_orders_before", "buy_orders_after", "sell_orders_before", "sell_orders_after", "porder", "dvalue", "cumvalue", "investor_buy_sell");
 
          // get file name by formatting start time as readable string
-         var d = new Date(this.startTime);
+         var d = new Date(this.startTime / 1000000);
          var filename = d.getHours() + '_' + d.getMinutes() + '_' + d.getSeconds() + '_fba_group_' + this.groupNum + '.csv';
 
          // download data 2d array as csv

@@ -54,7 +54,6 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                this.recordFPCchange(msg);
                break;
             case "BATCH"    :
-               console.log("batch in datah history");
                this.pushToBatches();
                //console.log(msg);
                break;
@@ -123,96 +122,96 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          }
       };
 
-      // dataHistory.recordBatch = function (msg) {
-      //    // calculate offset buy investor price
-      //    // first find minimum non-investor sell order price
-      //    var buyInvestorPrice = msg.msgData[1].reduce(function (previousValue, currentElement) {
-      //       return currentElement.price > previousValue && currentElement.id != 0 ? currentElement.price : previousValue;
-      //    }, msg.msgData[4]);
-      //    //then add investor spacing
-      //    buyInvestorPrice += this.investorOrderSpacing;
-
-      //    for (var buyOrder of msg.msgData[0]) {
-      //       if (buyOrder.transacted && buyOrder.id != 0) {
-      //          var uid = buyOrder.id;
-      //          if (uid == this.myId) this.profit += msg.msgData[4] - msg.msgData[3];
-               
-      //          //var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
-      //          var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] * 1000000 - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);   //changed 4/17/17 to batchlength*1000000
-      //          this.recordProfitSegment(curProfit + msg.msgData[4] - msg.msgData[3], this.startTime + this.batchLength * msg.msgData[2] * 1000000, this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);         //changed 4/17/17 to batchlength*1000000
-      //       }
-
-      //       // split orders up into my orders, others' orders and investor orders
-      //       if (buyOrder.id == dataHistory.myId) {
-      //          // if it's my order, record whether the profit from it was positive
-      //          buyOrder.positive = msg.msgData[4] - msg.msgData[3] >= 0;
-      //          this.myOrders.push(buyOrder);
-      //       }
-      //       else if (buyOrder.id == 0) {
-      //          // if it's an investor order, change its price before pushing it on
-      //          buyOrder.price = buyInvestorPrice;
-      //          buyInvestorPrice += this.investorOrderSpacing;
-      //          this.investorOrders.push(buyOrder);
-      //       }
-      //       else this.othersOrders.push(buyOrder);
-      //    }
-
-      //    // highest order in this batch is buy investor price minus investor spacing
-      //    // check to see if new price is greater than current highest price
-      //    if (buyInvestorPrice - this.investorOrderSpacing > this.highestMarketPrice) this.highestMarketPrice = buyInvestorPrice - this.investorOrderSpacing;
-
-      //    // do the same calculation for sell investors
-      //    var sellInvestorPrice = msg.msgData[0].reduce(function (previousValue, currentElement) {
-      //       return currentElement.price < previousValue && currentElement.id != 0 ? currentElement.price : previousValue;
-      //    }, msg.msgData[4]);
-      //    sellInvestorPrice -= this.investorOrderSpacing;
-
-      //    for (var sellOrder of msg.msgData[1]) {
-      //       if (sellOrder.transacted && sellOrder.id != 0) {
-      //          var uid = sellOrder.id;
-      //          if (uid == this.myId) this.profit += msg.msgData[3] - msg.msgData[4];
-               
-      //          //var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
-      //          var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] * 1000000 - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);  //changed 4/17/17 to batchlength*1000000
-      //          this.recordProfitSegment(curProfit + msg.msgData[3] - msg.msgData[4], this.startTime + this.batchLength * msg.msgData[2] * 1000000, this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);                  //changed 4/17/17 to batchlength*1000000
-      //       }
-
-      //       if (sellOrder.id == dataHistory.myId) {
-      //          sellOrder.positive = msg.msgData[3] - msg.msgData[4] >= 0;
-      //          this.myOrders.push(sellOrder);
-      //       }
-      //       else if (sellOrder.id == 0) {
-      //          sellOrder.price = sellInvestorPrice;
-      //          sellInvestorPrice -= this.investorOrderSpacing;
-      //          this.investorOrders.push(sellOrder);
-      //       }
-      //       else this.othersOrders.push(sellOrder);
-      //    }
-
-      //    if (sellInvestorPrice + this.investorOrderSpacing < this.lowestMarketPrice) this.lowestMarketPrice = sellInvestorPrice + this.investorOrderSpacing;
-
-      //    // save equilibrium price
-      //    this.priceHistory.push([msg.msgData[2], msg.msgData[3]]);
-
-      //    // update display spread for all players
-      //    for (var uid of this.group) {
-      //       this.playerData[uid].displaySpread = this.playerData[uid].spread;
-      //    }
-      // };
-
       dataHistory.recordBatch = function (msg) {
-         if(msg.msgData[0] === "B"){   //we only care about the start of a batch
-            console.log(this.batchNumber);
-            //calculate when the next batch occurs
-            var nextTime = msg.msgData[1] + this.batchLength * 1000000;
+         // calculate offset buy investor price
+         // first find minimum non-investor sell order price
+         var buyInvestorPrice = msg.msgData[1].reduce(function (previousValue, currentElement) {
+            return currentElement.price > previousValue && currentElement.id != 0 ? currentElement.price : previousValue;
+         }, msg.msgData[4]);
+         //then add investor spacing
+         buyInvestorPrice += this.investorOrderSpacing;
 
-            //calculate how long I have until the next batch
-            var timeLeft = nextTime - getTime();
+         for (var buyOrder of msg.msgData[0]) {
+            if (buyOrder.transacted && buyOrder.id != 0) {
+               var uid = buyOrder.id;
+               if (uid == this.myId) this.profit += msg.msgData[4] - msg.msgData[3];
+               
+               //var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
+               var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] * 1000000 - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);   //changed 4/17/17 to batchlength*1000000
+               this.recordProfitSegment(curProfit + msg.msgData[4] - msg.msgData[3], this.startTime + this.batchLength * msg.msgData[2] * 1000000, this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);         //changed 4/17/17 to batchlength*1000000
+            }
 
-            //what to do with this??!?!?!?!?!!?
-            this.batchNumber++;
+            // split orders up into my orders, others' orders and investor orders
+            if (buyOrder.id == dataHistory.myId) {
+               // if it's my order, record whether the profit from it was positive
+               buyOrder.positive = msg.msgData[4] - msg.msgData[3] >= 0;
+               this.myOrders.push(buyOrder);
+            }
+            else if (buyOrder.id == 0) {
+               // if it's an investor order, change its price before pushing it on
+               buyOrder.price = buyInvestorPrice;
+               buyInvestorPrice += this.investorOrderSpacing;
+               this.investorOrders.push(buyOrder);
+            }
+            else this.othersOrders.push(buyOrder);
          }
-      }
+
+         // highest order in this batch is buy investor price minus investor spacing
+         // check to see if new price is greater than current highest price
+         if (buyInvestorPrice - this.investorOrderSpacing > this.highestMarketPrice) this.highestMarketPrice = buyInvestorPrice - this.investorOrderSpacing;
+
+         // do the same calculation for sell investors
+         var sellInvestorPrice = msg.msgData[0].reduce(function (previousValue, currentElement) {
+            return currentElement.price < previousValue && currentElement.id != 0 ? currentElement.price : previousValue;
+         }, msg.msgData[4]);
+         sellInvestorPrice -= this.investorOrderSpacing;
+
+         for (var sellOrder of msg.msgData[1]) {
+            if (sellOrder.transacted && sellOrder.id != 0) {
+               var uid = sellOrder.id;
+               if (uid == this.myId) this.profit += msg.msgData[3] - msg.msgData[4];
+               
+               //var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
+               var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] * 1000000 - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);  //changed 4/17/17 to batchlength*1000000
+               this.recordProfitSegment(curProfit + msg.msgData[3] - msg.msgData[4], this.startTime + this.batchLength * msg.msgData[2] * 1000000, this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);                  //changed 4/17/17 to batchlength*1000000
+            }
+
+            if (sellOrder.id == dataHistory.myId) {
+               sellOrder.positive = msg.msgData[3] - msg.msgData[4] >= 0;
+               this.myOrders.push(sellOrder);
+            }
+            else if (sellOrder.id == 0) {
+               sellOrder.price = sellInvestorPrice;
+               sellInvestorPrice -= this.investorOrderSpacing;
+               this.investorOrders.push(sellOrder);
+            }
+            else this.othersOrders.push(sellOrder);
+         }
+
+         if (sellInvestorPrice + this.investorOrderSpacing < this.lowestMarketPrice) this.lowestMarketPrice = sellInvestorPrice + this.investorOrderSpacing;
+
+         // save equilibrium price
+         this.priceHistory.push([msg.msgData[2], msg.msgData[3]]);
+
+         // update display spread for all players
+         for (var uid of this.group) {
+            this.playerData[uid].displaySpread = this.playerData[uid].spread;
+         }
+      };
+
+      // dataHistory.recordBatch = function (msg) {
+      //    if(msg.msgData[0] === "B"){   //we only care about the start of a batch
+      //       console.log(this.batchNumber);
+      //       //calculate when the next batch occurs
+      //       var nextTime = msg.msgData[1] + this.batchLength * 1000000;
+
+      //       //calculate how long I have until the next batch
+      //       var timeLeft = nextTime - getTime();
+
+      //       //what to do with this??!?!?!?!?!!?
+      //       this.batchNumber++;
+      //    }
+      // }
 
       dataHistory.recordStateChange = function (newState, uid, timestamp) {
          this.playerData[uid].state = newState;
