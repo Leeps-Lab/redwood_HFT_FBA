@@ -67,11 +67,8 @@ Redwood.factory("GroupManager", function () {
                   
                   //adding for synchronization for admin
                   var msg = ouchToLeepsMsg(ouchStr);
-                  groupManager.lastbatchTime = msg.msgData[1];
+                  groupManager.lastbatchTime = getTime(); //msg.msgData[1];
                   groupManager.recvFromMarket(msg);
-                  //console.log(msg.asString());
-                  //read batchTime from admin (polling)
-                  //
                }
                else{
                   // split the string in case messages are conjoined
@@ -361,7 +358,7 @@ Redwood.factory("GroupManager", function () {
          }
          else if(msgType === "ESELL"){
             var msg2 = new Message("OUCH", "ESELL", [0, 0, false, getTime()]);
-            //var msg2 = new Message("OUCH", "ESELL", [0, 214748.3647, false, getTime()]);                //make not ioc until darrell fixes
+            //var msg2 = new Message("OUCH", "ESELL", [0, this.currentFundPrice - 1, false, getTime()]);                //make not ioc until darrell fixes
             //var msg2 = new Message("OUCH", "ESELL", [0, 99, false, getTime()]);                //make not ioc until darrell fixes
          }
          //var msg2 = new Message("OUCH", this.investorArrivals[this.investorIndex][1] == 1 ? "EBUY" : "ESELL", [0, 214748.3647, true, this.startTime + this.investorArrivals[this.investorIndex][0]]);
