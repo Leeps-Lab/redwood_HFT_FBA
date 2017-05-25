@@ -73,7 +73,6 @@ Redwood.factory("MarketAlgorithm", function () {
 
          // Fundamental Price Change
          if (msg.msgType === "FPC") {
-
             // update fundamental price variable
             this.fundamentalPrice = msg.msgData[1];
 
@@ -115,20 +114,24 @@ Redwood.factory("MarketAlgorithm", function () {
                nMsg3.timeStamp = msg.msgData[0]; // for debugging test output only
 
                if(positiveChange){     //the new price is greater than the old price -> generate snipe buy message
-                  snipeBuyMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice, true, getTime()]);        
+                  snipeBuyMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice, true, getTime()]);
+                  //snipeRemoveMsg = new Message("OUCH", "RSELL", [this.myId]);    // if I'm inserting a new buy snipe message, also make sure I don't have any stale snipe sell messages        
                   snipeBuyMsg.delay = !this.using_speed;
                   snipeBuyMsg.msgId = this.currentMsgId;
                   this.currentBuyId = this.currentMsgId;
                   this.currentMsgId++;
+                  //nMsg3.msgData[2].push(snipeBuyMsg);
                   nMsg3.msgData[2].push(snipeBuyMsg);
                   //console.log("snipeBuyMsg: " + snipeBuyMsg.asString() + "\n");
                }
                else{                   //the new price is less than the old price -> generate snipe sell message
                   snipeSellMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice, true, getTime()]);
+                  //snipeRemoveMsg = new Message("OUCH", "RBUY", [this.myId]);     //inserting new sell snipe msg, remove old
                   snipeSellMsg.delay = !this.using_speed;
                   snipeSellMsg.msgId = this.currentMsgId;
                   this.currentSellId = this.currentMsgId;
                   this.currentMsgId++;
+                  //nMsg3.msgData[2].push(snipeSellMsg);
                   nMsg3.msgData[2].push(snipeSellMsg);
                   //console.log("snipeSellMsg: " + snipeSellMsg.asString() + "\n");
                }

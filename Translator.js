@@ -78,17 +78,15 @@ function leepsMsgToOuch(leepsMsg){
 
       // Time in Force
       if(leepsMsg.msgData[2] === true){
-         spliceInArray(intToByteArray(0), ouchMsg, 4, 32);
-      }
-      else{
-        if(ouchMsg[4] == charToByte(String.fromCharCode(64))){
-          //console.log("INVESTOROORORRORORRORO");
-          spliceInArray(intToByteArray(3), ouchMsg, 4, 32);         
+        if(ouchMsg[4] != charToByte(String.fromCharCode(64))){
+          spliceInArray(intToByteArray(1), ouchMsg, 4, 32);      //changed 5/24 to test sniping (time of force of 1)
         }
         else{
-          //console.log("NOT INVESTOR");
-          spliceInArray(intToByteArray(99999), ouchMsg, 4, 32);
+          spliceInArray(intToByteArray(3), ouchMsg, 4, 32);       //investors have TOF of 3 seconds
         }
+      }
+      else{    
+          spliceInArray(intToByteArray(99999), ouchMsg, 4, 32);   //users have TOF of infinity
       }
 
       // Firm

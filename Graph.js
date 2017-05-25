@@ -227,15 +227,13 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       graph.drawAllBatches = function (graphRefr, dataHistory) {
          // first batch that will be displayed on graph
          var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000000000 - this.adminStartTime) / (this.batchLength*1000000)) - 1;  //changed to *1000000 4/17/17
-         //console.log(firstVisibleBatch);
          //var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength) - 1;
          if (firstVisibleBatch < 0) firstVisibleBatch = 0;
          // draw others' filled order circles
 
          //this.drawBatchCircles(graphRefr, dataHistory.othersOrders, "others-filled-orders", firstVisibleBatch);
          //this.drawBatchCircles(graphRefr, dataHistory.investorOrders, "others-filled-orders", firstVisibleBatch);
-         this.drawBatchCircles(graphRefr, dataHistory.investorTransactions, "others-filled-orders", firstVisibleBatch);
-         this.drawBatchCircles(graphRefr, dataHistory.otherTransactions, "others-filled-orders", firstVisibleBatch);
+         this.drawBatchCircles(graphRefr, dataHistory.otherTransactions.concat(dataHistory.investorTransactions), "others-filled-orders", firstVisibleBatch);
 
          // filter out positive and negative orders for my orders
          // this.drawBatchCircles(graphRefr, dataHistory.myOrders.filter(function (element) {
@@ -302,7 +300,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
                return d.transacted && d.batchNumber >= firstVisibleBatch;
             })
             .attr("cx", function (d) {
-               //console.log(getTime(),graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength * 1000000);
                return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength * 1000000);   //changed to *1000000 4/17/17
             })
             .attr("cy", function (d) {
