@@ -85,12 +85,13 @@ Redwood.factory("DataStorage", function () {
 
       dataStorage.storeTransaction = function (timestamp, price, fundPrice, buyer, seller) {
          if (buyer != 0) {
-            this.profitChanges.push([timestamp - this.startTime, fundPrice - price, buyer]);
+            this.profitChanges.push([timestamp - this.startTime, fundPrice - price, buyer]); //push price to eq
          }
 
          if (seller != 0) {
             this.profitChanges.push([timestamp - this.startTime, price - fundPrice, seller]);
          }
+         this.equilibriumPrices.push([timestamp - this.startTime, price]);
       };
 
       dataStorage.storeNumTransactions = function (batchNumber, transactions) {
