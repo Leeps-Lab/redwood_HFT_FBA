@@ -136,26 +136,7 @@ Redwood.factory("MarketAlgorithm", function () {
                   //console.log("snipeSellMsg: " + snipeSellMsg.asString() + "\n");
                }
             }
-            // else if (this.state == "state_snipe") {
-            //    nMsg3 = new Message("SYNC_FP", "SNIPE", [this.myId, this.using_speed, []]);
-            //    nMsg3.timeStamp = msg.msgData[0]; // for debugging test output only
-
-            //    var snipeEnterMsg;
-            //    var snipeRemoveMsg;
-            //    if (msg.msgData[3]) {
-            //       //snipeEnterMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice, true, Date.now()]);
-            //       snipeEnterMsg = new Message("OUCH", "EBUY", [this.myId, this.fundamentalPrice, true, getTime()]);
-            //       snipeRemoveMsg = new Message("OUCH", "RSELL", [this.myId]);    // if I'm inserting a new buy snipe message, also make sure I don't have any stale snipe sell messages
-            //    }
-            //    else {
-            //       //snipeEnterMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice, true, Date.now()]);
-            //       snipeEnterMsg = new Message("OUCH", "ESELL", [this.myId, this.fundamentalPrice, true, getTime()]);
-            //       snipeRemoveMsg = new Message("OUCH", "RBUY", [this.myId]);
-            //    }
-            //    snipeEnterMsg.delay = !this.using_speed;
-            //    snipeRemoveMsg.delay = !this.using_speed;
-            //    nMsg3.msgData[2].push(snipeRemoveMsg, snipeEnterMsg);
-            // }
+            
             else {
                console.error("invalid state");
                return;
@@ -176,8 +157,8 @@ Redwood.factory("MarketAlgorithm", function () {
             this.enterMarket();                 // enter market
             this.state = "state_maker";         // set state
 
-            var nMsg = new Message("DATA", "C_UMAKER", msg.msgData);
-            this.sendToAllDataHistories(nMsg);
+            //var nMsg = new Message("DATA", "C_UMAKER", msg.msgData);     //removed 6/27/17 for refactor
+            //this.sendToAllDataHistories(nMsg);                           //removed 6/27/17 for refactor
          }
 
          // user sent signal to change state to sniper
@@ -187,9 +168,9 @@ Redwood.factory("MarketAlgorithm", function () {
             }
             this.state = "state_snipe";         // update state
 
-            var nMsg = new Message("DATA", "C_USNIPE", msg.msgData);
-            this.sendToAllDataHistories(nMsg);
-         }
+            //var nMsg = new Message("DATA", "C_USNIPE", msg.msgData);     //removed 6/27/17 for refactor
+            //this.sendToAllDataHistories(nMsg);                           //removed 6/27/17 for refactor
+         }  
 
          // user sent signal to change state to "out of market"
          if (msg.msgType === "UOUT") {
@@ -197,8 +178,8 @@ Redwood.factory("MarketAlgorithm", function () {
             
             this.state = "state_out";           // update state
 
-            var nMsg = new Message("DATA", "C_UOUT", msg.msgData);
-            this.sendToAllDataHistories(nMsg);
+            //var nMsg = new Message("DATA", "C_UOUT", msg.msgData);      //removed 6/27/17 for refactor
+            //this.sendToAllDataHistories(nMsg);                           //removed 6/27/17 for refactor
          }
 
          if (msg.msgType === "USPEED") {
@@ -219,30 +200,12 @@ Redwood.factory("MarketAlgorithm", function () {
                this.sendToGroupManager(this.updateSellOfferMsg());
             }
 
-            var nMsg = new Message("DATA", "C_UUSPR", msg.msgData);
-            this.sendToAllDataHistories(nMsg);
+            //var nMsg = new Message("DATA", "C_UUSPR", msg.msgData);   //removed 6/27/17 for refactor
+            //this.sendToAllDataHistories(nMsg);                        //removed 6/27/17 for refactor
          }
          
          // the market sent the outcome of a batch
          if (msg.msgType == "BATCH") {
-            //console.log("flag 3");
-            //console.log(msg.asString());
-            // if I'm a maker, check to see if one of my orders was filled
-            // if (this.state == "state_maker") {
-            //    for (let order of msg.msgData[0]) {
-            //       if (order.id == this.myId && order.transacted) {
-            //          this.sendToGroupManager(this.enterBuyOfferMsg());
-            //       }
-            //    }
-            //    for (let order of msg.msgData[1]) {
-            //       if (order.id == this.myId && order.transacted) {
-            //          this.sendToGroupManager((this.enterSellOfferMsg()));
-            //       }
-            //    }
-            // }
-
-            // // add the current fundamental price to the message and send it on to dataHistory
-            // msg.msgData.push(this.fundamentalPrice);
             this.sendToDataHistory(msg);
          }
 

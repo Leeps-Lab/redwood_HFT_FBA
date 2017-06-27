@@ -63,7 +63,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             case "C_TRA"    :
                this.storeTransaction(msg);
                break;
-            case "C_USPEED" :
+            case "USPEED" :         //changed 6/27/17 for refactor
                this.storeSpeedChange(msg);
                break;
             case "C_UBUY"   :
@@ -80,17 +80,17 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             case "C_RSELL"  :
                this.storeSellOffer(msg.msgData[1], msg.msgData[0]);
                break;      
-            case "C_UMAKER" :
+            case "UMAKER" :      //changed 6/27/17 for refactor
                this.recordStateChange("Maker", msg.msgData[0], msg.msgData[1]);
                break;
-            case "C_USNIPE" :
+            case "USNIPE" :      //changed 6/27/17 for refactor
                this.recordStateChange("Snipe", msg.msgData[0], msg.msgData[1]);
                break;
-            case "C_UOUT" :
+            case "UOUT" :
                this.recordStateChange("Out", msg.msgData[0], msg.msgData[1]);
                break;
-            case "C_UUSPR" :
-            console.log("C_UUSPR");
+            case "UUSPR" :
+               console.log("UUSPR");
                this.playerData[msg.msgData[0]].spread = msg.msgData[1];
                this.calcLowestSpread();
                this.calcHighestSpread();

@@ -43,8 +43,8 @@ Redwood.factory("GroupManager", function () {
       if(groupManager.marketFlag === "REMOTE"/*ZACH, D/N MODIFY!*/){
 
          // open websocket with market
-         groupManager.marketURI = "ws://54.202.196.170:8000/";                      //PUT THIS BACK FOR VAGRANT TESTING
-         //groupManager.marketURI = "ws://54.149.235.92:8000/";
+         //groupManager.marketURI = "ws://54.202.196.170:8000/";                      //PUT THIS BACK FOR VAGRANT TESTING
+         groupManager.marketURI = "ws://54.149.235.92:8000/";                          //this is the redwood/aws instance
          groupManager.socket = new WebSocket(groupManager.marketURI, ['binary', 'base64']);
          groupManager.socket.onopen = function(event) {
             //groupManager.socket.send("Confirmed Opened Websocket connection");
