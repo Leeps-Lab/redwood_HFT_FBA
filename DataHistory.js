@@ -185,16 +185,20 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             myTransaction.positive = msg.msgData[2] - msg.msgData[1] >= 0;         //calculate +/- transaction
             myTransaction.price = msg.msgData[1];
             myTransaction.transacted = true;
-            myTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false);   
+            //myTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false); //test -> 6/27/17
+            myTransaction.batchNumber = this.calcClosestBatch(getTime(),false);   
+            console.log("currentTime:",getTime(),"transaction time:",msg.msgData[0],"difference(ms):",(getTime()-msg.msgData[0])/1000000); 
+            console.log("transaction batch number",myTransaction.batchNumber);
             this.myTransactions.push(myTransaction);
 
             //push info on the investor I transacted with to graph
             this.sellTransactionCount++;
-            console.log(this.sellTransactionCount, this.buyTransactionCount);
+            //console.log(this.sellTransactionCount, this.buyTransactionCount);
             investorTransaction.price = msg.msgData[2] - this.highestSpread/2 - (this.sellTransactionCount*this.investorOrderSpacing);
             //investorTransaction.price = msg.msgData[2] + this.investorOrderSpacing;    //investor has price of transaction + spacing
             investorTransaction.transacted = true;
             investorTransaction.batchNumber = myTransaction.batchNumber; 
+            //console.log("transaction batch number",investorTransaction.batchNumber);
             this.investorTransactions.push(investorTransaction);
          }
          else if (msg.msgData[4] == this.myId) {
@@ -207,7 +211,10 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             myTransaction.positive = msg.msgData[1] - msg.msgData[2] >= 0;         //calculate +/- transaction
             myTransaction.price = msg.msgData[1];
             myTransaction.transacted = true;
-            myTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false); 
+            //myTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false); //test -> 6/27/17
+            myTransaction.batchNumber = this.calcClosestBatch(getTime(),false);  
+            console.log("currentTime:",getTime(),"transaction time:",msg.msgData[0],"difference(ms):",(getTime()-msg.msgData[0])/1000000); 
+            console.log("transaction batch number",myTransaction.batchNumber);
             this.myTransactions.push(myTransaction);
 
             //push info on the investor I transacted with to graph
@@ -216,6 +223,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             //investorTransaction.price = msg.msgData[2] - this.investorOrderSpacing;    //investor has price of transaction + spacing
             investorTransaction.transacted = true;
             investorTransaction.batchNumber = myTransaction.batchNumber; 
+            //console.log("transaction batch number",investorTransaction.batchNumber);
             this.investorTransactions.push(investorTransaction);
          }
          else {
@@ -225,14 +233,18 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                this.buyTransactionCount++;
                investorTransaction.price = msg.msgData[2] + this.highestSpread/2 + (this.buyTransactionCount*this.investorOrderSpacing);    //investor has price of transaction + spacing
                investorTransaction.transacted = true;
-               investorTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false); 
+               //investorTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false);    //changed 6/27/17
+               investorTransaction.batchNumber = this.calcClosestBatch(getTime(),false); 
+               console.log("othertransaction: ", otherTransaction);
                this.investorTransactions.push(investorTransaction);
             }
             else { // buyer was a player
                otherTransaction.price = msg.msgData[1];
                otherTransaction.transacted = true;
-               otherTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false);
+               //otherTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false); //changed 6/27/17
+               otherTransaction.batchNumber = this.calcClosestBatch(getTime(),false);
                console.log(otherTransaction.batchNumber);
+               console.log("othertransaction: ", otherTransaction);
                this.otherTransactions.push(otherTransaction);
             }
 
@@ -240,13 +252,15 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                this.sellTransactionCount++;
                investorTransaction.price = msg.msgData[2] - this.highestSpread/2 - (this.sellTransactionCount*this.investorOrderSpacing);
                investorTransaction.transacted = true;
-               investorTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false); 
+               //investorTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false);       //changed 6/27/17
+               investorTransaction.batchNumber = this.calcClosestBatch(getTime(),false); 
                this.investorTransactions.push(investorTransaction);
             }
             else { // seller was a player
                otherTransaction.price = msg.msgData[1];
                otherTransaction.transacted = true;
-               otherTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false); 
+               //otherTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false);    //changed 6/27/17
+               otherTransaction.batchNumber = this.calcClosestBatch(getTime(),false); 
                console.log(otherTransaction.batchNumber);
                this.otherTransactions.push(otherTransaction);
             }
@@ -307,7 +321,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          console.log("pushToBatches");
 
          let currentBatch = this.calcClosestBatch(getTime(), false);
-
+         console.log("currentBatch",currentBatch);
          let batchMinPrice = this.curFundPrice[1];
          let batchMaxPrice = this.curFundPrice[1];
          

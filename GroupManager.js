@@ -264,7 +264,7 @@ Redwood.factory("GroupManager", function () {
             //console.log(leepsMsg);
          }
          //console.log("sending to remote server:\n");
-         //console.log(leepsMsg.asString());
+         console.log(leepsMsg.asString());
          var msg = leepsMsgToOuch(leepsMsg);
          this.socket.send(msg);
       }

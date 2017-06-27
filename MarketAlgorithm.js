@@ -184,9 +184,9 @@ Redwood.factory("MarketAlgorithm", function () {
 
          if (msg.msgType === "USPEED") {
             this.using_speed = msg.msgData[1];
-            var nMsg = new Message("DATA", "C_USPEED", msg.msgData);
-            this.sendToAllDataHistories(nMsg);
-         }
+            //var nMsg = new Message("DATA", "C_USPEED", msg.msgData);     //removed 6/27/17 for refactor
+            //this.sendToAllDataHistories(nMsg);                           //removed 6/27/17 for refactor
+         }  
 
          //User updated their spread
          if (msg.msgType === "UUSPR") {
@@ -284,6 +284,7 @@ Redwood.factory("MarketAlgorithm", function () {
             //pick the buyer to send the message unless the buyer is an outside investor, then use the seller
             if (msg.msgData[2] === this.myId || (msg.msgData[1] === this.myId && msg.msgData[2] == 0)) {
                var nMsg = new Message("DATA", "C_TRA", [msg.msgData[0], msg.msgData[3], this.fundamentalPrice, msg.msgData[1], msg.msgData[2]]);
+               //console.log(getTime(),nMsg);
                this.sendToAllDataHistories(nMsg);
                //var batchMsg = new Message("ITCH", "BATCH", [msg.msgData[0], msg.msgData[3], this.fundamentalPrice, msg.msgData[1], msg.msgData[2]]);
                //this.sendToAllDataHistories(batchMsg);
