@@ -157,6 +157,7 @@ Redwood.factory("MarketAlgorithm", function () {
             this.enterMarket();                 // enter market
             this.state = "state_maker";         // set state
 
+            //groupManager.dataStore.storeMsg(msg);                        //added, dont think need 6/30/17
             //var nMsg = new Message("DATA", "C_UMAKER", msg.msgData);     //removed 6/27/17 for refactor
             //this.sendToAllDataHistories(nMsg);                           //removed 6/27/17 for refactor
          }
