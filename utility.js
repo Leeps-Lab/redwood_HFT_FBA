@@ -18,6 +18,45 @@ function printTime(nanoseconds){
   return str;
 }
 
+function OuchMessage(protocol, msgType, subjectID, price, IOC) {
+   this.protocol = "OUCH";                   //Ouch, Update, Cancel -> 'O','U','X'
+   this.timeStamp = getTime();               //timeStamp is not sent to the server
+   this.msgType = msgType;                   //EBUY,ESELL,RBUY,RSELL,UBUY,USELL
+   this.price = price;                       //must be multiplied by 1000 before sent to server
+   this.subjectID = subjectID;               //0,1,2,3,4
+   this.timeofForce = IOC;                   //needs to be converted to either 3 or 99999
+
+   //All irrelevant but used to generate the message to the exchange
+   // this.firm = "SUB" + this.userID;          //SUBA,SUBB,SUBC,or SUBD
+   // this.stock = 1;   
+   // this.shares = 1;
+   // this.display = 'Y';
+   // this.capacity = 'P';
+   // this.sweep = 'N';
+   // this.minQuantity = 0;
+   // this.crossType = 'N';
+   // this.customerType = 'R';
+   
+
+   this.delay = false;  
+   this.senderId;
+   this.msgId;
+   this.prevMsgId;
+   this.numShares = 0;
+}
+
+function ItchMessage(msgType, timeStamp, price, buyerID, sellerID, isBatch){
+   this.protocol = "ITCH";                   //'A','C','U','E','S'
+   this.msgType = msgType;                   //C_UBUY,C_USELL,C_EBUY,C_ESELL,C_CANC,C_TRA,BATCH
+   this.timeStamp = timeStamp;               //timeStamp from the server
+   this.price = price;                       //must be multiplied by 1000 before sent to server
+   this.buyerID = buyerID;                   //0,1,2,3,4
+   this.sellerID = sellerID;                 //0,1,2,3,4
+   this.isBatch = isBatch;                   //boolean
+   //msg.timeStamp;                          //for testing
+   this.msgId;
+   this.numShares = 0;
+}
 
 // Message object. Used to communicate between group manager, subject manager, and market algorithm
 function Message(protocol, msgType, msgData) {

@@ -364,6 +364,7 @@ function ouchToLeepsMsg(ouchMsg){
     var batchType = ouchMsg.charAt(9);  //B for start of batch, P for end of batch
     var timeStamp = string256ToInt(ouchMsg.substring(1,9));  
     var msg = new Message("ITCH", "BATCH", [batchType, timeStamp]);
+    //if B -> make isBatch true (6/30/17)
     return msg;
   }
 
