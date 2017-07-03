@@ -241,8 +241,11 @@ Redwood.factory("GroupManager", function () {
          else {
             //console.log("not c_tra or batch");
             //console.log(msg.asString());
-            if(msg.msgData[0] > 0) {
-               this.marketAlgorithms[msg.msgData[0]].recvFromGroupManager(msg);
+            //if(msg.msgData[0] > 0) {
+               // this.marketAlgorithms[msg.msgData[0]].recvFromGroupManager(msg);
+            // }
+            if(msg.subjectID > 0) {
+               this.marketAlgorithms[msg.subjectID].recvFromGroupManager(msg);
             }
             else {
                this.sendToAllDataHistories(msg);
