@@ -148,7 +148,6 @@ Redwood.factory("GroupManager", function () {
                for (var index of indexOrder) {
                   playerOrder.push(this.FPMsgList[index].msgData[0]);
                   for (var rmsg of this.FPMsgList[index].msgData[2]) {
-                     //console.log(rmsg);
                      this.sendToMarket(rmsg);
                   }
                }
@@ -163,7 +162,6 @@ Redwood.factory("GroupManager", function () {
 
          // general message that needs to be passed on to marketManager
          if (msg.protocol === "OUCH") {
-            //console.log(msg);
             groupManager.sendToMarket(msg);
          }
 
@@ -230,7 +228,7 @@ Redwood.factory("GroupManager", function () {
          //this.inboundMarketLog += msg.asString() + "\n";
          //console.log("Inbound Messages:\n" + this.inboundMarketLog);
          //console.log(msg);
-         console.log("Inbound Message: " + msg.asString() + "\n");
+         //console.log("Inbound Message: " + msg.asString() + "\n");
          //this.inboundMarketLog = "";
 
          //console.log("Receiving from Remote");
@@ -354,14 +352,12 @@ Redwood.factory("GroupManager", function () {
          // create the outside investor leeps message
          var msgType = this.investorArrivals[this.investorIndex][1] === 1 ? "EBUY" : "ESELL";
          if(msgType === "EBUY"){
-            var msg2 = new Message("OUCH", "EBUY", [0, 214748.3647, true, getTime()]);      //make not ioc until darrell fixes  
-            //var msg2 = new Message("OUCH", "EBUY", [0, this.currentFundPrice + 1, false, getTime()]);      //make not ioc until darrell fixes  
-            //var msg2 = new Message("OUCH", "EBUY", [0, 101, false, getTime()]);      //kristian test
+            //var msg2 = new Message("OUCH", "EBUY", [0, 214748.3647, true, getTime()]);      //make not ioc until darrell fixes 
+            var msg2 = new OuchMessage("EBUY", 0, 214748.3647, true);      //changed 7/3/17
          }
          else if(msgType === "ESELL"){
-            var msg2 = new Message("OUCH", "ESELL", [0, 0, true, getTime()]);
-            //var msg2 = new Message("OUCH", "ESELL", [0, this.currentFundPrice - 1, false, getTime()]);                //make not ioc until darrell fixes
-            //var msg2 = new Message("OUCH", "ESELL", [0, 99, false, getTime()]);                //make not ioc until darrell fixes
+            //var msg2 = new Message("OUCH", "ESELL", [0, 0, true, getTime()]);
+            var msg2 = new OuchMessage("ESELL", 0, 0, true);      //changed 7/3/17
          }
          //var msg2 = new Message("OUCH", this.investorArrivals[this.investorIndex][1] == 1 ? "EBUY" : "ESELL", [0, 214748.3647, true, this.startTime + this.investorArrivals[this.investorIndex][0]]);
          //console.log(msg2.asString());

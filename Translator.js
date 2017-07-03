@@ -256,7 +256,6 @@ function ouchToLeepsMsg(ouchMsg){
     
     // pull out subject id from firm
     var subjId = ouchMsg.charCodeAt(47) - 64;
-    console.log("subject ID", subjId);
     // create leeps message
     var msg = new Message("OUCH", lpsMsgType, [subjId, price, timeStamp]);
     msg.timeStamp = timeStamp; // for test output only
