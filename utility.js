@@ -18,7 +18,7 @@ function printTime(nanoseconds){
   return str;
 }
 
-function OuchMessage(protocol, msgType, subjectID, price, IOC) {
+function OuchMessage(msgType, subjectID, price, IOC) {
    this.protocol = "OUCH";                   //Ouch, Update, Cancel -> 'O','U','X'
    this.timeStamp = getTime();               //timeStamp is not sent to the server
    this.msgType = msgType;                   //EBUY,ESELL,RBUY,RSELL,UBUY,USELL
@@ -42,7 +42,7 @@ function OuchMessage(protocol, msgType, subjectID, price, IOC) {
    this.senderId;
    this.msgId;
    this.prevMsgId;
-   this.numShares = 0;
+   //this.numShares = 0;
 }
 
 function ItchMessage(msgType, timeStamp, price, buyerID, sellerID, isBatch){
@@ -53,9 +53,8 @@ function ItchMessage(msgType, timeStamp, price, buyerID, sellerID, isBatch){
    this.buyerID = buyerID;                   //0,1,2,3,4
    this.sellerID = sellerID;                 //0,1,2,3,4
    this.isBatch = isBatch;                   //boolean
-   //msg.timeStamp;                          //for testing
    this.msgId;
-   this.numShares = 0;
+   //this.numShares = 0;
 }
 
 // Message object. Used to communicate between group manager, subject manager, and market algorithm

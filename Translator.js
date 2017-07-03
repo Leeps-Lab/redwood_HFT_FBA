@@ -45,7 +45,8 @@ function leepsMsgToOuch(leepsMsg){
       ouchMsg[1] = charToByte('S');
       ouchMsg[2] = charToByte('U');      
       ouchMsg[3] = charToByte('B');
-      ouchMsg[4] = charToByte(String.fromCharCode(64 + leepsMsg.msgData[0]));
+      //ouchMsg[4] = charToByte(String.fromCharCode(64 + leepsMsg.msgData[0]));
+      ouchMsg[4] = charToByte(String.fromCharCode(64 + leepsMsg.subjectID));
       // Buy/Sell indicator within order id
       if(leepsMsg.msgType === "EBUY"){
          ouchMsg[5] = charToByte('B');
@@ -74,10 +75,12 @@ function leepsMsgToOuch(leepsMsg){
       spliceInArray(intToByteArray(538976288), ouchMsg, 4, 24);
 
       // Price
-      spliceInArray(priceToByteArray(leepsMsg.msgData[1]), ouchMsg, 4, 28);
+      //spliceInArray(priceToByteArray(leepsMsg.msgData[1]), ouchMsg, 4, 28);
+      spliceInArray(priceToByteArray(leepsMsg.price), ouchMsg, 4, 28);
 
       // Time in Force
-      if(leepsMsg.msgData[2] === true){
+      //if(leepsMsg.msgData[2] === true){
+      if(leepsMsg.IOC === true){
         if(ouchMsg[4] != charToByte(String.fromCharCode(64))){
           spliceInArray(intToByteArray(1), ouchMsg, 4, 32);      //changed 5/24 to test sniping (time of force of 1)
         }
@@ -94,7 +97,8 @@ function leepsMsgToOuch(leepsMsg){
       ouchMsg[36] = charToByte('S');
       ouchMsg[37] = charToByte('U');      
       ouchMsg[38] = charToByte('B');
-      ouchMsg[39] = charToByte(String.fromCharCode(64 + leepsMsg.msgData[0]));
+      //ouchMsg[39] = charToByte(String.fromCharCode(64 + leepsMsg.msgData[0]));
+      ouchMsg[39] = charToByte(String.fromCharCode(64 + leepsMsg.subjectID));
 
       // Display
       ouchMsg[40] = charToByte('Y');
@@ -128,7 +132,8 @@ function leepsMsgToOuch(leepsMsg){
       ouchMsg[1] = charToByte('S');
       ouchMsg[2] = charToByte('U');      
       ouchMsg[3] = charToByte('B');
-      ouchMsg[4] = charToByte(String.fromCharCode(64 + leepsMsg.msgData[0]));
+      //ouchMsg[4] = charToByte(String.fromCharCode(64 + leepsMsg.msgData[0]));
+      ouchMsg[4] = charToByte(String.fromCharCode(64 + leepsMsg.subjectID));
       // Buy/Sell indicator within order id
       if(leepsMsg.msgType === "RBUY"){
          ouchMsg[5] = charToByte('B');
@@ -155,7 +160,8 @@ function leepsMsgToOuch(leepsMsg){
       ouchMsg[1] = charToByte('S');
       ouchMsg[2] = charToByte('U');      
       ouchMsg[3] = charToByte('B');
-      ouchMsg[4] = charToByte(String.fromCharCode(64 + leepsMsg.msgData[0]));
+      //ouchMsg[4] = charToByte(String.fromCharCode(64 + leepsMsg.msgData[0]));
+      ouchMsg[4] = charToByte(String.fromCharCode(64 + leepsMsg.subjectID));
       // Buy/Sell indicator within order id
       if(leepsMsg.msgType === "UBUY"){
          ouchMsg[5] = charToByte('B');
@@ -170,7 +176,8 @@ function leepsMsgToOuch(leepsMsg){
       ouchMsg[15] = charToByte('S');
       ouchMsg[16] = charToByte('U');      
       ouchMsg[17] = charToByte('B');
-      ouchMsg[18] = charToByte(String.fromCharCode(64 + leepsMsg.msgData[0]));
+      //ouchMsg[18] = charToByte(String.fromCharCode(64 + leepsMsg.msgData[0]));
+      ouchMsg[18] = charToByte(String.fromCharCode(64 + leepsMsg.subjectID));
       // Buy/Sell indicator within order id
       if(leepsMsg.msgType === "UBUY"){
          ouchMsg[19] = charToByte('B');
@@ -185,10 +192,12 @@ function leepsMsgToOuch(leepsMsg){
       spliceInArray(intToByteArray(1), ouchMsg, 4, 29);
 
       // Price
-      spliceInArray(priceToByteArray(leepsMsg.msgData[1]), ouchMsg, 4, 33);
+      //spliceInArray(priceToByteArray(leepsMsg.msgData[1]), ouchMsg, 4, 33);
+      spliceInArray(priceToByteArray(leepsMsg.price), ouchMsg, 4, 33);
 
       // Time in Force
-      if(leepsMsg.msgData[2] === true){
+      //if(leepsMsg.msgData[2] === true){
+      if(leepsMsg.IOC === true){  
          spliceInArray(intToByteArray(0), ouchMsg, 4, 37);
       }
       else{
@@ -247,7 +256,7 @@ function ouchToLeepsMsg(ouchMsg){
     
     // pull out subject id from firm
     var subjId = ouchMsg.charCodeAt(47) - 64;
-    
+    console.log("subject ID", subjId);
     // create leeps message
     var msg = new Message("OUCH", lpsMsgType, [subjId, price, timeStamp]);
     msg.timeStamp = timeStamp; // for test output only

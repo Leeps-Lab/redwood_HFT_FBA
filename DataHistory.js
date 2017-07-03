@@ -68,10 +68,12 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                break;
             case "C_UBUY"   :
             case "C_EBUY"   :
+               console.log(msg);
                this.recordBuyOffer(msg);
                break;
             case "C_USELL"  :
             case "C_ESELL"  :
+               console.log(msg);
                this.recordSellOffer(msg);
                break;
             case "C_RBUY"   :

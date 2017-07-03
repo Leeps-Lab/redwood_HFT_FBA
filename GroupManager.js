@@ -148,6 +148,7 @@ Redwood.factory("GroupManager", function () {
                for (var index of indexOrder) {
                   playerOrder.push(this.FPMsgList[index].msgData[0]);
                   for (var rmsg of this.FPMsgList[index].msgData[2]) {
+                     //console.log(rmsg);
                      this.sendToMarket(rmsg);
                   }
                }
@@ -162,6 +163,7 @@ Redwood.factory("GroupManager", function () {
 
          // general message that needs to be passed on to marketManager
          if (msg.protocol === "OUCH") {
+            //console.log(msg);
             groupManager.sendToMarket(msg);
          }
 
@@ -181,9 +183,9 @@ Redwood.factory("GroupManager", function () {
       // Function for sending messages, will route msg to remote or local market based on this.marketFLag
       groupManager.sendToMarket = function (leepsMsg) {
          // add message to log
-         this.outboundMarketLog += leepsMsg.asString() + "\n";
+         //this.outboundMarketLog += leepsMsg.asString() + "\n";
          //console.log("Outbound messages:\n" + this.outboundMarketLog);
-         console.log("Outbound Message: " + leepsMsg.asString() + "\n");
+         //console.log("Outbound Message: " + leepsMsg.asString() + "\n");
          this.outboundMarketLog = "";
 
          //If no delay send msg now, otherwise send after delay
@@ -264,7 +266,7 @@ Redwood.factory("GroupManager", function () {
             //console.log(leepsMsg);
          }
          //console.log("sending to remote server:\n");
-         console.log(leepsMsg.asString());
+         //console.log(leepsMsg.asString());
          var msg = leepsMsgToOuch(leepsMsg);
          this.socket.send(msg);
       }
