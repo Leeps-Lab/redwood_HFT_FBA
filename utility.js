@@ -25,20 +25,7 @@ function OuchMessage(msgType, subjectID, price, IOC) {
    this.price = price;                       //must be multiplied by 1000 before sent to server
    this.subjectID = subjectID;               //0,1,2,3,4
    this.timeofForce = IOC;                   //needs to be converted to either 3 or 99999
-
-   //All irrelevant but used to generate the message to the exchange
-   // this.firm = "SUB" + this.userID;          //SUBA,SUBB,SUBC,or SUBD
-   // this.stock = 1;   
-   // this.shares = 1;
-   // this.display = 'Y';
-   // this.capacity = 'P';
-   // this.sweep = 'N';
-   // this.minQuantity = 0;
-   // this.crossType = 'N';
-   // this.customerType = 'R';
-   
-
-   this.delay = false;  
+   this.delay = false;                       //false by default
    this.senderId;
    this.msgId;
    this.prevMsgId;
@@ -63,7 +50,6 @@ function ItchMessage(msgType, subjectID, price, timeStamp, buyerID, sellerID){
 function Message(protocol, msgType, msgData) {
    this.protocol = protocol;
    this.delay = false;
-   //this.timeStamp = Date.now();
    this.timeStamp = getTime();
    this.msgType = msgType;
    this.msgData = msgData;

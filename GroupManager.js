@@ -43,7 +43,7 @@ Redwood.factory("GroupManager", function () {
       if(groupManager.marketFlag === "REMOTE"/*ZACH, D/N MODIFY!*/){
 
          // open websocket with market
-         //groupManager.marketURI = "ws://54.202.196.170:8000/";                      //PUT THIS BACK FOR VAGRANT TESTING
+         //groupManager.marketURI = "ws://54.202.196.170:8000/";                       //PUT THIS BACK FOR VAGRANT TESTING
          groupManager.marketURI = "ws://54.149.235.92:8000/";                          //this is the redwood/aws instance
          groupManager.socket = new WebSocket(groupManager.marketURI, ['binary', 'base64']);
          groupManager.socket.onopen = function(event) {
@@ -52,31 +52,21 @@ Redwood.factory("GroupManager", function () {
 
          // recieves messages from remote market
          groupManager.socket.onmessage = function(event) {
-            //console.log("Received msg from server");
             // create reader to read "blob" object
             var reader = new FileReader();
             reader.addEventListener("loadend", function() {
-
-               //console.log("[" + moment().format("hh:mm:ss.SSS") + "]Recieved From Remote Market: ");
-
                // reader.result contains the raw ouch message as a DataBuffer, convert it to string
                var ouchStr = String.fromCharCode.apply(null, new Uint8Array(reader.result));
                //logStringAsNums(ouchStr);
-
-               if(ouchStr.charAt(0) == 'S'){      //special batch msg -> no need to split
-                  
-                  //adding for synchronization for admin
-                  var msg = ouchToLeepsMsg(ouchStr);
-                  groupManager.lastbatchTime = getTime(); //msg.msgData[1];
-                  groupManager.recvFromMarket(msg);
+               if(ouchStr.charAt(0) == 'S'){                            //special batch msg -> no need to split
+                  var msg = ouchToLeepsMsg(ouchStr);                    //adding for synchronization for admin
+                  groupManager.lastbatchTime = getTime();               //msg.timeStamp;
+                  groupManager.recvFromMarket(msg);                     //send Batch message to Market Algorithm
                }
                else{
                   // split the string in case messages are conjoined
-                  var ouchMsgArray = splitMessages(ouchStr);
-                  //console.log("Received from Server: \n");
+                  var ouchMsgArray = splitMessages(ouchStr);            // translate the message and pass it to the recieve function
                   for(ouchMsg of ouchMsgArray){
-                     // translate the message and pass it to the recieve function
-                     //console.log(ouchToLeepsMsg(ouchMsg).asString());
                      groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
                   }
                }
@@ -128,13 +118,11 @@ Redwood.factory("GroupManager", function () {
          if (this.isDebug) {
             this.logger.logRecv(msg, "Market Algorithm");
          }
-
          // synchronized message in response to fundamental price change
          if (msg.protocol === "SYNC_FP") {
             //mark that this user sent msg
             this.syncFPArray.markReady(msg.msgData[0]);
             this.FPMsgList.push(msg);
-
 
             // check if every user has sent a response
             if (this.syncFPArray.allReady()) {
@@ -152,7 +140,8 @@ Redwood.factory("GroupManager", function () {
                   }
                }
                
-               this.dataStore.storePlayerOrder(msg.timeStamp, playerOrder);
+               //save order to CSV file
+               this.dataStore.storePlayerOrder(msg.timeStamp, playerOrder);      
 
                // reset arrays for the next fundamental price change
                this.FPMsgList = [];
@@ -160,31 +149,16 @@ Redwood.factory("GroupManager", function () {
             }
          }
 
-         // general message that needs to be passed on to marketManager
+         // general message that needs to be passed on to market algorthm
          if (msg.protocol === "OUCH") {
             groupManager.sendToMarket(msg);
          }
 
       };
 
-      // this sends message to market with specified amount of delay
-      // groupManager.sendToMarket = function (msg) {
-      //    //If no delay send msg now, otherwise send after delay
-      //    if (msg.delay) {
-      //       window.setTimeout(this.market.recvMessage.bind(this.market), this.delay, msg);
-      //    }
-      //    else {
-      //       this.market.recvMessage(msg);
-      //    }
-      // };
-
       // Function for sending messages, will route msg to remote or local market based on this.marketFLag
       groupManager.sendToMarket = function (leepsMsg) {
-         // add message to log
-         //this.outboundMarketLog += leepsMsg.asString() + "\n";
-         //console.log("Outbound messages:\n" + this.outboundMarketLog);
-         //console.log("Outbound Message: " + leepsMsg.asString() + "\n");
-         this.outboundMarketLog = "";
+         //console.log("Outbound Message", leepsMsg);                //debug OUCH messages
 
          //If no delay send msg now, otherwise send after delay
          if (leepsMsg.delay) {
@@ -212,39 +186,13 @@ Redwood.factory("GroupManager", function () {
       };
 
       // handles a message from the market
-      // groupManager.recvFromMarket = function (msg) {
-
-      //    if (this.isDebug) {
-      //       this.logger.logRecv(msg, "Market");
-      //    }
-
-      //    this.sendToMarketAlgorithms(msg);
-      // };
-
-      // handles a message from the market
       groupManager.recvFromMarket = function (msg) {
-
-         // add message to log
-         //this.inboundMarketLog += msg.asString() + "\n";
-         //console.log("Inbound Messages:\n" + this.inboundMarketLog);
-         //console.log(msg);
-         //console.log("Inbound Message: " + msg.asString() + "\n");
-         //this.inboundMarketLog = "";
-
-         //console.log("Receiving from Remote");
+         //console.log("Inbound Message", leepsMsg);                //debug incoming ITCH messages
          if(msg.msgType === "C_TRA" || msg.msgType === "BATCH"){     
-            //console.log("Receiving from Remote");
-            //console.log(msg.asString());
-            //console.log(msg);
             this.sendToMarketAlgorithms(msg);
          }
          else {
-            //console.log("not c_tra or batch");
-            //console.log(msg.asString());
-            //if(msg.msgData[0] > 0) {
-               // this.marketAlgorithms[msg.msgData[0]].recvFromGroupManager(msg);
-            // }
-            if(msg.subjectID > 0) {
+            if(msg.subjectID > 0) {                                 //Only send user messages to market algorithm
                this.marketAlgorithms[msg.subjectID].recvFromGroupManager(msg);
             }
             else {
@@ -253,22 +201,14 @@ Redwood.factory("GroupManager", function () {
          }
       };
 
-      groupManager.sendToLocalMarket = function(leepsMsg){
+      groupManager.sendToLocalMarket = function(leepsMsg){          //obsolete
          console.log("sending to local market");
-         //console.log(leepsMsg.asString());
          this.market.recvMessage(leepsMsg);
       }
 
-      groupManager.sendToRemoteMarket = function(leepsMsg){
-
-         if(leepsMsg.msgType === "ESELL" || leepsMsg.msgType === "EBUY"){
-            //console.log("Flag 5:");
-            //console.log("Sending to Remote");
-            //console.log(leepsMsg);
-         }
-         //console.log("sending to remote server:\n");
-         //console.log(leepsMsg.asString());
-         var msg = leepsMsgToOuch(leepsMsg);
+      groupManager.sendToRemoteMarket = function(leepsMsg){ 
+         var msg = leepsMsgToOuch(leepsMsg);                        //convert in house format to NASDAQ OUCH format
+         //console.log(msg);                                        //debug for outgoing message
          this.socket.send(msg);
       }
 
@@ -279,7 +219,6 @@ Redwood.factory("GroupManager", function () {
 
       // handles message from subject and passes it on to market algorithm
       groupManager.recvFromSubject = function (msg) {
-
          if (this.isDebug) {
             this.logger.logRecv(msg, "Subjects");
          }
@@ -316,15 +255,13 @@ Redwood.factory("GroupManager", function () {
       };
 
       groupManager.sendNextPriceChange = function () {
-         // if current price is -1, end the game
-         if (this.priceChanges[this.priceIndex][1] < 0) {
+         
+         if (this.priceChanges[this.priceIndex][1] < 0) {      // if current price is -1, end the game
             this.rssend("end_game", this.groupNumber);
             window.clearTimeout(this.market.timeoutID);
             return;
          }
-         //console.log("price change: " + printTime(getTime()) + "\n");
          // FPC message contains timestamp, new price, price index and a boolean reflecting the jump's direction
-         //var msg = new Message("ITCH", "FPC", [Date.now(), this.priceChanges[this.priceIndex][1], this.priceIndex, this.priceChanges[this.priceIndex][1] > this.priceChanges[this.priceIndex - 1][1]]);
          var msg = new Message("ITCH", "FPC", [getTime(), this.priceChanges[this.priceIndex][1], this.priceIndex, this.priceChanges[this.priceIndex][1] > this.priceChanges[this.priceIndex - 1][1]]);
          msg.delay = false;
          this.dataStore.storeMsg(msg);
@@ -339,31 +276,22 @@ Redwood.factory("GroupManager", function () {
             return;
          }
 
-
-         //console.log(this.priceChanges[this.priceIndex][0], this.startTime + this.priceChanges[this.priceIndex][0] - getTime());
-         //window.setTimeout(this.sendNextPriceChange, this.startTime + this.priceChanges[this.priceIndex][0] - Date.now());
-         //window.setTimeout(this.sendNextPriceChange, this.startTime + this.priceChanges[this.priceIndex][0] - getTime());
-         window.setTimeout(this.sendNextPriceChange, (this.startTime + this.priceChanges[this.priceIndex][0] - getTime()) / 1000000);  //fom cda
-         //var poop = (this.startTime + this.investorArrivals[this.investorIndex][0] - getTime()) / 1000000;
-         // console.log("price change time /1000000: " + poop + "\n without division: " + (poop * 1000000) + "\n");
+         //set timeout for sending the next price change
+         window.setTimeout(this.sendNextPriceChange, (this.startTime + this.priceChanges[this.priceIndex][0] - getTime()) / 1000000); 
       }.bind(groupManager);
 
       groupManager.sendNextInvestorArrival = function () {
-         //this.dataStore.investorArrivals.push([Date.now() - this.startTime, this.investorArrivals[this.investorIndex][1] == 1 ? "BUY" : "SELL"]);
+         //saves investor data to CSV output
          this.dataStore.investorArrivals.push([getTime() - this.startTime, this.investorArrivals[this.investorIndex][1] == 1 ? "BUY" : "SELL"]);
          
          // create the outside investor leeps message
          var msgType = this.investorArrivals[this.investorIndex][1] === 1 ? "EBUY" : "ESELL";
          if(msgType === "EBUY"){
-            //var msg2 = new Message("OUCH", "EBUY", [0, 214748.3647, true, getTime()]);      //make not ioc until darrell fixes 
             var msg2 = new OuchMessage("EBUY", 0, 214748.3647, true);      //changed 7/3/17
          }
          else if(msgType === "ESELL"){
-            //var msg2 = new Message("OUCH", "ESELL", [0, 0, true, getTime()]);
             var msg2 = new OuchMessage("ESELL", 0, 0, true);      //changed 7/3/17
          }
-         //var msg2 = new Message("OUCH", this.investorArrivals[this.investorIndex][1] == 1 ? "EBUY" : "ESELL", [0, 214748.3647, true, this.startTime + this.investorArrivals[this.investorIndex][0]]);
-         //console.log(msg2.asString());
 
          msg2.msgId = this.curMsgId;
          this.curMsgId++;
@@ -377,11 +305,7 @@ Redwood.factory("GroupManager", function () {
             return;
          }
 
-         //window.setTimeout(this.sendNextInvestorArrival, this.startTime + this.investorArrivals[this.investorIndex][0] - Date.now());
-         //window.setTimeout(this.sendNextInvestorArrival, this.startTime + this.investorArrivals[this.investorIndex][0] - getTime());
          window.setTimeout(this.sendNextInvestorArrival, (this.startTime + this.investorArrivals[this.investorIndex][0] - getTime()) / 1000000);   //from cda
-         //var poop = (this.startTime + this.investorArrivals[this.investorIndex][0] - getTime()) / 1000000;
-         //console.log("investor time /1000000: " + poop + "\n without division: " + (poop * 1000000) + "\n");
       }.bind(groupManager);
 
       return groupManager;

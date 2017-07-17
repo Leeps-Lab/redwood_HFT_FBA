@@ -21,8 +21,6 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             $scope.tradingGraph.draw($scope.dHistory);
 
             if ($scope.using_speed) {
-               //$scope.dHistory.profit -= CLOCK_FREQUENCY * $scope.dHistory.speedCost / 1000
-               //$scope.dHistory.profit -= CLOCK_FREQUENCY * $scope.dHistory.speedCost / 1000000000
                $scope.dHistory.profit -= (getTime() - $scope.lastTime) * $scope.dHistory.speedCost / 1000000000; //from cda
             }
 
@@ -124,9 +122,6 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                   var delay = $scope.inputData[0][0] + ($scope.dHistory.startTime - $scope.tradingGraph.getCurOffsetTime())/1000000;   //from cda
                   console.log("delay: " + delay);
                   window.setTimeout($scope.processInputAction, delay, 0);  //from cda
-                  //window.setTimeout($scope.processInputAction, $scope.inputData[0][0] + $scope.dHistory.startTime - $scope.tradingGraph.getCurOffsetTime(), 0);
-                  //console.log($scope.config.batchLength*1000000);
-                  //window.setTimeout($scope.dHistory.pushToBatches, $scope.config.batchLength*1000000);
                });
             }
          });
@@ -138,10 +133,10 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          $scope.setSpeed = function (value) {
             if (value !== $scope.using_speed) {
                $scope.using_speed = value;
-               //var msg = new Message("USER", "USPEED", [rs.user_id, $scope.using_speed, $scope.tradingGraph.getCurOffsetTime()]);
-               //$scope.sendToGroupManager(msg);
                var msg = new Message("USER", "USPEED", [rs.user_id, $scope.using_speed, $scope.tradingGraph.getCurOffsetTime()]);
                $scope.dHistory.recvMessage(msg);   //changed 6/24 -> bypass need to generate confirmation msgs by sending straight to dhistory
+               //$scope.sendToGroupManager(msg);
+               
             }
          };
 
@@ -358,6 +353,5 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             var delay = parseInt($scope.inputData[inputIndex + 1][0]) + ($scope.dHistory.startTime - $scope.tradingGraph.getCurOffsetTime())/1000000; //from cda
             console.log("delay: " + delay);
             window.setTimeout($scope.processInputAction, delay, inputIndex + 1); //from cda
-            //window.setTimeout($scope.processInputAction, parseInt($scope.inputData[inputIndex + 1][0]) + $scope.dHistory.startTime - $scope.tradingGraph.getCurOffsetTime(), inputIndex + 1);
          }
       }]);
