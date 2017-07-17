@@ -213,7 +213,8 @@ Redwood.factory("MarketAlgorithm", function () {
 
          // Confirmation that a buy offer has been placed in market
          if (msg.msgType == "C_EBUY") {
-            if (msg.msgData[0] == this.myId) {
+            //if (msg.msgData[0] == this.myId) {
+            if (msg.subjectID == this.myId) {   
                // var nMsg = new Message("DATA", "C_EBUY", msg.msgData);
                // console.log(msg,nMsg);
                // this.sendToAllDataHistories(nMsg);
@@ -223,7 +224,8 @@ Redwood.factory("MarketAlgorithm", function () {
 
          // Confirmation that a sell offer has been placed in market
          if (msg.msgType == "C_ESELL") {
-            if (msg.msgData[0] == this.myId) {
+            //if (msg.msgData[0] == this.myId) {
+            if (msg.subjectID == this.myId) { 
                // var nMsg = new Message("DATA", "C_ESELL", msg.msgData);
                // console.log(msg,nMsg);
                // this.sendToAllDataHistories(nMsg);
@@ -235,18 +237,22 @@ Redwood.factory("MarketAlgorithm", function () {
 
             // Confirmation that a buy offer has been removed from market
             if (msg.msgId === this.currentBuyId) {
-               if (msg.msgData[0] == this.myId) {
-                  var nMsg = new Message("DATA", "C_RBUY", msg.msgData);         //CHANGE TO ITCH
-                  this.sendToAllDataHistories(nMsg);
+               //if (msg.msgData[0] == this.myId) {
+               if (msg.subjectID == this.myId) {   
+                  //var nMsg = new Message("DATA", "C_RBUY", msg.msgData);         //CHANGE TO ITCH
+                  msg.msgType = "C_RBUY";                                          //Identify for Dhistory
+                  this.sendToAllDataHistories(msg);
                   this.currentBuyId = 0;
                }
             }
 
             // Confirmation that a sell offer has been placed in market
             if (msg.msgId === this.currentSellId) {
-               if (msg.msgData[0] == this.myId) {
-                  var nMsg = new Message("DATA", "C_RSELL", msg.msgData);           //CHANGE TO ITCH
-                  this.sendToAllDataHistories(nMsg);
+               //if (msg.msgData[0] == this.myId) {
+               if (msg.subjectID == this.myId) { 
+                  //var nMsg = new Message("DATA", "C_RSELL", msg.msgData);           //CHANGE TO ITCH
+                  msg.msgType = "C_RSELL";
+                  this.sendToAllDataHistories(msg);
                   this.currentSellId = 0;
                }
             }
@@ -254,7 +260,8 @@ Redwood.factory("MarketAlgorithm", function () {
 
          // Confirmation that a buy offer has been updated
          if (msg.msgType == "C_UBUY") {
-            if (msg.msgData[0] == this.myId) {
+            //if (msg.msgData[0] == this.myId) {
+            if (msg.subjectID == this.myId) {
                // var nMsg = new Message("DATA", "C_UBUY", msg.msgData);
                // this.sendToAllDataHistories(nMsg);
                this.sendToAllDataHistories(msg);            //changed 7/3/17
@@ -263,7 +270,8 @@ Redwood.factory("MarketAlgorithm", function () {
 
          // Confirmation that a sell offer has been updated
          if (msg.msgType == "C_USELL") {
-            if (msg.msgData[0] == this.myId) {
+            //if (msg.msgData[0] == this.myId) {
+            if (msg.subjectID == this.myId) {
                //var nMsg = new Message("DATA", "C_USELL", msg.msgData);
                //this.sendToAllDataHistories(nMsg);
                this.sendToAllDataHistories(msg);            //changed 7/3/17
@@ -292,13 +300,25 @@ Redwood.factory("MarketAlgorithm", function () {
             //   this.sendToAllDataHistories(nMsg);
             //}
 
+            // if (this.state == "state_maker") {
+            //    if (msg.msgData[1] === this.myId)
+            //    {
+            //       this.currentBuyId = 0;
+            //       this.sendToGroupManager(this.enterBuyOfferMsg());
+            //    }
+            //    if (msg.msgData[2] === this.myId) 
+            //    {
+            //       this.currentSellId = 0;
+            //       this.sendToGroupManager(this.enterSellOfferMsg());
+            //    }
+            // }
             if (this.state == "state_maker") {
-               if (msg.msgData[1] === this.myId)
+               if (msg.buyerID === this.myId)
                {
                   this.currentBuyId = 0;
                   this.sendToGroupManager(this.enterBuyOfferMsg());
                }
-               if (msg.msgData[2] === this.myId) 
+               if (msg.sellerID === this.myId) 
                {
                   this.currentSellId = 0;
                   this.sendToGroupManager(this.enterSellOfferMsg());

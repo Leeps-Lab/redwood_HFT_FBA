@@ -281,7 +281,7 @@ function ouchToLeepsMsg(ouchMsg){
     var numCanceled = string256ToInt(ouchMsg.substring(23, 27));
 
     //var msg = new Message("OUCH", "C_CANC", [subjId, timeStamp]);
-    var msg = new ItchMessage("C_CANC", subjId, null, timeStamp, null, null, null);
+    var msg = new ItchMessage("C_CANC", subjId, null, timeStamp, null, null);
     msg.timeStamp = timeStamp; // for test output only
     msg.msgId = msgId;
     msg.numShares = numCanceled;
@@ -326,7 +326,7 @@ function ouchToLeepsMsg(ouchMsg){
 
     // create leeps message
     //var msg = new Message("OUCH", lpsMsgType, [subjId, price, timeStamp]);
-    var msg = new ItchMessage(lpsMsgType, subjId, price, timeStamp, null, null, null);
+    var msg = new ItchMessage(lpsMsgType, subjId, price, timeStamp, null, null);
     msg.timeStamp = timeStamp; // for test output only
     msg.msgId = msgId;
     msg.prevMsgId = prevMsgId;
@@ -358,11 +358,11 @@ function ouchToLeepsMsg(ouchMsg){
     // create leeps message
     if(transactionType === "B"){
       //var msg = new Message("OUCH", "C_TRA", [timeStamp, subjId, 0, price]);
-      var msg = new ItchMessage("C_TRA", subjId, price, timeStamp, subjId, 0, null);
+      var msg = new ItchMessage("C_TRA", subjId, price, timeStamp, subjId, 0);
     }
     else if(transactionType === "S"){
       //var msg = new Message("OUCH", "C_TRA", [timeStamp, 0, subjId, price]);
-      var msg = new ItchMessage("C_TRA", subjId, price, timeStamp, 0, subjId, null);
+      var msg = new ItchMessage("C_TRA", subjId, price, timeStamp, 0, subjId);
     }
     else{
       console.error("Unable to recognize type of tranaction: " + transactionType);
@@ -377,7 +377,8 @@ function ouchToLeepsMsg(ouchMsg){
     var batchType = ouchMsg.charAt(9);  //B for start of batch, P for end of batch
     var timeStamp = string256ToInt(ouchMsg.substring(1,9));  
     //var msg = new Message("ITCH", "BATCH", [batchType, timeStamp]);
-    var msg = new ItchMessage("BATCH", null, null, timeStamp, null, null, batchType);
+    var msg = new ItchMessage("BATCH", null, null, timeStamp, null, null);
+    msg.batchType = batchType;
     //if B -> make isBatch true (6/30/17)
     return msg;
   }

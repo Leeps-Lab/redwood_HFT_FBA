@@ -77,7 +77,9 @@ Redwood.factory("DataStorage", function () {
                break;
             case "C_TRA" :
                //added 5/17/17 to update profits of users in CSV
-               this.storeTransaction(message.timeStamp, message.msgData[1], message.msgData[2], message.msgData[3], message.msgData[4]);
+               // this.storeTransaction(message.timeStamp, message.msgData[1], message.msgData[2], message.msgData[3], message.msgData[4]);
+               this.storeTransaction(message.timeStamp, message.price, message.FPC, message.buyerID, message.sellerID);
+               
                break;
             case "FPC" :
                this.storeFPC(message.timeStamp, message.msgData[1])

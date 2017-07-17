@@ -45,15 +45,16 @@ function OuchMessage(msgType, subjectID, price, IOC) {
    //this.numShares = 0;
 }
 
-function ItchMessage(msgType, subjectID, price, timeStamp, buyerID, sellerID, batchType){
+function ItchMessage(msgType, subjectID, price, timeStamp, buyerID, sellerID){
    this.protocol = "ITCH";                   //'A','C','U','E','S'
    this.msgType = msgType;                   //C_UBUY,C_USELL,C_EBUY,C_ESELL,C_CANC,C_TRA,BATCH
    this.timeStamp = timeStamp;               //timeStamp from the server
    this.price = price;                       //must be multiplied by 1000 before sent to server
    this.buyerID = buyerID;                   //0,1,2,3,4
    this.sellerID = sellerID;                 //0,1,2,3,4
+   this.subjectID = subjectID;               //0,1,2,3,4
    this.FPC;
-   this.batchType = batchType;               //'B' for Start, 'P' for End
+   this.batchType;                           //'B' for Start, 'P' for End
    this.msgId;
    this.numShares = 0;
 }
