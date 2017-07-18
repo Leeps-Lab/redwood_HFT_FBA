@@ -187,7 +187,7 @@ Redwood.factory("GroupManager", function () {
 
       // handles a message from the market
       groupManager.recvFromMarket = function (msg) {
-         //console.log("Inbound Message", leepsMsg);                //debug incoming ITCH messages
+         //console.log("Inbound Message", msg);                //debug incoming ITCH messages
          if(msg.msgType === "C_TRA" || msg.msgType === "BATCH"){     
             this.sendToMarketAlgorithms(msg);
          }

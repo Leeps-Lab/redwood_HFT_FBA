@@ -63,7 +63,6 @@ Redwood.factory("DataStorage", function () {
                this.storeStateChange(message.msgData[1], "OUT", message.msgData[0]);
                break;
             case "UMAKER" :
-               console.log("made it in dataStorage");
                this.storeStateChange(message.msgData[1], "MAKER", message.msgData[0]);
                break;
             case "USNIPE" :

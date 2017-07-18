@@ -186,6 +186,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             myTransaction.price = msg.price;
             myTransaction.transacted = true;
             myTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false); //test -> 7/17/17
+            //console.log(msg.timeStamp,getTime(),(msg.timeStamp-getTime())/1000000);
             //myTransaction.batchNumber = this.calcClosestBatch(getTime(),false);   
             this.myTransactions.push(myTransaction);
 
@@ -193,7 +194,8 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             this.sellTransactionCount++;                                            //number of sell transactions in this batch
             investorTransaction.price = msg.FPC - (this.highestSpread / 2) - (this.sellTransactionCount * this.investorOrderSpacing);
             investorTransaction.transacted = true;
-            investorTransaction.batchNumber = myTransaction.batchNumber; 
+            investorTransaction.batchNumber = myTransaction.batchNumber;
+            console.log("investor transaction: ", investorTransaction);
             this.investorTransactions.push(investorTransaction);
          }
          else if (msg.sellerID == this.myId) {                                      //if I'm the seller
@@ -204,6 +206,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             myTransaction.price = msg.price;
             myTransaction.transacted = true;
             myTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false); //test -> 7/17/17
+            //console.log(msg.timeStamp,getTime(),(msg.timeStamp-getTime())/1000000);
             //myTransaction.batchNumber = this.calcClosestBatch(getTime(),false);  
             this.myTransactions.push(myTransaction);
 
@@ -212,6 +215,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             investorTransaction.price = msg.FPC + (this.highestSpread / 2) + (this.buyTransactionCount * this.investorOrderSpacing);    //investor has price of transaction + spacing
             investorTransaction.transacted = true;
             investorTransaction.batchNumber = myTransaction.batchNumber; 
+            console.log("investor transaction: ", investorTransaction);
             this.investorTransactions.push(investorTransaction);
          }
          else {   //a different user transacted, need to push to investorTransaction to update my graph
