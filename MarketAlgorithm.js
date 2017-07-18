@@ -245,18 +245,9 @@ Redwood.factory("MarketAlgorithm", function () {
          // Confirmation that a transaction has taken place
          if (msg.msgType == "C_TRA") {
             msg.FPC = this.fundamentalPrice;
-            console.log(msg);
+            //console.log(msg);
             //this.sendToAllDataHistories(msg);
-            this.sendToDataHistory(msg,msg.subjectID);   //test 7/18/17 (only need to send to dhistory of user that transacted)
-
-            //send data message to dataHistory containing [timestamp, price, fund-price, buyer, seller]
-            //pick the buyer to send the message unless the buyer is an outside investor, then use the seller
-            // if (msg.msgData[2] === this.myId || (msg.msgData[1] === this.myId && msg.msgData[2] == 0)) {
-            //    var nMsg = new Message("DATA", "C_TRA", [msg.msgData[0], msg.msgData[3], this.fundamentalPrice, msg.msgData[1], msg.msgData[2]]);
-
-            //    console.log(msg,nMsg);
-            //    this.sendToAllDataHistories(nMsg);
-            // } 
+            this.sendToDataHistory(msg,msg.subjectID);   //test 7/18/17 (only need to send to dhistory of user that transacted);
             if (this.state == "state_maker") {     //replenish filled orders
                if (msg.buyerID === this.myId)
                {

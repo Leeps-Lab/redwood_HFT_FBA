@@ -180,13 +180,11 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          var otherTransaction = {};        
          if (msg.buyerID == this.myId) {                                            //I'm the buyer
             this.profit += msg.FPC - msg.price;                                     //fundPrice - myPrice
-            console.log("profit", this.profit);
             //push info on my transaction to graph
             myTransaction.positive = msg.FPC - msg.price >= 0;                      //calculate +/- transaction
             myTransaction.price = msg.price;
             myTransaction.transacted = true;
             myTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false); //test -> 7/17/17
-            //console.log(msg.timeStamp,getTime(),(msg.timeStamp-getTime())/1000000);
             //myTransaction.batchNumber = this.calcClosestBatch(getTime(),false);   
             this.myTransactions.push(myTransaction);
 
@@ -195,18 +193,16 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             investorTransaction.price = msg.FPC - (this.highestSpread / 2) - (this.sellTransactionCount * this.investorOrderSpacing);
             investorTransaction.transacted = true;
             investorTransaction.batchNumber = myTransaction.batchNumber;
-            console.log("investor transaction: ", investorTransaction);
+            //console.log("investor transaction: ", investorTransaction);
             this.investorTransactions.push(investorTransaction);
          }
          else if (msg.sellerID == this.myId) {                                      //if I'm the seller
             this.profit += msg.price - msg.FPC;
-            console.log("profit", this.profit);                
             //push info on my transaction to graph
             myTransaction.positive = msg.price - msg.FPC >= 0;                      //calculate +/- transaction
             myTransaction.price = msg.price;
             myTransaction.transacted = true;
             myTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false); //test -> 7/17/17
-            //console.log(msg.timeStamp,getTime(),(msg.timeStamp-getTime())/1000000);
             //myTransaction.batchNumber = this.calcClosestBatch(getTime(),false);  
             this.myTransactions.push(myTransaction);
 
@@ -215,7 +211,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             investorTransaction.price = msg.FPC + (this.highestSpread / 2) + (this.buyTransactionCount * this.investorOrderSpacing);    //investor has price of transaction + spacing
             investorTransaction.transacted = true;
             investorTransaction.batchNumber = myTransaction.batchNumber; 
-            console.log("investor transaction: ", investorTransaction);
+            //console.log("investor transaction: ", investorTransaction);
             this.investorTransactions.push(investorTransaction);
          }
          else {   //a different user transacted, need to push to investorTransaction to update my graph
@@ -225,7 +221,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                investorTransaction.transacted = true;
                investorTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false);    //changed 7/17/17
                //investorTransaction.batchNumber = this.calcClosestBatch(getTime(),false); 
-               console.log("investor transaction: ", investorTransaction);
+               //console.log("investor transaction: ", investorTransaction);
                this.investorTransactions.push(investorTransaction);
             }
             else { //other user is the buyer
@@ -233,7 +229,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                otherTransaction.transacted = true;
                otherTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false); //changed 7/17/17
                //otherTransaction.batchNumber = this.calcClosestBatch(getTime(),false);
-               console.log("other transaction: ", otherTransaction);
+               //console.log("other transaction: ", otherTransaction);
                this.otherTransactions.push(otherTransaction);
             }
 
@@ -243,7 +239,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                investorTransaction.transacted = true;
                investorTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false);       //changed 7/17/17
                //investorTransaction.batchNumber = this.calcClosestBatch(getTime(),false); 
-               console.log("investor transaction: ", investorTransaction);
+               //console.log("investor transaction: ", investorTransaction);
                this.investorTransactions.push(investorTransaction);
             }
             else { //other user is the seller
@@ -251,7 +247,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                otherTransaction.transacted = true;
                otherTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false);    //changed 7/17/17
                //otherTransaction.batchNumber = this.calcClosestBatch(getTime(),false); 
-               console.log("other transaction: ", otherTransaction);
+               //console.log("other transaction: ", otherTransaction);
                this.otherTransactions.push(otherTransaction);
             }
 
@@ -325,6 +321,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                order.price = batchMinPrice;
             }
             this.investorOrders.push(order);
+            //console.log(order,(getTime() - order.time)/1000000);
          }
          this.investorOrdersThisBatch = [];
 
@@ -340,7 +337,8 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             this.investorOrdersThisBatch.push({
                batchNumber: this.calcClosestBatch(buyMsg.timeStamp, true),
                price: buyMsg.price,
-               isBuy: true
+               isBuy: true,
+               time: getTime()
             });
             return;
          }
@@ -366,7 +364,8 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          if (sellMsg.subjectID == 0) {
             this.investorOrdersThisBatch.push({
                batchNumber: this.calcClosestBatch(sellMsg.timeStamp, true),
-               isBuy: false
+               isBuy: false,
+               time: getTime()
             });
             return;
          }

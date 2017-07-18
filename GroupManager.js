@@ -227,6 +227,8 @@ Redwood.factory("GroupManager", function () {
          if (msg.protocol === "USER") {
             var subjectID = msg.msgData[0];
             this.marketAlgorithms[subjectID].recvFromGroupManager(msg);
+            
+            this.sendToAllDataHistories(msg);            //updates the UI, doesn't work when directly sent from start.js
 
             this.dataStore.storeMsg(msg);
             if (msg.msgType == "UMAKER") this.dataStore.storeSpreadChange(msg.msgData[1], this.marketAlgorithms[subjectID].spread, msg.msgData[0]);
