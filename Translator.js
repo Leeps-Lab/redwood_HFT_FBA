@@ -81,7 +81,7 @@ function leepsMsgToOuch(leepsMsg){
       // Time in Force
       //if(leepsMsg.msgData[2] === true){
       if(leepsMsg.IOC === true){
-        if(ouchMsg[4] != charToByte(String.fromCharCode(64))){
+        if(ouchMsg[4] != charToByte(String.fromCharCode(64))){   //if youre not an investor
           spliceInArray(intToByteArray(1), ouchMsg, 4, 32);      //changed 5/24 to test sniping (time of force of 1)
         }
         else{
@@ -198,7 +198,7 @@ function leepsMsgToOuch(leepsMsg){
       // Time in Force
       //if(leepsMsg.msgData[2] === true){
       if(leepsMsg.IOC === true){  
-         spliceInArray(intToByteArray(0), ouchMsg, 4, 37);
+         spliceInArray(intToByteArray(1), ouchMsg, 4, 37);    //7/18/17 changed from 0 to 1 for sniping purposes
       }
       else{
          spliceInArray(intToByteArray(99999), ouchMsg, 4, 37);

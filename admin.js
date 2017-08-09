@@ -343,10 +343,8 @@ Redwood.controller("AdminCtrl",
 
             // if there are any price changes to send, start sending them
             if ($scope.priceChanges.length > 2) {
-               //window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, $scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - Date.now());
                window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, ($scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - getTime()) / 1000000);
             }
-            //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - Date.now());
             //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - getTime());
             //$scope.groupManagers[groupNum].intervalPromise = $interval($scope.groupManagers[groupNum].update.bind($scope.groupManagers[groupNum]), CLOCK_FREQUENCY);
             if ($scope.investorArrivals.length > 1) {

@@ -24,7 +24,7 @@ function OuchMessage(msgType, subjectID, price, IOC) {
    this.msgType = msgType;                   //EBUY,ESELL,RBUY,RSELL,UBUY,USELL
    this.price = price;                       //must be multiplied by 1000 before sent to server
    this.subjectID = subjectID;               //0,1,2,3,4
-   this.timeofForce = IOC;                   //needs to be converted to either 3 or 99999
+   this.IOC = IOC;                   //needs to be converted to either 3 or 99999
    this.delay = false;                       //false by default
    this.senderId;
    this.msgId;

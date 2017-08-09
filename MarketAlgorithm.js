@@ -158,12 +158,17 @@ Redwood.factory("MarketAlgorithm", function () {
          }  
 
          // user sent signal to change state to "out of market"
-         if (msg.msgType === "UOUT") {
-            this.exitMarket();                  // clear the market of my orders
-            this.state = "state_out";           // update state
-
-            //var nMsg = new Message("DATA", "C_UOUT", msg.msgData);      //removed 6/27/17 for refactor
-            //this.sendToAllDataHistories(nMsg);                           //removed 6/27/17 for refactor
+         if (msg.msgType === "UOUT") {                         //only remove orders that are in the book
+            if(this.buyEntered == true){
+               this.sendToGroupManager(this.removeBuyOfferMsg());
+               this.buyEntered = false;
+               this.state = "state_out";
+            }
+            if(this.sellEntered == true){
+               this.sendToGroupManager(this.removeSellOfferMsg());
+               this.sellEntered = false;
+               this.state = "state_out";
+            }
          }
 
          if (msg.msgType === "USPEED") {
@@ -252,11 +257,13 @@ Redwood.factory("MarketAlgorithm", function () {
                if (msg.buyerID === this.myId)
                {
                   this.currentBuyId = 0;
+                  this.buyEntered = false;         //added 7/18/17 for fixing OUT user input
                   this.sendToGroupManager(this.enterBuyOfferMsg());
                }
                if (msg.sellerID === this.myId) 
                {
                   this.currentSellId = 0;
+                  this.sellEntered = false;        //added 7/18/17 for fixing OUT user input
                   this.sendToGroupManager(this.enterSellOfferMsg());
                }
             }
