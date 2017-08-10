@@ -15,16 +15,50 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          $scope.spread = 0;
          $scope.maxSpread = 1;
          $scope.lastTime = 0;
+         $scope.mousePressed = false;
+         $scope.oldOffsetY = null;
+         $scope.curOffsetY = null;
+         $scope.startTime = 0;
+         $scope.jumpOffsetY = 0;
+         $scope.LaserSound;
+         $scope.statename = "Out";
+
+         $scope.s = {
+            NO_LINES: 0,
+            DRAW_FIRST: 1,
+            FIRST_DRAWN: 2,
+            DRAW_SECOND: 3,
+            SECOND_DRAWN: 4,
+            REDRAW_FIRST: 5,
+            REDRAW_SECOND: 6,
+            OUT: 7
+         };
+
+         $scope.e = {
+            NO_EVENT: 0,
+            JUMP: 1,
+            CLICK: 2,
+            FIRST_TIME: 3
+         };
+         $scope.lastEvent = $scope.e.NO_EVENT;
+         $scope.event = $scope.e.NO_EVENT;
+         $scope.tickState = $scope.s.NO_LINES;
 
          //Loops at speed CLOCK_FREQUENCY in Hz, updates the graph
-         $scope.update = function () {
+         $scope.update = function (timestamp) {
+            $scope.FSM($scope.tickState, $scope.event, timestamp);
+            $scope.FPCpoll();
+
             $scope.tradingGraph.draw($scope.dHistory);
 
             if ($scope.using_speed) {
                $scope.dHistory.profit -= (getTime() - $scope.lastTime) * $scope.dHistory.speedCost / 1000000000; //from cda
             }
-
             $scope.lastTime = getTime();
+
+            $scope.dHistory.CalculatePlayerInfo();
+            requestAnimationFrame($scope.update);
+            $scope.$digest();                      //for updating profit
          };
 
          // Sorts a message list with the lowest actionTime first
@@ -101,12 +135,15 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             //Create data history and graph objects
             $scope.dHistory = dataHistory.createDataHistory(data.startTime, data.startFP, rs.user_id, $scope.group, $scope.isDebug, data.speedCost, data.startingWealth, data.maxSpread, data.batchLength);
             $scope.dHistory.init();
-            $scope.tradingGraph = graphing.makeTradingGraph("graph1", "graph2", data.startTime, data.playerTimeOffsets[rs.user_id], data.batchLength);
+            $scope.tradingGraph = graphing.makeTradingGraph("graph1", "graph2", data.startTime, data.playerTimeOffsets[rs.user_id], data.batchLength, "graph3");
             $scope.tradingGraph.init(data.startFP, data.maxSpread, data.startingWealth);
 
+            //load the audio objects
+            $scope.AudioInit();
             // set last time and start looping the update function
             $scope.lastTime = getTime();
-            $interval($scope.update, CLOCK_FREQUENCY);
+            //$interval($scope.update, CLOCK_FREQUENCY);
+            requestAnimationFrame($scope.update);
 
             // if input data was provided, setup automatic input system
             if (data.hasOwnProperty("input_addresses")) {
@@ -130,12 +167,28 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             handleMsgFromGM(msg);
          });
 
+         $scope.GetStateName = function (){
+            if ($scope.state == "state_maker") return "Maker";
+            if ($scope.state == "state_out") return "Out";
+            if ($scope.state == "state_snipe") return "Sniper";
+         };
+
+         $scope.GetSpread = function (){
+            if($scope.state == "state_maker") return $scope.spread;
+            else return "N/A";
+         };
+
+         $scope.AudioInit = function (){
+            $scope.LaserSound = new Audio("/static/experiments/redwood-high-frequency-trading-remote/Sounds/laser1.wav");
+            $scope.LaserSound.volume = .1;
+            // $scope.LaserSound.play();
+         };
+
          $scope.setSpeed = function (value) {
             if (value !== $scope.using_speed) {
                $scope.using_speed = value;
                var msg = new Message("USER", "USPEED", [rs.user_id, $scope.using_speed, $scope.tradingGraph.getCurOffsetTime()]);
                $scope.sendToGroupManager(msg);           //still have to send to market algorithm to update player state
-               //rs.send("To_All_Data_Histories", msg);    //Added 7/18/17 for refactor
                
             }
          };
@@ -145,57 +198,241 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                $scope.setSpeed(this.checked);
             });
 
-         $("#slider-val")
-            .change( function () {
-               var newVal = $(this).val();
+         $scope.FPCpoll = function () {
+            if($scope.tradingGraph.oldFundPrice != $scope.dHistory.curFundPrice[1]){
+               $scope.event = $scope.e.JUMP;
+               $scope.jumpOffsetY = $scope.tradingGraph.FPCswing;
+            }
+         }; 
 
-               // if someone tries to enter an invalid spread value
-               if (newVal == "" || newVal > $scope.maxSpread || newVal < 0) {
-                  $(this).val($scope.sliderVal);
-                  return;
-               }
+         $scope.CalculateYPOS = function (offset) {
+            //reflects my current spread choice over the center of svg element
+            return $scope.tradingGraph.newElementHeight - offset;
+         };
 
-               if (newVal != $scope.spread) {
-                  $scope.sliderVal = newVal;
-                  $scope.spread = newVal;
-                  $("#slider").slider({value: newVal});
-                  var msg = new Message("USER", "UUSPR", [rs.user_id, $scope.sliderVal, $scope.tradingGraph.getCurOffsetTime()]);
-                  $scope.sendToGroupManager(msg);
-                  //rs.send("To_All_Data_Histories", msg);    //Added 7/18/17 for refactor
-               }
-               if ($scope.state != "state_maker") {
-                  var msg2 = new Message("USER", "UMAKER", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
-                  $scope.sendToGroupManager(msg2);
-                  $scope.setState("state_maker");
-                  //rs.send("To_All_Data_Histories", msg2);    //Added 7/18/17 for refactor
-               }
-            });
+         $scope.CalculateXPOS = function (runtime){        //This returns the horizontal distance from the right of the graph svg
+         //for implementation purposes, both fast and slow lines take the whole width
+            if($scope.using_speed){        
+               return ($scope.tradingGraph.newElementWidth * Math.min(runtime / $scope.tradingGraph.fastDelay, 1)).toFixed(2);
+            }
+            else{             
+               return ($scope.tradingGraph.newElementWidth * Math.min(runtime / $scope.tradingGraph.slowDelay, 1)).toFixed(2);
+            }
+         };  
 
-         $("#slider")
-            .slider({
-               orientation: "vertical",
-               step: .01,
-               range: "min",
-               slide: function (event, ui) {
-                  $scope.sliderVal = ui.value;
-               },
-               stop: function (event, ui) {
-                  if ($scope.sliderVal != $scope.spread) {
-                     $scope.spread = $scope.sliderVal;
-                     var msg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, $scope.tradingGraph.getCurOffsetTime()]);
-                     $scope.sendToGroupManager(msg);
-                     //rs.send("To_All_Data_Histories", msg);    //Added 7/18/17 for refactor
+         $scope.FSM = function (state, event, timestamp) {
+            switch(state){ 
+               case $scope.s.NO_LINES:
+                  switch(event){ 
+                     case $scope.e.CLICK:                                                       //user's first click on the graph
+                        $scope.startTime = window.performance.now();                            //set start time for the lasers
+                        $scope.tradingGraph.callDrawSpreadTick($scope.curOffsetY, $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);                        //generate the top line
+                        $scope.tradingGraph.callDrawSpreadTick($scope.CalculateYPOS($scope.curOffsetY), $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);  //generate the bottom line
+                        $scope.lastEvent = $scope.e.FIRST_TIME;                                 //special case
+                        $scope.event = $scope.e.NO_EVENT;                                       //clear event
+                        $scope.tickState = $scope.s.DRAW_FIRST;                                 //transition to DRAW_FIRST
+                        break;
+
+                     case $scope.e.JUMP:
+                        $scope.event = $scope.e.NO_EVENT;                                       //clear the event, we don't care about jumps at this time
+                        break;
+
+                     default:
+                        // console.log("pay jason more");
+                        break;
                   }
-               },
-               start: function (event, ui) {
-                  if ($scope.state != "state_maker") {
+                  break;
+               case $scope.s.DRAW_FIRST:
+                  switch(event){
+                     case $scope.e.CLICK:                                                       //user clicked before the lines were fully drawn
+                        $scope.startTime = window.performance.now();                            //reset start time for the new lines
+                        $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();           //replace moving lines with your new spread
+                        $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();               //clear old spread region if it's been drawn
+                        $scope.tradingGraph.callDrawSpreadTick($scope.curOffsetY, $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);                       //new top line at new spread
+                        $scope.tradingGraph.callDrawSpreadTick($scope.CalculateYPOS($scope.curOffsetY), $scope.using_speed, timestamp - $scope.startTime, false, "current", 0); //new bot line at new spread
+                        $scope.tradingGraph.DrawBox($scope.tradingGraph, $scope.oldOffsetY, $scope.jumpOffsetY, $scope.CalculateYPOS($scope.oldOffsetY), "box");                                 //display your spread region at your old spread
+                        $scope.lastEvent = $scope.event;                                        //keep track of the last event
+                        $scope.event = $scope.e.NO_EVENT;                                       //clear event
+                        $scope.tickState = $scope.s.DRAW_FIRST;                                 //transition to default case
+
+                     case $scope.e.JUMP:
+                        $scope.startTime = window.performance.now();                            //reset start time for the new lines
+                        $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();           //moving spread lines will be replaced
+                        $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();               //clear old spread region for shifted one
+                        $scope.tradingGraph.callDrawSpreadTick($scope.curOffsetY, $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);                        //send new top line at new spread
+                        $scope.tradingGraph.callDrawSpreadTick($scope.CalculateYPOS($scope.curOffsetY), $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);  //send new bot line at new spread
+                        $scope.oldOffsetY = $scope.curOffsetY;                                  //must set this so upon leaving this case so it will be correct in default
+                        $scope.tradingGraph.DrawBox($scope.tradingGraph, $scope.oldOffsetY, $scope.jumpOffsetY, $scope.CalculateYPOS($scope.oldOffsetY), "box"); //shift the spread region by the jump distance
+                        $scope.lastEvent = $scope.event;                                        //keep track of the last event
+                        $scope.event = $scope.e.NO_EVENT;                                       //clear event, transition to default
+                        $scope.LaserSound.play();
+                        break;
+
+                     default:                                                                   //no event, so continue drawing the lines
+                        if($scope.using_speed){
+                           if(timestamp - $scope.startTime < $scope.tradingGraph.fastDelay){    //current spread lines havent reached the end
+                              $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();     //delete line history so they appear moving
+                              $scope.tradingGraph.callDrawSpreadTick($scope.curOffsetY, $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);                        //current top line
+                              $scope.tradingGraph.callDrawSpreadTick($scope.CalculateYPOS($scope.curOffsetY), $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);  //current bot line
+                              if($scope.lastEvent != $scope.e.FIRST_TIME){                      //don't want to display spread region until the first lines reach the center
+                                 $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();      //clear redundant spread regions for performance
+                                 $scope.tradingGraph.DrawBox($scope.tradingGraph, $scope.oldOffsetY, $scope.jumpOffsetY, $scope.CalculateYPOS($scope.oldOffsetY), "box");          //display your current spread region with offset if any
+                              }
+                           }
+                           else{
+                              $scope.oldOffsetY = $scope.curOffsetY;                            //both lines caught up, so they have the same offsets
+                              $scope.jumpOffsetY = 0;                                           //safely move back the spread region to the current spread
+                              $scope.tickState = $scope.s.FIRST_DRAWN;                          //the lines drawn without an interruption -> transition to FIRST_DRAWN
+                           }  
+                        }
+                        else {                                                                  //no event, so continue drawing the lines
+                           if(timestamp - $scope.startTime < $scope.tradingGraph.slowDelay){    //current spread lines havent reached the end
+                              $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();     //delete line history so they appear moving
+                              $scope.tradingGraph.callDrawSpreadTick($scope.curOffsetY, $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);                        //current top line
+                              $scope.tradingGraph.callDrawSpreadTick($scope.CalculateYPOS($scope.curOffsetY), $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);  //current bot line
+                              if($scope.lastEvent != $scope.e.FIRST_TIME){                      //don't want to display spread region until the first lines reach the center
+                                 $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();      //clear redundant spread regions for performance
+                                 $scope.tradingGraph.DrawBox($scope.tradingGraph, $scope.oldOffsetY, $scope.jumpOffsetY, $scope.CalculateYPOS($scope.oldOffsetY), "box");          //display your current spread region
+                              } 
+                           }
+                           else{
+                              $scope.oldOffsetY = $scope.curOffsetY;                            //both lines caught up, so they have the same offset
+                              $scope.jumpOffsetY = 0;                                           //safely move back the spread region to the current spread
+                              $scope.tickState = $scope.s.FIRST_DRAWN;                          //the lines drawn without an interruption -> transition to FIRST_DRAWN
+                           }
+                        }
+                        
+                        break;
+                  }
+                  break;
+               case $scope.s.FIRST_DRAWN:
+                  switch(event){
+                     case $scope.e.CLICK:                                                       //user clicked after lines reached the center point
+                        $scope.startTime = window.performance.now();                            //reset start time for the new spread lines
+                        $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();           //remove static lines current spread
+                        $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();               //remove current spread region for performance and safety
+                        $scope.tradingGraph.callDrawSpreadTick($scope.curOffsetY, $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);                        //new top line at spread
+                        $scope.tradingGraph.callDrawSpreadTick($scope.CalculateYPOS($scope.curOffsetY), $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);  //new bot line at spread
+                        $scope.tradingGraph.DrawBox($scope.tradingGraph, $scope.oldOffsetY, $scope.jumpOffsetY, $scope.CalculateYPOS($scope.oldOffsetY), "box");                                  //display your current spread region            
+                        $scope.lastEvent = $scope.event;                                        //keep track of the last event
+                        $scope.event = $scope.e.NO_EVENT;                                       //clear event
+                        $scope.tickState = $scope.s.DRAW_FIRST;                                 //transition to DRAW_FIRST 
+                        break;
+
+                     case $scope.e.JUMP:
+                        $scope.startTime = window.performance.now();                            //reset start time for the new lines
+                        $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();           //remove your current static lines
+                        $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();               //remove your spread region
+                        $scope.tradingGraph.callDrawSpreadTick($scope.curOffsetY, $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);                                 //new top line at current spread
+                        $scope.tradingGraph.callDrawSpreadTick($scope.CalculateYPOS($scope.curOffsetY), $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);           //new bot line at current spread
+                        $scope.oldOffsetY = $scope.curOffsetY;                                  //must set this so upon leaving this case, it will work in default
+                        $scope.tradingGraph.DrawBox($scope.tradingGraph, $scope.oldOffsetY, $scope.jumpOffsetY, $scope.CalculateYPOS($scope.oldOffsetY), "box"); //display new shifted spread region
+                        $scope.lastEvent = $scope.event;                                        //keep track of the last event
+                        $scope.event = $scope.e.NO_EVENT;                                       //clear event
+                        $scope.tickState = $scope.s.DRAW_FIRST;                                 //transition to DRAW_FIRST
+                        $scope.LaserSound.play();
+                        break;
+
+                     default:                                                                   //continue to draw static current spread until the next event
+                        $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();           //clear static 
+                        $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();               //clear old spread region displays for performance
+                        $scope.tradingGraph.DrawBox($scope.tradingGraph, $scope.oldOffsetY, $scope.jumpOffsetY, $scope.CalculateYPOS($scope.oldOffsetY), "box");        //draw my current spread region
+                        break;
+                  }
+                  break;
+
+               case $scope.s.OUT:
+                  switch(event){
+                     case $scope.e.FIRST_TIME:
+                        if(!$scope.using_speed){
+                           window.setTimeout(function(){                                              //wait your delay before removing
+                              $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();           //clear any graph elements
+                              $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();               //clear any graph elements
+                           }, 500);
+                        }
+                        else{
+                           $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();           //clear any graph elements
+                           $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();               //clear any graph elements
+                        }
+                        $scope.jumpOffsetY = 0;                                                 //reset variable
+                        $scope.oldOffsetY = $scope.curOffsetY;                                  //reset variable
+                        $scope.lastEvent = $scope.e.NO_EVENT;                                   //reset variable
+                        $scope.event = $scope.e.NO_EVENT;                                       //clear the event
+                        break;
+
+                     case $scope.e.CLICK:
+                        $scope.tickState = $scope.s.NO_LINES;                                   //only transition from out on a click or from UI buttons
+                        //leave the event to be handled in NO_LINES
+                        break;
+
+                     default:
+                        //Do nothing until user re enters the market
+                        break;
+                  }
+                  break;
+               }
+         };
+
+
+         $("#graph3")
+            .mousedown( function(event) {
+               $scope.mousePressed = true;                                       //set the flag so in case we leave the svg element we know it was a press
+               if ($scope.state != "state_maker") {
                      var msg = new Message("USER", "UMAKER", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
                      $scope.sendToGroupManager(msg);
                      $scope.setState("state_maker");
-                     //rs.send("To_All_Data_Histories", msg);    //Added 7/18/17 for refactor
+               }  
+            })
+            .mouseleave( function(event) {
+               if ($scope.mousePressed) {                                        //only set the spread if svg has been clicked on
+                  $scope.mousePressed = false;                                   //reset the flag
+                  if (event.offsetY <= $scope.tradingGraph.newElementHeight / 2) {      //you left the svg right of the center tick
+                     $scope.spread = (5 - Math.abs(10 * event.offsetY / $scope.tradingGraph.newElementHeight)).toPrecision(2); //.1 increments
+                     if($scope.spread > 5) $scope.spread = 5;                                       //cap max spread to 5
+                     if($scope.spread <= .1) $scope.spread = .1;
+                  } 
+                  else {                                                            //you clicked below of the center tick
+                     $scope.spread = (((10 * event.offsetY - $scope.tradingGraph.newElementHeight / 5) / $scope.tradingGraph.newElementHeight) - 4.8).toPrecision(2); //.1 increments
+                     if($scope.spread > 5) $scope.spread = 5;                                       //cap max spread to 5
+                     if($scope.spread <= .1) $scope.spread = .1;
                   }
+                  var msg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, $scope.tradingGraph.getCurOffsetTime()]);
+                  $scope.sendToGroupManager(msg);
+                  $scope.tradingGraph.currSpreadTick = event.offsetY;            //sets the location to be graphed
+
+                  $scope.oldOffsetY = $scope.curOffsetY;                                //update our last y position for receding lines
+                  $scope.curOffsetY = event.offsetY;                             //set event to be handled in FSM
+                  $scope.event = $scope.e.CLICK;
+
+                  $scope.LaserSound.play();
                }
-            });
+            })
+            .mouseup( function(event) {
+               $scope.mousePressed = false;                                      //reset the flag
+               if (event.offsetY <= $scope.tradingGraph.newElementHeight / 2) {      //you clicked right of the center tick
+                  $scope.spread = (5 - Math.abs(10 * event.offsetY / $scope.tradingGraph.newElementHeight)).toPrecision(2); //.1 increments
+                  if($scope.spread > 5) $scope.spread = 5;                                       //cap max spread to 5
+                  if($scope.spread <= .1) $scope.spread = .1;
+               } 
+               else {                                                            //you clicked left of the center tick
+                  $scope.spread = (((10 * event.offsetY - $scope.tradingGraph.newElementHeight / 5) / $scope.tradingGraph.newElementHeight) - 4.8).toPrecision(2); //.1 increments
+                  if($scope.spread > 5) $scope.spread = 5;                                       //cap max spread to 5
+                  if($scope.spread <= .1) $scope.spread = .1;   
+               }
+               var msg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, $scope.tradingGraph.getCurOffsetTime()]);
+               $scope.sendToGroupManager(msg);
+               $scope.tradingGraph.currSpreadTick = event.offsetY;               //sets the location to be graphed
+               $scope.oldOffsetY = $scope.curOffsetY;                                   //update our last y position for receding lines
+               $scope.curOffsetY = event.offsetY;                                //set event to be handled in FSM
+               $scope.event = $scope.e.CLICK;
+
+               $scope.LaserSound.play(); 
+            });   
+
+         
+
+
+
 
          // button for setting state to sniper
          $("#state_snipe")
@@ -205,7 +442,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                var msg = new Message("USER", "USNIPE", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
                $scope.sendToGroupManager(msg);
                $scope.setState("state_snipe");
-               //rs.send("To_All_Data_Histories", msg);    //Added 7/18/17 for refactor
+               $scope.tickState = $scope.s.OUT;
+               $scope.event = $scope.e.FIRST_TIME;
             });
 
          // button for setting state to market maker
@@ -216,7 +454,13 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                var msg = new Message("USER", "UMAKER", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
                $scope.sendToGroupManager(msg);
                $scope.setState("state_maker");
-               //rs.send("To_All_Data_Histories", msg);    //Added 7/18/17 for refactor
+               $scope.tickState = $scope.s.NO_LINES;        //fake a click event
+               $scope.event = $scope.e.CLICK;
+               $scope.curOffsetY = $scope.tradingGraph.newElementHeight / 4;
+               $scope.spread = 2.5;
+               $scope.oldOffsetY = null;
+               var nMsg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, $scope.tradingGraph.getCurOffsetTime()]);
+               $scope.sendToGroupManager(nMsg);
             });
 
          // button for setting state to "out of market"
@@ -230,7 +474,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                var msg = new Message("USER", "UOUT", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
                $scope.sendToGroupManager(msg);
                $scope.setState("state_out");
-               //rs.send("To_All_Data_Histories", msg);    //Added 7/18/17 for refactor
+               $scope.tickState = $scope.s.OUT;
+               $scope.event = $scope.e.FIRST_TIME;
             });
 
          $("#expand-graph")
@@ -301,21 +546,34 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                   var msg = new Message("USER", "UOUT", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
                   $scope.sendToGroupManager(msg);
                   $scope.setState("state_out");
-                  //rs.send("To_All_Data_Histories", msg);    //Added 7/18/17 for refactor
+                  
+                  $scope.setSpeed(false);
+                  $("#speed-switch").prop("checked", false);
+                  $scope.tickState = $scope.s.OUT;
+                  $scope.event = $scope.e.FIRST_TIME;
                   break;
 
                case "SNIPE":
                   var msg = new Message("USER", "USNIPE", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
                   $scope.sendToGroupManager(msg);
                   $scope.setState("state_snipe");
-                  //rs.send("To_All_Data_Histories", msg);    //Added 7/18/17 for refactor
+                  
+                  $scope.tickState = $scope.s.OUT;
+                  $scope.event = $scope.e.FIRST_TIME;
                   break;
 
                case "MAKER":
                   var msg = new Message("USER", "UMAKER", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
                   $scope.sendToGroupManager(msg);
                   $scope.setState("state_maker");
-                  //rs.send("To_All_Data_Histories", msg);    //Added 7/18/17 for refactor
+                  
+                  $scope.tickState = $scope.s.NO_LINES;        //fake a click event
+                  $scope.event = $scope.e.CLICK;
+                  $scope.curOffsetY = $scope.tradingGraph.newElementHeight / 4;
+                  $scope.spread = 2.5;
+                  $scope.oldOffsetY = null;
+                  var nMsg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, $scope.tradingGraph.getCurOffsetTime()]);
+                  $scope.sendToGroupManager(nMsg);
                   break;
 
                case "FAST":

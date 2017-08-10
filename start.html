@@ -1,123 +1,79 @@
 <div ng-controller="HFTStartController">
-    <div rw-subject-header time-remaining="timeRemaining" time-total="config.timeLimit"></div>
-    <div time-remaining="timeRemaining" time-total="config.timeLimit"></div>
-    <div class="container">
-        <div class="ui-container" id="ui">
+    <!--Top Data Banner-->
+    <div class="top-banner">
+        <table class="table" style="width:100%">
+            <tr>
+                <td class="status-display">Group # {{groupNum}}</td>
+                <td class="status-display">Number of Traders: {{dHistory.totalTraders}}</td>
+                <td class="status-display">Role: {{GetStateName()}}</td>
+                <td class="status-display">Fundamental Value: {{dHistory.curFundPrice[1] | number : 2}}</td>
+            </tr>
+            <tr>
+                <td class="status-display">Period # </td>
+                <td class="status-display">Number of Makers: {{dHistory.totalMakers}} ({{dHistory.fastMakers}} fast)</td>
+                <td class="status-display">Spread: {{GetSpread()}}</td>
+                <td class="status-display">Current Buy Offer: {{dHistory.getCurrBuy() | number : 2}}</td>
+            </tr>
+            <tr>
+                <td class="status-display">Speed Cost: ${{dHistory.speedCost | number : 2}} / Second</td>
+                <td class="status-display">Number of Snipers: {{dHistory.totalSnipers}} ({{dHistory.fastSnipers}} fast)</td>
+                <td class="status-display">Your Profit: ${{dHistory.profit | number : 2}}</td>
+                 <td class="status-display">Current Sell Offer: {{dHistory.getCurrSell() | number : 2}}</td>
+            </tr>    
+        </table>
+    </div>
 
-            <!--Top two screens-->
-            <div class="row" style="margin-bottom:20px;">
-                <!--Top left screen-->
-                <div class="col-xs-8 screen-wrapper">
-                    <div class="screen top-left-screen">
-                        <svg width="100%" height="100%" id="graph1">
-                            <span class="zoom-in" id="market-zoom-in" ng-class="{'zoom-disabled': tradingGraph.expandedGraph}">+</span>
-                            <span class="zoom-out" id="market-zoom-out" ng-class="{'zoom-disabled': tradingGraph.expandedGraph}">-</span>
-                        </svg>
-                    </div>
-                </div>
-
-                <!--Top right screen-->
-                <div class="col-xs-4 screen-wrapper" style="padding-right:20px;">
-                    <div class="screen top-right-screen">
-                        <div id="data-container">
-                            <div class="status-table">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Player</th>
-                                            <th>Role</th>
-                                            <th>Last Spread</th>
-                                            <th>Speed?</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr ng-repeat="(player, data) in dHistory.playerData">
-                                            <td>{{player == dHistory.myId ? "You" : displayId[player]}}</td>
-                                            <td ng-class="'state-label-' + data.state">{{data.state}}</td>
-                                            <td>{{data.state == "Maker" ? data.displaySpread : ""}}</td>
-                                            <td>{{data.speed ? "On" : "Off"}}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <h5 class="status-display">Best Spread: {{dHistory.lowestSpread}}</h5>
-                            <h5 class="status-display">Your Profit: ${{dHistory.profit | number : 2}}</h5>
-                            <h5 class="status-display">Speed Cost: ${{dHistory.speedCost | number : 2}} / Second</h5>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!--Bottom two screens-->
-            <div class="row">
-                <!--Bottom left screen-->
-                <div class="col-xs-8 screen-wrapper">
-                    <div class="screen bottom-left-screen">
-                        <svg width="100%" height="100%" id="graph2">
-                            <span class="zoom-in" id="profit-zoom-in" ng-class="{'zoom-disabled': tradingGraph.expandedGraph}">+</span>
-                            <span class="zoom-out" id="profit-zoom-out" ng-class="{'zoom-disabled': tradingGraph.expandedGraph}">-</span>
-                        </svg>
-                    </div>
-                </div>
-
-                <!--Bottom right screen-->
-                <div class="col-xs-4 screen-wrapper" style="padding-right:20px">
-                    <div class="screen bottom-right-screen">
-
-                        <div id="buttons-container">
-
-                            <div class="button-container-state">
-                                <div class="state-label">
-                                    Role
-                                </div>
-                                <button id="state_out" ng-disabled="state=='state_out'" class="btn" type="button">
-                                    Out
-                                </button>
-                                <button id="state_snipe" ng-disabled="state=='state_snipe'" class="btn" type="button">
-                                    Snipe
-                                </button>
-                                <button id="state_maker" ng-disabled="state=='state_maker'" class="btn" type="button">
-                                    Maker
-                                </button>
-                            </div>
-
-                            <div class="button-container-speed">
-                                <div class="speed-label">
-                                    Speed
-                                </div>
-                                <div class="material-switch">
-                                    <input id="speed-switch" type="checkbox" ng-disabled="state=='state_out'"/>
-                                    <label for="speed-switch"></label>
-                                </div>
-                            </div>
-
-                            <div id="graph-controls">
-                                <button id="expand-graph" ng-disabled="tradingGraph.expandedGraph" class="btn" type="button">
-                                    Expand
-                                </button>
-                                <button id="contract-graph" ng-disabled="!tradingGraph.expandedGraph" class="btn" type="button">
-                                    Contract
-                                </button>
-                            </div>
-                        </div>
-
-                        <div id="slider-container">
-                            <div class="button-container-spread">
-                                <div class="spread-label">
-                                    Spread
-                                </div>
-                                <input id="slider-val" type="number" min="0" max="{{maxSpread}}" step=".01" value="{{sliderVal}}">
-                                <div id="slider">
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-            <!--End Screens-->
+    <!-- bottom of the ui -->
+    <div class="row">
+        <!-- graph the profit -->
+        <div class="col-xs-8 profit-graph-container" style="padding: 5px">
+            <svg width="100%" height="100%" id="graph2">
+                <span class="zoom-in" id="profit-zoom-in" ng-class="{'zoom-disabled': tradingGraph.expandedGraph}">+</span>
+                <span class="zoom-out" id="profit-zoom-out" ng-class="{'zoom-disabled': tradingGraph.expandedGraph}">-</span>
+            </svg>
         </div>
-        <!-- ui-container -->
 
+        <!-- graph the experiment -->
+        <div class="col-xs-6 user-graph-container" style="padding: 5px">
+            <svg width="100%" height="100%" id="graph3"></svg>
+        </div>
+
+        <!-- user buttons -->
+        <div class="col-xs-3 control-container" style="padding: 5px">
+            <!-- roles -->
+            <div class="button-container-state">
+                <div class="row" style="padding-bottom:3em">
+                    <button id="state_out" ng-disabled="state=='state_out'" class="btn" type="button" style="width:75px">
+                        Out   
+                    </button>
+                </div>
+                <div class="row" style="padding-bottom:3em">
+                    <button id="state_snipe" ng-disabled="state=='state_snipe'" class="btn" type="button" style="width:75px">
+                        Snipe
+                    </button> 
+                </div>
+                <div class="row">
+                    <button id="state_maker" ng-disabled="state=='state_maker'" class="btn" type="button" style="width:75px">
+                        Maker
+                    </button>
+                </div>
+            </div>
+            <!-- speed button -->
+            <div class="button-container-speed">
+                <div class="speed-label" p style="font-size:15px">Speed</div>
+                <div class="material-switch">
+                    <input id="speed-switch" type="checkbox" ng-disabled="state=='state_out'"/>
+                    <label for="speed-switch"></label>
+                </div>
+            </div> 
+        </div>
+    </div>
+
+    <!--legacy graph-->
+    <div class="profit-graph-container">
+        <svg width="100%" height="100%" id="graph1">
+            <span class="zoom-in" id="market-zoom-in" ng-class="{'zoom-disabled': tradingGraph.expandedGraph}">+</span>
+            <span class="zoom-out" id="market-zoom-out" ng-class="{'zoom-disabled': tradingGraph.expandedGraph}">-</span>
+        </svg>
     </div>
 </div>

@@ -44,16 +44,12 @@ Redwood.factory("MarketAlgorithm", function () {
       marketAlgorithm.enterMarket = function () {
          this.sendToGroupManager(this.enterBuyOfferMsg());
          this.sendToGroupManager(this.enterSellOfferMsg());
-         this.buyEntered = true;
-         this.sellEntered = true;
       };
 
       // sends out remove buy and sell messages for exiting market
       marketAlgorithm.exitMarket = function () {
          this.sendToGroupManager(this.removeBuyOfferMsg());
          this.sendToGroupManager(this.removeSellOfferMsg());
-         this.buyEntered = false;
-         this.sellEntered = false;
       };
 
       // Handle message sent to the market algorithm
@@ -158,17 +154,14 @@ Redwood.factory("MarketAlgorithm", function () {
          }  
 
          // user sent signal to change state to "out of market"
-         if (msg.msgType === "UOUT") {                         //only remove orders that are in the book
-            if(this.buyEntered == true){
-               this.sendToGroupManager(this.removeBuyOfferMsg());
-               this.buyEntered = false;
-               this.state = "state_out";
+         if (msg.msgType === "UOUT") {
+            if (this.state === "state_maker") {   // if switching from being a maker, exit the market
+               this.exitMarket();
             }
-            if(this.sellEntered == true){
-               this.sendToGroupManager(this.removeSellOfferMsg());
-               this.sellEntered = false;
-               this.state = "state_out";
-            }
+            this.state = "state_out";           // update state
+
+            //var nMsg = new Message("DATA", "C_UOUT", msg.msgData);
+            //this.sendToAllDataHistories(nMsg);
          }
 
          if (msg.msgType === "USPEED") {
@@ -277,6 +270,7 @@ Redwood.factory("MarketAlgorithm", function () {
          nMsg.msgId = this.currentMsgId;
          this.currentBuyId = this.currentMsgId;
          this.currentMsgId++;
+         this.buyEntered = true;
          return nMsg;
       };
 
@@ -287,6 +281,7 @@ Redwood.factory("MarketAlgorithm", function () {
          nMsg.msgId = this.currentMsgId;
          this.currentSellId = this.currentMsgId;
          this.currentMsgId++;
+         this.sellEntered = true;
          return nMsg;
       };
 
@@ -298,6 +293,7 @@ Redwood.factory("MarketAlgorithm", function () {
          nMsg.prevMsgId = this.currentBuyId;
          this.currentBuyId = this.currentMsgId;
          this.currentMsgId++;
+         this.buyEntered = true;
          return nMsg;
       };
 
@@ -309,6 +305,7 @@ Redwood.factory("MarketAlgorithm", function () {
          nMsg.prevMsgId = this.currentSellId;
          this.currentSellId = this.currentMsgId;
          this.currentMsgId++;
+         this.sellEntered = true;
          return nMsg;
       };
 
@@ -317,6 +314,7 @@ Redwood.factory("MarketAlgorithm", function () {
          nMsg.delay = !this.using_speed;
          nMsg.senderId = this.myId;
          nMsg.msgId = this.currentBuyId;
+         this.buyEntered = false;
          return nMsg;
       }
 
@@ -325,6 +323,7 @@ Redwood.factory("MarketAlgorithm", function () {
          nMsg.delay = !this.using_speed;
          nMsg.senderId = this.myId;
          nMsg.msgId = this.currentSellId;
+         this.sellEntered = false;
          return nMsg;
       }
 

@@ -62,6 +62,7 @@ Redwood.factory("GroupManager", function () {
                   var msg = ouchToLeepsMsg(ouchStr);                    //adding for synchronization for admin
                   groupManager.lastbatchTime = getTime();               //msg.timeStamp;
                   groupManager.recvFromMarket(msg);                     //send Batch message to Market Algorithm
+                  console.log(msg);
                }
                else{
                   // split the string in case messages are conjoined

@@ -112,3 +112,136 @@ svg {
     stroke: rgba(26, 73, 232, 0.4);
     stroke-width: 1;
 }
+
+.others-buy-offer {
+    stroke: rgba(26, 73, 232, .5);;
+    stroke-width: 1;
+}
+
+.others-sell-offer {
+    stroke: rgba(26, 73, 232, .5);;
+    stroke-width: 1;
+}
+
+.my-buy-offer {
+    stroke: rgb(26, 73, 232);
+    stroke-width: 1.5;
+}
+
+.my-sell-offer {
+    stroke: rgb(26, 73, 232);
+    stroke-width: 1.5;
+}
+
+.cur-buy-offer {
+    stroke: rgb(80, 50, 30);
+    stroke-width: 1;
+}
+
+.cur-sell-offer {
+    stroke: rgb(80, 50, 30);
+    stroke-width: 1;
+}
+
+.past-buy-offer {
+    stroke: rgb(80, 50, 30);
+    stroke-width: 1;
+}
+
+.past-sell-offer {
+    stroke: rgb(80, 50, 30);
+    stroke-width: 1;
+}
+
+.my-profit-out {
+    stroke: rgb(110, 110, 110);
+    stroke-width: 3;
+}
+
+.my-fpc-flash {
+    stroke: gold;
+    stroke-width: 5;
+    fill-opacity: 0;
+    fill: pink;
+}
+
+.my-profit-snipe {
+    stroke: rgb(200, 79, 34);
+    stroke-width: 3;
+}
+
+.my-profit-maker {
+    stroke: rgb(26, 73, 232);
+    stroke-width: 3;
+}
+
+.others-profit-out {
+    stroke: rgba(110, 110, 110, 0.4);
+    stroke-width: 1;
+}
+
+.others-profit-snipe {
+    stroke: rgba(200, 79, 34, 0.4);
+    stroke-width: 1;
+}
+
+.others-profit-maker {
+    stroke: rgba(26, 73, 232, 0.4);
+    stroke-width: 1;
+}
+
+.my-positive-transactions {
+    stroke: green;
+    stroke-width: 5;
+}
+
+.my-negative-transactions {
+    stroke: red;
+    stroke-width: 5;
+}
+
+.other-transactions {
+    stroke: gray;
+    stroke-width: 3;
+}
+
+.other-positive-transactions {
+    stroke: #3D7A5C;
+    stroke-width: 5;
+    /*opacity: .5;*/
+}
+
+.other-negative-trasactions {
+    stroke: #94476B;
+    stroke-width: 5;
+    /*opacity: .5;*/
+}
+
+.snipe-profit {
+    fill: green;
+}
+
+.snipe-loss {
+    fill: red;
+}
+
+.my-positive-profit {
+    stroke: green;
+    stroke-width: 2;
+}
+
+.my-negative-profit {
+    stroke: red;
+    stroke-width: 2;
+}
+
+.other-positive-profit {
+    stroke: #3D7A5C;
+    stroke-width: 1;
+}
+
+.other-negative-profit {
+    stroke: #94476B;
+    stroke-width: 1;
+}
+

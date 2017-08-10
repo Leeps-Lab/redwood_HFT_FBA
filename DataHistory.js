@@ -42,6 +42,20 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.highestProfitPrice = startingWealth;
       dataHistory.lowestProfitPrice = startingWealth;
 
+      dataHistory.totalMakers = 0;
+      dataHistory.totalSnipers = 0;
+      dataHistory.fastMakers = 0;
+      dataHistory.fastSnipers = 0;
+      dataHistory.totalTraders = 0;
+
+      dataHistory.SnipeTransaction = false;
+      dataHistory.SnipeStyle = "";
+      dataHistory.snipeOP = 1;
+      dataHistory.lastTime = null;
+      
+      dataHistory.positive_sound;
+      dataHistory.negative_sound;
+
       dataHistory.debugMode = debugMode;
       if (debugMode) {
          dataHistory.logger = new MessageLogger("Data History " + String(myId), "orange", "subject-log");
@@ -61,7 +75,9 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                //console.log(msg);
                break;
             case "C_TRA"    :
-               this.storeTransaction(msg);
+               if(msg.subjectID > 0) {             
+                  this.storeTransaction(msg);
+               }
                break;
             case "USPEED" :         //changed 6/27/17 for refactor
                this.storeSpeedChange(msg);
@@ -75,27 +91,23 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                this.recordSellOffer(msg);
                break;
             case "C_RBUY"   :
-               //this.storeBuyOffer(msg.msgData[1], msg.msgData[0]);
                this.storeBuyOffer(msg.timeStamp, msg.subjectID);
                break;
             case "C_RSELL"  :
-               //this.storeSellOffer(msg.msgData[1], msg.msgData[0]);
                this.storeBuyOffer(msg.timeStamp, msg.subjectID);
                break;      
             case "UMAKER" :      //changed 6/27/17 for refactor
                this.recordStateChange("Maker", msg.msgData[0], msg.msgData[1]);
-               //this.recordStateChange("Maker", msg.subjectID, msg.timeStamp);
                break;
             case "USNIPE" :      //changed 6/27/17 for refactor
                this.recordStateChange("Snipe", msg.msgData[0], msg.msgData[1]);
-               //this.recordStateChange("Snipe", msg.subjectID, msg.timeStamp);
                break;
             case "UOUT" :
                this.recordStateChange("Out", msg.msgData[0], msg.msgData[1]);
                //this.recordStateChange("Out", msg.subjectID, msg.timeStamp);
                break;
             case "UUSPR" :
-               console.log("UUSPR");
+               // console.log("UUSPR");
                this.playerData[msg.msgData[0]].spread = msg.msgData[1];
                this.calcLowestSpread();
                this.calcHighestSpread();
@@ -107,6 +119,10 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       
       //initializes player data storage
       dataHistory.init = function () {
+         dataHistory.positive_sound = new Audio("/static/experiments/redwood-high-frequency-trading-remote/Sounds/coin.ogg");
+         dataHistory.positive_sound.volume = .02;
+         dataHistory.negative_sound = new Audio("/static/experiments/redwood-high-frequency-trading-remote/Sounds/negative-beep.wav");
+         dataHistory.negative_sound.volume = .1;
          for (var uid of this.group) {
             this.playerData[uid] = {
                speed: false,
@@ -118,8 +134,27 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                state: "Out",
                spread: this.maxSpread / 2,
                curProfitSegment: [this.startTime, this.profit, 0, "Out"], // [start time, start profit, slope, state]
-               pastProfitSegments: []                              // [start time, end time, start price, end price, state]
+               pastProfitSegments: [],                              // [start time, end time, start price, end price, state]
+               profitJumps: []
             };
+         }
+      };
+
+      dataHistory.getCurrBuy = function () {    //function for updating start.html fields
+         if(this.playerData[this.myId].state == "Maker"){
+            return this.playerData[this.myId].curBuyOffer == null ? "N/A" : this.playerData[this.myId].curBuyOffer[1];
+         }
+         else{
+            return "N/A";
+         }
+      };
+
+      dataHistory.getCurrSell = function () {
+         if(this.playerData[this.myId].state == "Maker"){
+            return this.playerData[this.myId].curSellOffer == null ? "N/A" : this.playerData[this.myId].curSellOffer[1];
+         }
+         else{
+            return "N/A";
          }
       };
 
@@ -147,7 +182,12 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          this.calcLowestSpread();
 
          var curProfit = this.playerData[uid].curProfitSegment[1] - ((timestamp - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);     
-         this.recordProfitSegment(curProfit, timestamp, this.playerData[uid].curProfitSegment[2], uid, newState);
+         this.recordProfitSegment(curProfit, timestamp, this.playerData[uid].curProfitSegment[2], uid, newState, true);
+
+         if(newState != "Maker"){                           //added 8/9/17 to remove any orders that dont get shifted
+            this.playerData[uid].curBuyOffer = null;
+            this.playerData[uid].curSellOffer = null;
+         }
       };
 
       // Adds fundamental price change to history
@@ -174,13 +214,25 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          }
       };
 
-      dataHistory.storeTransaction = function (msg) {    //[timestamp, price, fund-price, buyer, seller]
+      dataHistory.storeTransaction = function (msg) {
+         var p;
          var myTransaction = {};       
          var investorTransaction = {};
-         var otherTransaction = {};        
-         if (msg.buyerID == this.myId) {                                            //I'm the buyer
-            this.profit += msg.FPC - msg.price;                                     //fundPrice - myPrice
-            //push info on my transaction to graph
+         var otherTransaction = {};     
+         if (msg.buyerID == this.myId) {                                            // if I'm the buyer
+            if(this.playerData[this.myId].state === "Snipe"){                       //set variables for flash
+               // p = msg.price - msg.FPC;                                             //profit calculated opposite for snipers
+               p = msg.FPC - msg.price;
+               this.SnipeTransaction = true;
+               this.SnipeStyle = p < 0 ? "snipe-loss" : "snipe-profit";
+               this.snipeOP = .5;
+            }
+            else{
+               p = msg.FPC - msg.price;
+            }
+
+            this.profit += p;
+
             myTransaction.positive = msg.FPC - msg.price >= 0;                      //calculate +/- transaction
             myTransaction.price = msg.price;
             myTransaction.transacted = true;
@@ -195,9 +247,29 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             investorTransaction.batchNumber = myTransaction.batchNumber;
             //console.log("investor transaction: ", investorTransaction);
             this.investorTransactions.push(investorTransaction);
+
+            if(p > 0){
+               dataHistory.negative_sound.pause();
+               dataHistory.positive_sound.play();
+            }
+            else{
+               dataHistory.positive_sound.pause();
+               dataHistory.negative_sound.play();
+            }
          }
          else if (msg.sellerID == this.myId) {                                      //if I'm the seller
-            this.profit += msg.price - msg.FPC;
+            if(this.playerData[this.myId].state === "Snipe"){                       //set variables for flash
+               // p = msg.FPC - msg.price;                                             //profit calculated opposite for snipers
+               p = msg.price - msg.FPC;  
+               this.SnipeTransaction = true;
+               this.SnipeStyle = p < 0 ? "snipe-loss" : "snipe-profit";
+               this.snipeOP = .5;
+            }
+            else{
+               p = msg.price - msg.FPC;                                             //Im a maker
+            }
+            this.profit += p;
+
             //push info on my transaction to graph
             myTransaction.positive = msg.price - msg.FPC >= 0;                      //calculate +/- transaction
             myTransaction.price = msg.price;
@@ -213,7 +285,17 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             investorTransaction.batchNumber = myTransaction.batchNumber; 
             //console.log("investor transaction: ", investorTransaction);
             this.investorTransactions.push(investorTransaction);
+
+            if(p > 0){
+               dataHistory.negative_sound.pause();
+               dataHistory.positive_sound.play();
+            }
+            else{
+               dataHistory.positive_sound.pause();
+               dataHistory.negative_sound.play();
+            }
          }
+ 
          else {   //a different user transacted, need to push to investorTransaction to update my graph
             if (msg.buyerID == 0) { // buyer was an investor
                this.buyTransactionCount++;
@@ -252,23 +334,36 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             }
 
          }
-         if (msg.buyerID != 0) { //checks if the player that receieved the buy transaction has a current buy offer
-            if (this.playerData[msg.buyerID].curBuyOffer !== null) this.storeBuyOffer(msg.timeStamp, msg.buyerID);
-            var uid = msg.buyerID;
-            var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.timeStamp - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); //changed from 1000
-            this.recordProfitSegment(curProfit + msg.FPC - msg.price, msg.timeStamp, this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);
+
+         if(msg.subjectID > 0){                                               //ADDED 7/21/17 to fix transaction horizontal lines
+            this.transactions[0] = msg;                                       //added 7/24/17 -> we only need to graph the most recent transaction
          }
 
-         //checks if the player that receieved the buy transaction has a current sell offer
-         if (msg.sellerID != 0) {   //checks if the player that receieved the buy transaction has a current sell offer
-            if (this.playerData[msg.sellerID].curSellOffer !== null) this.storeSellOffer(msg.timeStamp, msg.sellerID);
-            var uid = msg.sellerID;
+         if (msg.buyerID != 0) {
+            var uid = msg.buyerID;
+            if (this.playerData[uid].curBuyOffer !== null) this.storeBuyOffer(msg.timeStamp, uid);
+            //p = this.playerData[uid].state === "Snipe" ? msg.price - msg.FPC : msg.FPC - msg.price;     //snipe message profit calculated opposite of makers
+            p = msg.FPC - msg.price;
             var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.timeStamp - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); //changed from 1000
-            this.recordProfitSegment(curProfit + msg.price - msg.FPC, msg.timeStamp, this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);
+            // console.log(this.playerData[uid].state, "buy for profit:", p);
+            this.recordProfitSegment(curProfit + p, msg.timeStamp, this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state, false, curProfit);
          }
-         //console.log(msg.msgData);
-         //this.transactions.push(msg.msgData);    //removed 7/17/17
+         if (msg.sellerID != 0) {
+            var uid = msg.sellerID;
+            if (this.playerData[uid].curSellOffer !== null) this.storeSellOffer(msg.timeStamp, uid);
+            // p = this.playerData[uid].state === "Snipe" ? msg.FPC - msg.price : msg.price - msg.FPC;     //snipe message profit calculated opposite of makers
+            p = msg.price - msg.FPC;
+            var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.timeStamp - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); //changed from 1000
+            // console.log(this.playerData[uid].state, "sell for profit:", p);
+            this.recordProfitSegment(curProfit + p, msg.timeStamp, this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state, false, curProfit);
+         }
+
+         // if(msg.subjectID > 0){                                               //ADDED 7/21/17 to fix transaction horizontal lines
+         //    this.transactions[0] = msg;                                       //added 7/24/17 -> we only need to graph the most recent transaction
+         // }
+         
       };
+
 
 
 
@@ -407,14 +502,21 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          var uid = msg.msgData[0];
          this.playerData[uid].speed = msg.msgData[1];
          var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);
-         this.recordProfitSegment(curProfit, msg.msgData[2], msg.msgData[1] ? this.speedCost : 0, uid, this.playerData[uid].state);
+         this.recordProfitSegment(curProfit, msg.msgData[2], msg.msgData[1] ? this.speedCost : 0, uid, this.playerData[uid].state, true);
       };
 
-      dataHistory.recordProfitSegment = function (price, startTime, slope, uid, state) {
+      dataHistory.recordProfitSegment = function (price, startTime, slope, uid, state, speedChange, old) {
          if (price > this.highestProfitPrice) this.highestProfitPrice = price;
          if (price < this.lowestProfitPrice) this.lowestProfitPrice = price;
 
          if (this.playerData[uid].curProfitSegment != null) {
+            if(speedChange){  //dont draw a profit line when changing speed or state
+               this.playerData[uid].profitJumps.push({timestamp: startTime, newPrice: 0, oldPrice: 0});
+            } 
+            else {
+               this.playerData[uid].profitJumps.push({timestamp: startTime, newPrice: price, oldPrice: old});
+            }
+            this.lastTime = startTime;
             this.storeProfitSegment(startTime, uid);
          }
          this.playerData[uid].curProfitSegment = [startTime, price, slope, state];
@@ -432,84 +534,32 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          this.playerData[uid].curProfitSegment = null;
       };
 
-      //dataHistory.recordBatch = function (msg) {
-      //    // calculate offset buy investor price
-      //    // first find minimum non-investor sell order price
-      //    var buyInvestorPrice = msg.msgData[1].reduce(function (previousValue, currentElement) {
-      //       return currentElement.price > previousValue && currentElement.id != 0 ? currentElement.price : previousValue;
-      //    }, msg.msgData[4]);
-      //    //then add investor spacing
-      //    buyInvestorPrice += this.investorOrderSpacing;
-
-      //    for (var buyOrder of msg.msgData[0]) {
-      //       if (buyOrder.transacted && buyOrder.id != 0) {
-      //          var uid = buyOrder.id;
-      //          if (uid == this.myId) this.profit += msg.msgData[4] - msg.msgData[3];
-               
-      //          //var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
-      //          var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] * 1000000 - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);   //changed 4/17/17 to batchlength*1000000
-      //          this.recordProfitSegment(curProfit + msg.msgData[4] - msg.msgData[3], this.startTime + this.batchLength * msg.msgData[2] * 1000000, this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);         //changed 4/17/17 to batchlength*1000000
-      //       }
-
-      //       // split orders up into my orders, others' orders and investor orders
-      //       if (buyOrder.id == dataHistory.myId) {
-      //          // if it's my order, record whether the profit from it was positive
-      //          buyOrder.positive = msg.msgData[4] - msg.msgData[3] >= 0;
-      //          this.myOrders.push(buyOrder);
-      //       }
-      //       else if (buyOrder.id == 0) {
-      //          // if it's an investor order, change its price before pushing it on
-      //          buyOrder.price = buyInvestorPrice;
-      //          buyInvestorPrice += this.investorOrderSpacing;
-      //          this.investorOrders.push(buyOrder);
-      //       }
-      //       else this.othersOrders.push(buyOrder);
-      //    }
-
-      //    // highest order in this batch is buy investor price minus investor spacing
-      //    // check to see if new price is greater than current highest price
-      //    if (buyInvestorPrice - this.investorOrderSpacing > this.highestMarketPrice) {
-      //       this.highestMarketPrice = buyInvestorPrice - this.investorOrderSpacing;
-      //    }
-
-      //    // do the same calculation for sell investors
-      //    var sellInvestorPrice = msg.msgData[0].reduce(function (previousValue, currentElement) {
-      //       return currentElement.price < previousValue && currentElement.id != 0 ? currentElement.price : previousValue;
-      //    }, msg.msgData[4]);
-      //    sellInvestorPrice -= this.investorOrderSpacing;
-
-      //    for (var sellOrder of msg.msgData[1]) {
-      //       if (sellOrder.transacted && sellOrder.id != 0) {
-      //          var uid = sellOrder.id;
-      //          if (uid == this.myId) this.profit += msg.msgData[3] - msg.msgData[4];
-               
-      //          //var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
-      //          var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] * 1000000 - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);  //changed 4/17/17 to batchlength*1000000
-      //          this.recordProfitSegment(curProfit + msg.msgData[3] - msg.msgData[4], this.startTime + this.batchLength * msg.msgData[2] * 1000000, this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);                  //changed 4/17/17 to batchlength*1000000
-      //       }
-
-      //       if (sellOrder.id == dataHistory.myId) {
-      //          sellOrder.positive = msg.msgData[3] - msg.msgData[4] >= 0;
-      //          this.myOrders.push(sellOrder);
-      //       }
-      //       else if (sellOrder.id == 0) {
-      //          sellOrder.price = sellInvestorPrice;
-      //          sellInvestorPrice -= this.investorOrderSpacing;
-      //          this.investorOrders.push(sellOrder);
-      //       }
-      //       else this.othersOrders.push(sellOrder);
-      //    }
-
-      //    if (sellInvestorPrice + this.investorOrderSpacing < this.lowestMarketPrice) this.lowestMarketPrice = sellInvestorPrice + this.investorOrderSpacing;
-
-      //    // save equilibrium price
-      //    this.priceHistory.push([msg.msgData[2], msg.msgData[3]]);
-
-      //    // update display spread for all players
-      //    for (var uid of this.group) {
-      //       this.playerData[uid].displaySpread = this.playerData[uid].spread;
-      //    }
-      // };
+      dataHistory.CalculatePlayerInfo = function() {        //calculates info on players for UI
+         dataHistory.totalMakers = 0;
+         dataHistory.totalSnipers = 0;
+         dataHistory.fastMakers = 0;
+         dataHistory.fastSnipers = 0;
+         dataHistory.totalTraders = 0;
+         for (var uid of this.group){
+            if(this.playerData[uid].state === "Maker"){
+               dataHistory.totalMakers++;
+               dataHistory.totalTraders++;
+               // console.log(dataHistory.totalMakers, "totalMakers");
+               if(this.playerData[uid].speed == true){
+                  dataHistory.fastMakers++;
+               }
+            }
+            if(this.playerData[uid].state === "Snipe"){
+               dataHistory.totalSnipers++;
+               dataHistory.totalTraders++;
+               // console.log(dataHistory.totalSnipers, "totalSnipers");
+               if(this.playerData[uid].speed == true){
+                  dataHistory.fastSnipers++;
+               }
+            }
+         }
+         // console.log("makers:",dataHistory.totalMakers,"snipers:",dataHistory.totalSnipers,"total:",dataHistory.totalTraders);
+      };
 
       return dataHistory;
    };
