@@ -48,6 +48,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          $scope.update = function (timestamp) {
             $scope.FSM($scope.tickState, $scope.event, timestamp);
             $scope.FPCpoll();
+            $scope.BatchPoll();
 
             $scope.tradingGraph.draw($scope.dHistory);
 
@@ -197,6 +198,29 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             .click(function () {
                $scope.setSpeed(this.checked);
             });
+
+         $scope.BatchPoll = function() {
+            if($scope.dHistory.startBatch){
+               $scope.dHistory.startBatch = false;
+               $scope.startTimer();
+
+            }
+         };   
+         
+          $scope.startTimer = function() {
+            $('#timer').pietimer({
+                timerSeconds: 3,
+                color: 'SkyBlue',
+                fill: true,
+                showPercentage: false,
+                callback: function() {
+                    $('#timer').pietimer('reset');
+                    console.log("batch");
+                    $('#timer').pietimer('start');
+                }
+            });
+          };
+            
 
          $scope.FPCpoll = function () {
             if($scope.tradingGraph.oldFundPrice != $scope.dHistory.curFundPrice[1]){

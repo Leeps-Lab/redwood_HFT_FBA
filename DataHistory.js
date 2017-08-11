@@ -18,6 +18,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.maxSpread = maxSpread;
       dataHistory.batchLength = batchLength;
       dataHistory.batchNumber = 0;
+      dataHistory.startBatch = true;
 
       dataHistory.investorTransactions =[];
       dataHistory.otherTransactions = [];
@@ -71,7 +72,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                this.recordFPCchange(msg);
                break;
             case "BATCH"    :
-               this.pushToBatches();
+               this.pushToBatches(msg);
                //console.log(msg);
                break;
             case "C_TRA"    :
@@ -367,7 +368,10 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
 
 
 
-      dataHistory.pushToBatches = function(){
+      dataHistory.pushToBatches = function(msg){
+         if(msg.batchType == 'P'){     //start of batch = B, end = P -> want to start timer as soon as last batch ends
+            this.startBatch = true;
+         }
          let currentBatch = this.calcClosestBatch(getTime(), false);
          let batchMinPrice = this.curFundPrice[1];
          let batchMaxPrice = this.curFundPrice[1];
