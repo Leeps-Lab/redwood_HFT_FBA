@@ -531,8 +531,22 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             .append("line")
             .attr("id","REMOVE")
             .attr("opacity", graphRefr.op)
-            .attr("x1", graphRefr.newElementWidth / 2)
-            .attr("x2", graphRefr.newElementWidth / 2)
+            .attr("x1", function (d){
+               if(d.buyerID == myId || d.sellerID == myId){
+                  return graphRefr.newElementWidth / 2 + 5;
+               }
+               else{
+                  return graphRefr.newElementWidth / 2 - 5;
+               }
+            })
+            .attr("x2", function (d){
+               if(d.buyerID == myId || d.sellerID == myId){
+                  return graphRefr.newElementWidth / 2 + 5;
+               }
+               else{
+                  return graphRefr.newElementWidth / 2 - 5;
+               }
+            })
             .attr("y1", graphRefr.newElementHeight / 2)
             .attr("y2", function (d) {
                if(d.buyerID != 0){     //we know to draw line to the current buy offer

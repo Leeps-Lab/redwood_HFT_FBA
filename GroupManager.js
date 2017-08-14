@@ -62,7 +62,7 @@ Redwood.factory("GroupManager", function () {
                   var msg = ouchToLeepsMsg(ouchStr);                    //adding for synchronization for admin
                   groupManager.lastbatchTime = getTime();               //msg.timeStamp;
                   groupManager.recvFromMarket(msg);                     //send Batch message to Market Algorithm
-                  console.log(msg);
+                  // console.log(msg);
                }
                else{
                   // split the string in case messages are conjoined
@@ -188,7 +188,7 @@ Redwood.factory("GroupManager", function () {
 
       // handles a message from the market
       groupManager.recvFromMarket = function (msg) {
-         //console.log("Inbound Message", msg);                //debug incoming ITCH messages
+         // console.log("Inbound Message", msg);                //debug incoming ITCH messages
          if(msg.msgType === "C_TRA" || msg.msgType === "BATCH"){     
             this.sendToMarketAlgorithms(msg);
          }

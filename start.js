@@ -211,7 +211,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             $('#timer').pietimer({
                 timerSeconds: 3,
                 color: 'SkyBlue',
-                fill: true,
+                fill: false,
                 showPercentage: false,
                 callback: function() {
                     $('#timer').pietimer('reset');
