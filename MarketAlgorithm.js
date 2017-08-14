@@ -242,24 +242,24 @@ Redwood.factory("MarketAlgorithm", function () {
 
          // Confirmation that a transaction has taken place
          if (msg.msgType == "C_TRA") {
-            msg.FPC = this.fundamentalPrice;
-            //console.log(msg);
-            //this.sendToAllDataHistories(msg);
-            this.sendToDataHistory(msg,msg.subjectID);   //test 7/18/17 (only need to send to dhistory of user that transacted);
-            if (this.state == "state_maker") {     //replenish filled orders
-               if (msg.buyerID === this.myId)
-               {
-                  this.currentBuyId = 0;
-                  this.buyEntered = false;         //added 7/18/17 for fixing OUT user input
-                  this.sendToGroupManager(this.enterBuyOfferMsg());
-               }
-               if (msg.sellerID === this.myId) 
-               {
-                  this.currentSellId = 0;
-                  this.sellEntered = false;        //added 7/18/17 for fixing OUT user input
+            msg.FPC = this.fundamentalPrice;    //add FPC to message for graphing
+            if (msg.buyerID === this.myId) {    
+               this.currentBuyId = 0;
+               this.buyEntered = false;         //added 7/18/17 for fixing OUT user input
+            }
+            if (msg.sellerID === this.myId) {
+               this.currentSellId = 0;
+               this.sellEntered = false;        //added 7/18/17 for fixing OUT user input
+            }
+            if (this.state == "state_maker") {     //replenish filled orders if maker
+               if(this.sellEntered == false){
                   this.sendToGroupManager(this.enterSellOfferMsg());
                }
+               if(this.buyEntered == false){
+                  this.sendToGroupManager(this.enterBuyOfferMsg());
+               }
             }
+            this.sendToDataHistory(msg,msg.subjectID);   //8/14 moved this to bottom for graphical improvement
          }
       };
 
