@@ -206,13 +206,13 @@ Redwood.factory("MarketAlgorithm", function () {
          }
 
          if(msg.msgType === "C_CANC"){
-
             // Confirmation that a buy offer has been removed from market
             if (msg.msgId === this.currentBuyId) {
                if (msg.subjectID == this.myId) {   
                   msg.msgType = "C_RBUY";                                          //Identify for Dhistory
-                  this.sendToAllDataHistories(msg);
                   this.currentBuyId = 0;
+                  this.buyEntered = false;
+                  this.sendToAllDataHistories(msg);
                }
             }
 
@@ -220,8 +220,9 @@ Redwood.factory("MarketAlgorithm", function () {
             if (msg.msgId === this.currentSellId) {
                if (msg.subjectID == this.myId) { 
                   msg.msgType = "C_RSELL";
-                  this.sendToAllDataHistories(msg);
                   this.currentSellId = 0;
+                  this.sellEntered = false
+                  this.sendToAllDataHistories(msg);
                }
             }
          }
