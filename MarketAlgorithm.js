@@ -188,6 +188,7 @@ Redwood.factory("MarketAlgorithm", function () {
          
          // the market sent the outcome of a batch
          if (msg.msgType == "BATCH") {
+            msg.FPC = this.fundamentalPrice;
             this.sendToDataHistory(msg);
          }
 

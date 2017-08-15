@@ -203,11 +203,12 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             if($scope.dHistory.startBatch){
                $scope.dHistory.startBatch = false;
                $scope.startTimer();
+               $scope.tradingGraph.BatchStart();
 
             }
          };   
          
-          $scope.startTimer = function() {
+         $scope.startTimer = function() {
             $('#timer').pietimer({
                 timerSeconds: 3,
                 color: 'SkyBlue',
@@ -215,12 +216,11 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                 showPercentage: false,
                 callback: function() {
                     $('#timer').pietimer('reset');
-                    console.log("batch");
                     $('#timer').pietimer('start');
                 }
             });
-          };
-            
+         };
+   
 
          $scope.FPCpoll = function () {
             if($scope.tradingGraph.oldFundPrice != $scope.dHistory.curFundPrice[1]){

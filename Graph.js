@@ -487,6 +487,26 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
 
       graph.drawLaserOffers = function (graphRefr, dataHistory){
          var p,q;
+         var lastBatch = dataHistory.othersOrders.filter(function(order){
+            return order.batchNumber == dataHistory.currentBatchNumber;       //filters out only orders from the most recent batch to draw
+         });
+         // console.log(lastBatch);
+         for(var order of lastBatch){
+            if(order.sell != null){
+               p = (order.sell - order.fpc) * graphRefr.widthScale;
+            }
+            else{
+               p = null;
+            }
+
+            if(order.buy != null){
+               q = (order.fpc - order.buy) * graphRefr.widthScale;
+            }
+            else{
+               q = null;
+            }
+            this.drawLaserMarket(graphRefr, p, q, "others-buy-offer");
+         }
          for (var user of dataHistory.group) {
             if(dataHistory.playerData[user].state === "Maker"){
                if (user !== dataHistory.myId && dataHistory.playerData[user].curBuyOffer !== null) {
@@ -504,7 +524,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
                   p = null;
                }
 
-               this.drawLaserMarket(graphRefr, p, q, "others-buy-offer");
+               // this.drawLaserMarket(graphRefr, p, q, "others-buy-offer");
             }
          }
          if (dataHistory.playerData[dataHistory.myId].curBuyOffer !== null && dataHistory.playerData[dataHistory.myId].state === "Maker") {
@@ -716,6 +736,17 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             .attr("y2", yPos)
             .style("stroke", color)
             .attr("class", "my-buy-offer");
+      };
+
+      graph.BatchStart = function() {
+         this.newMarketSVG.append("rect")
+         .attr("id", "remove")
+         .attr("x", 0)
+         .attr("width", this.newElementWidth)
+         .attr("y", 0)
+         .attr("height", this.newElementHeight)
+         .attr("class", "my-batch-flash")
+         .transition().duration(1000).style("opacity", 0);
       };
 
 

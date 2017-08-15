@@ -165,6 +165,13 @@ svg {
     fill: pink;
 }
 
+.my-batch-flash {
+    stroke: BlueViolet;
+    stroke-width: 5;
+    fill-opacity: 0;
+    fill: pink;
+}
+
 .my-profit-snipe {
     stroke: rgb(200, 79, 34);
     stroke-width: 3;

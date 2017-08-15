@@ -20,6 +20,8 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.batchNumber = 0;
       dataHistory.startBatch = true;
 
+      dataHistory.currentBatchNumber = 0;    //added 8/14/17
+
       dataHistory.investorTransactions =[];
       dataHistory.otherTransactions = [];
       dataHistory.myTransactions = [];
@@ -369,65 +371,73 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
 
 
       dataHistory.pushToBatches = function(msg){
-         if(msg.batchType == 'P'){     //start of batch = B, end = P -> want to start timer as soon as last batch ends
+         if(msg.batchType == 'B'){
             this.startBatch = true;
          }
-         let currentBatch = this.calcClosestBatch(getTime(), false);
-         let batchMinPrice = this.curFundPrice[1];
-         let batchMaxPrice = this.curFundPrice[1];
-         
-         for (var uid of this.group) {
-            if (this.playerData[uid].curBuyOffer != null) {
-               batchMinPrice = Math.min(batchMinPrice, this.playerData[uid].curBuyOffer[1]);
+         if(msg.batchType == 'P'){     //start of batch = B, end = P -> want to start timer as soon as last batch ends
+            this.currentBatchNumber = this.calcClosestBatch(getTime(), false);
+            let batchMinPrice = this.curFundPrice[1];
+            let batchMaxPrice = this.curFundPrice[1];
+            
+            for (var uid of this.group) {
+               if (this.playerData[uid].curBuyOffer != null) {
+                  batchMinPrice = Math.min(batchMinPrice, this.playerData[uid].curBuyOffer[1]);
 
-               let update = {
-                  batchNumber: currentBatch,
-                  price: this.playerData[uid].curBuyOffer[1]
-               };
-               if (uid == this.myId) {
-                  this.myOrders.push(update);
+                  let update = {
+                     batchNumber: this.currentBatchNumber,
+                     price: this.playerData[uid].curBuyOffer[1],
+                     buy: this.playerData[uid].curBuyOffer[1],       //will make this less repetitive once legacy graph is removed
+                     sell: null,
+                     fpc: msg.FPC
+                  };
+                  if (uid == this.myId) {
+                     this.myOrders.push(update);
+                  }
+                  else {
+                     this.othersOrders.push(update);
+                  }
+               }
+
+               if (this.playerData[uid].curSellOffer != null) {
+                  batchMaxPrice = Math.max(batchMaxPrice, this.playerData[uid].curSellOffer[1]);
+
+                  let update = {
+                     batchNumber: this.currentBatchNumber,
+                     price: this.playerData[uid].curSellOffer[1],
+                     buy: null,       //will make this less repetitive once legacy graph is removed
+                     sell: this.playerData[uid].curSellOffer[1],
+                     fpc: msg.FPC
+                  };
+                  if (uid == this.myId) {
+                     this.myOrders.push(update);
+                  }
+                  else {
+                     this.othersOrders.push(update);
+                  }
+               }
+
+            }
+
+            // add investor orders from this batch to investor orders array
+            for(let order of this.investorOrdersThisBatch) {
+               if (order.isBuy) {
+                  batchMaxPrice += this.investorOrderSpacing;
+                  order.price = batchMaxPrice;
                }
                else {
-                  this.othersOrders.push(update);
+                  batchMinPrice -= this.investorOrderSpacing;
+                  order.price = batchMinPrice;
                }
+               this.investorOrders.push(order);
+               //console.log(order,(getTime() - order.time)/1000000);
             }
+            this.investorOrdersThisBatch = [];
 
-            if (this.playerData[uid].curSellOffer != null) {
-               batchMaxPrice = Math.max(batchMaxPrice, this.playerData[uid].curSellOffer[1]);
-
-               let update = {
-                  batchNumber: currentBatch,
-                  price: this.playerData[uid].curSellOffer[1]
-               };
-               if (uid == this.myId) {
-                  this.myOrders.push(update);
-               }
-               else {
-                  this.othersOrders.push(update);
-               }
-            }
-
+            window.setTimeout(function(){
+                  this.buyTransactionCount = 0;
+                  this.sellTransactionCount = 0;
+               }.bind(this), 200);
          }
-
-         // add investor orders from this batch to investor orders array
-         for(let order of this.investorOrdersThisBatch) {
-            if (order.isBuy) {
-               batchMaxPrice += this.investorOrderSpacing;
-               order.price = batchMaxPrice;
-            }
-            else {
-               batchMinPrice -= this.investorOrderSpacing;
-               order.price = batchMinPrice;
-            }
-            this.investorOrders.push(order);
-            //console.log(order,(getTime() - order.time)/1000000);
-         }
-         this.investorOrdersThisBatch = [];
-
-         window.setTimeout(function(){
-               this.buyTransactionCount = 0;
-               this.sellTransactionCount = 0;
-            }.bind(this), 200);
       };
 
       //records a new buy offer
