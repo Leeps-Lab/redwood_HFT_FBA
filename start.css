@@ -197,6 +197,11 @@ body {
     background-color: rgb(230, 230, 230);
 }
 
+.batch-line-container {
+    height: 5px;
+    width: 100%;
+}
+
 .table{
     table-layout : auto;
     padding-bottom: 0px;

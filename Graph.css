@@ -172,6 +172,11 @@ svg {
     fill: pink;
 }
 
+.batch-progress {
+    stroke: pink;
+    stroke-width: 5;
+}
+
 .my-profit-snipe {
     stroke: rgb(200, 79, 34);
     stroke-width: 3;

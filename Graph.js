@@ -11,19 +11,22 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
    var api = {};
 
    // Returns new grpah object - pass in id of svg element on which graph will be drawn
-   api.makeTradingGraph = function (marketSVGElementID, profitSVGElementID, adminStartTime, playerTimeOffset, batchLength, newMarketSVGElementID) {
+   api.makeTradingGraph = function (marketSVGElementID, profitSVGElementID, adminStartTime, playerTimeOffset, batchLength, newMarketSVGElementID, batchSVGElementID) {
       var graph = {};
 
       graph.marketElementId = marketSVGElementID;  //id of the market graph svg element
       graph.profitElementId = profitSVGElementID;  //id of the profit graph svg element
       graph.newMarketElementId = newMarketSVGElementID;
+      graph.batchSVGElementId = batchSVGElementID;
       graph.elementWidth = 0;          //Width and Height of both svg elements
       graph.elementHeight = 0;         //    (use calculateSize to determine)
       graph.axisLabelWidth = 40;       //Width of area where price axis labels are drawn
       graph.graphPaddingRight = 20;    // how far from the x axis label that the line stops moving
       graph.marketSVG = d3.select('#' + graph.marketElementId); //market svg element
       graph.profitSVG = d3.select('#' + graph.profitElementId); //profit svg element
-      graph.newMarketSVG = d3.select('#' + graph.newMarketElementId);                          
+      graph.newMarketSVG = d3.select('#' + graph.newMarketElementId);          
+      graph.BatchSVG = d3.select('#' + graph.batchSVGElementId);
+
       graph.minPriceMarket = 0;             //min price on price axis for market graph
       graph.maxPriceMarket = 0;             //max price on price axis for market graph
       graph.centerPriceMarket = 0;          //desired price for center of graph
@@ -84,6 +87,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       //adding for testing purposes
       graph.newElementWidth = 0;
       graph.newElementHeight = 0;
+      graph.BatchSVGWidth = 0;
 
       graph.getCurOffsetTime = function () {
          return getTime() - this.timeOffset;
@@ -148,6 +152,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          this.newElementHeight = $('#' + this.newMarketElementId).height();
          this.profitElementWidth = $('#' + this.profitElementId).width();
          this.profitElementHeight = $('#' + this.profitElementId).height();
+         this.BatchSVGWidth = $('#' + this.batchSVGElementId).width();
       };
 
       graph.mapProfitPriceToYAxis = function (price) {
@@ -747,6 +752,23 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          .attr("height", this.newElementHeight)
          .attr("class", "my-batch-flash")
          .transition().duration(1000).style("opacity", 0);
+      };
+
+      graph.BatchProgress = function () {
+         console.log(this.BatchSVGWidth);
+         this.BatchSVG.append("line")
+         .attr("id", "remove")
+         .attr("class", "batch-progress")
+         .attr({
+            x1: 0,
+            x2: 0,
+            y1: 3,
+            y2: 3
+         })
+         .transition()
+         .duration(3000)
+         .attr("x2", graph.BatchSVGWidth)
+         .transition().duration(500).style("opacity", 0);
       };
 
 

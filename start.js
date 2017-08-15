@@ -136,7 +136,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             //Create data history and graph objects
             $scope.dHistory = dataHistory.createDataHistory(data.startTime, data.startFP, rs.user_id, $scope.group, $scope.isDebug, data.speedCost, data.startingWealth, data.maxSpread, data.batchLength);
             $scope.dHistory.init();
-            $scope.tradingGraph = graphing.makeTradingGraph("graph1", "graph2", data.startTime, data.playerTimeOffsets[rs.user_id], data.batchLength, "graph3");
+            $scope.tradingGraph = graphing.makeTradingGraph("graph1", "graph2", data.startTime, data.playerTimeOffsets[rs.user_id], data.batchLength, "graph3", "graph4");
             $scope.tradingGraph.init(data.startFP, data.maxSpread, data.startingWealth);
 
             //load the audio objects
@@ -202,9 +202,9 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          $scope.BatchPoll = function() {
             if($scope.dHistory.startBatch){
                $scope.dHistory.startBatch = false;
-               $scope.startTimer();
+               // $scope.startTimer();
                $scope.tradingGraph.BatchStart();
-
+               $scope.tradingGraph.BatchProgress();
             }
          };   
          
