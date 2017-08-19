@@ -100,6 +100,13 @@ Redwood.factory("MarketAlgorithm", function () {
                nMsg3 = new Message("SYNC_FP", "SNIPE", [this.myId, this.using_speed, []]);
                nMsg3.timeStamp = msg.msgData[0]; // for debugging test output only
 
+               if(this.buyEntered) {    //remove stale snipe messages (no more IOC)
+                  this.sendToGroupManager(this.removeBuyOfferMsg());
+               }
+               else if(this.sellEntered){
+                  this.sendToGroupManager(this.removeSellOfferMsg());
+               }
+
                if(positiveChange){     //the new price is greater than the old price -> generate snipe buy message
                   snipeBuyMsg = new OuchMessage("EBUY", this.myId, this.fundamentalPrice, true);
                   snipeBuyMsg.delay = !this.using_speed;

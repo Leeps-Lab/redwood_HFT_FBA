@@ -217,6 +217,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       };
 
       dataHistory.storeTransaction = function (msg) {
+         console.log("Transaction", msg.subjectID, printTime(getTime()));
          var p;
          var myTransaction = {};       
          var investorTransaction = {};
@@ -343,7 +344,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
 
          if (msg.buyerID != 0) {
             var uid = msg.buyerID;
-            if (this.playerData[uid].curBuyOffer !== null) this.storeBuyOffer(msg.timeStamp, uid);
+            if (this.playerData[uid].curBuyOffer != null) this.storeBuyOffer(msg.timeStamp, uid);
             //p = this.playerData[uid].state === "Snipe" ? msg.price - msg.FPC : msg.FPC - msg.price;     //snipe message profit calculated opposite of makers
             p = msg.FPC - msg.price;
             var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.timeStamp - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); //changed from 1000
@@ -352,7 +353,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          }
          if (msg.sellerID != 0) {
             var uid = msg.sellerID;
-            if (this.playerData[uid].curSellOffer !== null) this.storeSellOffer(msg.timeStamp, uid);
+            if (this.playerData[uid].curSellOffer != null) this.storeSellOffer(msg.timeStamp, uid);
             // p = this.playerData[uid].state === "Snipe" ? msg.FPC - msg.price : msg.price - msg.FPC;     //snipe message profit calculated opposite of makers
             p = msg.price - msg.FPC;
             var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.timeStamp - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); //changed from 1000
@@ -365,9 +366,6 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          // }
          
       };
-
-
-
 
       dataHistory.pushToBatches = function(msg){
          if(msg.batchType == 'B'){
@@ -453,7 +451,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          }
 
          if(this.playerData[buyMsg.subjectID].state == 'Snipe'){  //TEST -> don't want to graph snipe offer
-            console.log("Tried to record buy offer, state: "  + this.playerData[buyMsg.subjectID].state);
+            // console.log("Tried to record buy offer, state: "  + this.playerData[buyMsg.subjectID].state);
             return;
          }
          //Check if current buy offer needs to be stored
@@ -480,7 +478,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          }
 
          if(this.playerData[sellMsg.subjectID].state == 'Snipe'){     //TEST -> don't want to graph snipe offer
-            console.log("Tried to record sell offer, state: "  + this.playerData[sellMsg.subjectID].state);
+            // console.log("Tried to record sell offer, state: "  + this.playerData[sellMsg.subjectID].state);
             return;
          }
          //Check if current sell offer needs to be stored

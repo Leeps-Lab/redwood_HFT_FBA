@@ -81,7 +81,7 @@ function leepsMsgToOuch(leepsMsg){
       // Time in Force
       //if(leepsMsg.msgData[2] === true){
       if(leepsMsg.IOC === true){
-        if(ouchMsg[4] != charToByte(String.fromCharCode(64))){   //if youre not an investor
+        if(leepsMsg.subjectID != 0){   //if youre not an investor
           spliceInArray(intToByteArray(1), ouchMsg, 4, 32);      //changed 5/24 to test sniping (time of force of 1)
         }
         else{
