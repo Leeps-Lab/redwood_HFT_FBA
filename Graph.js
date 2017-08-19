@@ -206,6 +206,12 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          return lines;
       };
 
+      // graph.calcClosestBatch = function (currTime) {
+      //    var batchTime = this.batchLength * 1000000;              //time per batch
+      //    var batch = currTime - ((currTime - this.adminStartTime) % batchTime);        //time since start of experiment
+      //    return batch + batchTime;
+      // };
+
       graph.drawBatchLines = function (graphRefr, svgToUpdate) {  
          //Draw rectangles for time grid lines
          svgToUpdate.selectAll("line.batch-line")
@@ -389,7 +395,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       };
 
       //draws profit line
-      graph.drawProfit = function (graphRefr, historyDataSet, currentData, outStyleClass, makerStyleClass, snipeStyleClass) {
+      graph.drawProfit = function (graphRefr, historyDataSet, currentData, outStyleClass, makerStyleClass, snipeStyleClass, uid) {
          this.profitSVG.selectAll("line." + outStyleClass + " line." + makerStyleClass + " line." + snipeStyleClass)
             .data(historyDataSet, function (d) {
                return d;
@@ -418,7 +424,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             });
 
          if (currentData != null) {
-            //var pricefinal = currentData[1] - ((graphRefr.currentTime - currentData[0]) * currentData[2] / 1000); //determines how far down the line has moved
             var pricefinal = currentData[1] - ((graphRefr.currentTime - currentData[0]) * currentData[2] / 1000000000); //determines how far down the line has moved
             this.profitSVG.append("line")
                .attr("x1", this.mapTimeToXAxis(currentData[0]))
@@ -429,7 +434,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          }
 
          this.profitSVG.selectAll("line.positive-profit line.negative-profit")
-            .data(dataHistory.playerData[dataHistory.myId].profitJumps)          //REPLACE dataHistory.myId with myID to graph vertical lines for other users profit
+            .data(dataHistory.playerData[dataHistory.myId].profitJumps)          //REPLACE dataHistory.myId with uid to graph vertical lines for other users profit
             .enter()
             .append("line")
             .filter(function (d) {
@@ -755,7 +760,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       };
 
       graph.BatchProgress = function () {
-         console.log(this.BatchSVGWidth);
          this.BatchSVG.append("line")
          .attr("id", "remove")
          .attr("class", "batch-progress")
@@ -884,8 +888,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             //console.log("MADE IT IN THIS DUMB IF STATEMENT!!\n");
          }
          else{
-            //console.log("failed if statement\n");
-            //this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000000000, this.currentTime + this.advanceTimeShown, this.batchLength * 1000000);    //remember to take this out 4/17/17
+            // console.log("failed if statement\n");
+            this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000000000, this.currentTime + this.advanceTimeShown, this.batchLength * 1000000);    //remember to take this out 4/17/17
          }
 
          // draw vertical center line

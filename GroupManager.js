@@ -191,7 +191,8 @@ Redwood.factory("GroupManager", function () {
       groupManager.recvFromMarket = function (msg) {
          // console.log("Inbound Message", msg);                //debug incoming ITCH messages
          if(msg.msgType === "C_TRA" || msg.msgType === "BATCH"){     
-            if(msg.buyerID != 0 && msg.buyerID != null) console.log(msg);
+            // if(msg.buyerID != 0 && msg.buyerID != null) console.log(msg);
+            if(msg.msgType === "BATCH")console.log(msg.batchType === 'B' ? "Start" : "End", printTime(msg.timeStamp));
             this.sendToMarketAlgorithms(msg);
          }
          else {

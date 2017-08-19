@@ -54,7 +54,6 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.SnipeTransaction = false;
       dataHistory.SnipeStyle = "";
       dataHistory.snipeOP = 1;
-      dataHistory.lastTime = null;
       
       dataHistory.positive_sound;
       dataHistory.negative_sound;
@@ -304,16 +303,16 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                this.buyTransactionCount++;
                investorTransaction.price = msg.FPC + (this.highestSpread / 2) + (this.buyTransactionCount * this.investorOrderSpacing);    //investor has price of transaction + spacing
                investorTransaction.transacted = true;
-               investorTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false);    //changed 7/17/17
-               //investorTransaction.batchNumber = this.calcClosestBatch(getTime(),false); 
+               // investorTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false);    //changed 7/17/17
+               investorTransaction.batchNumber = this.calcClosestBatch(getTime(),false); 
                //console.log("investor transaction: ", investorTransaction);
                this.investorTransactions.push(investorTransaction);
             }
             else { //other user is the buyer
                otherTransaction.price = msg.price;
                otherTransaction.transacted = true;
-               otherTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false); //changed 7/17/17
-               //otherTransaction.batchNumber = this.calcClosestBatch(getTime(),false);
+               // otherTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false); //changed 7/17/17
+               otherTransaction.batchNumber = this.calcClosestBatch(getTime(),false);
                //console.log("other transaction: ", otherTransaction);
                this.otherTransactions.push(otherTransaction);
             }
@@ -322,16 +321,16 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                this.sellTransactionCount++;
                investorTransaction.price = msg.FPC - (this.highestSpread / 2) - (this.sellTransactionCount * this.investorOrderSpacing);
                investorTransaction.transacted = true;
-               investorTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false);       //changed 7/17/17
-               //investorTransaction.batchNumber = this.calcClosestBatch(getTime(),false); 
+               // investorTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false);       //changed 7/17/17
+               investorTransaction.batchNumber = this.calcClosestBatch(getTime(),false); 
                //console.log("investor transaction: ", investorTransaction);
                this.investorTransactions.push(investorTransaction);
             }
             else { //other user is the seller
                otherTransaction.price = msg.price;
                otherTransaction.transacted = true;
-               otherTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false);    //changed 7/17/17
-               //otherTransaction.batchNumber = this.calcClosestBatch(getTime(),false); 
+               // otherTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false);    //changed 7/17/17
+               otherTransaction.batchNumber = this.calcClosestBatch(getTime(),false); 
                //console.log("other transaction: ", otherTransaction);
                this.otherTransactions.push(otherTransaction);
             }
@@ -372,9 +371,10 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
 
       dataHistory.pushToBatches = function(msg){
          if(msg.batchType == 'B'){
-            this.startBatch = true;
+            // this.startBatch = true;
          }
          if(msg.batchType == 'P'){     //start of batch = B, end = P -> want to start timer as soon as last batch ends
+            this.startBatch = true;
             this.currentBatchNumber = this.calcClosestBatch(getTime(), false);
             let batchMinPrice = this.curFundPrice[1];
             let batchMaxPrice = this.curFundPrice[1];
@@ -523,19 +523,29 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          if (price > this.highestProfitPrice) this.highestProfitPrice = price;
          if (price < this.lowestProfitPrice) this.lowestProfitPrice = price;
 
+         var nextBatchTime = startTime;                                                      //initialize to start time in case fail next if statement
          if (this.playerData[uid].curProfitSegment != null) {
-            if(speedChange){  //dont draw a profit line when changing speed or state
-               this.playerData[uid].profitJumps.push({timestamp: startTime, newPrice: 0, oldPrice: 0});
+            nextBatchTime = this.calcClosestBatchTime(startTime);                            //snap vertical profit to the batch lines
+            if(speedChange){                                                                 //dont draw a profit line when changing speed or state
+               // this.playerData[uid].profitJumps.push({timestamp: startTime, newPrice: 0, oldPrice: 0});
+               this.playerData[uid].profitJumps.push({timestamp: nextBatchTime, newPrice: 0, oldPrice: 0});
             } 
             else {
-               this.playerData[uid].profitJumps.push({timestamp: startTime, newPrice: price, oldPrice: old});
+               // this.playerData[uid].profitJumps.push({timestamp: startTime, newPrice: price, oldPrice: old});
+               this.playerData[uid].profitJumps.push({timestamp: nextBatchTime, newPrice: price, oldPrice: old});
             }
-            this.lastTime = startTime;
-            this.storeProfitSegment(startTime, uid);
+            // this.storeProfitSegment(startTime, uid);
+            this.storeProfitSegment(nextBatchTime, uid);
          }
-         this.playerData[uid].curProfitSegment = [startTime, price, slope, state];
+         // this.playerData[uid].curProfitSegment = [startTime, price, slope, state];
+         this.playerData[uid].curProfitSegment = [nextBatchTime, price, slope, state];
       };
 
+      dataHistory.calcClosestBatchTime = function (currTime) {
+         var batchTime = this.batchLength * 1000000;              //time per batch
+         var batch = currTime - ((currTime - this.startTime) % batchTime);        //time since start of experiment
+         return batch + batchTime;
+      };
       // 
 
       dataHistory.storeProfitSegment = function (endTime, uid) {
