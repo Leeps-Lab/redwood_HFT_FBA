@@ -77,8 +77,8 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       graph.removeAnimationID = 0;
       graph.removeStaticAnimationID = 0;
       graph.IDArray = [];
-      graph.slowDelay = 2000;                   
-      graph.fastDelay = 1000;
+      graph.slowDelay = 500;                   
+      graph.fastDelay = 100;
       graph.FPCswing = null;              //used for shifting spread ticks with FPC's
       graph.currentSellTick = [];
       graph.currentBuyTick = [];
@@ -205,12 +205,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          }
          return lines;
       };
-
-      // graph.calcClosestBatch = function (currTime) {
-      //    var batchTime = this.batchLength * 1000000;              //time per batch
-      //    var batch = currTime - ((currTime - this.adminStartTime) % batchTime);        //time since start of experiment
-      //    return batch + batchTime;
-      // };
 
       graph.drawBatchLines = function (graphRefr, svgToUpdate) {  
          //Draw rectangles for time grid lines
@@ -772,7 +766,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          .transition()
          .duration(3000)
          .attr("x2", graph.BatchSVGWidth)
-         .transition().duration(500).style("opacity", 0);
       };
 
 

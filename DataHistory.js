@@ -176,7 +176,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                this.highestSpread = this.playerData[player].spread;
             }
          }
-         console.log(this.highestSpread);
+         // console.log(this.highestSpread);
       };
 
       dataHistory.recordStateChange = function (newState, uid, timestamp) {
@@ -525,12 +525,12 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
 
          var nextBatchTime = startTime;                                                      //initialize to start time in case fail next if statement
          if (this.playerData[uid].curProfitSegment != null) {
-            nextBatchTime = this.calcClosestBatchTime(startTime);                            //snap vertical profit to the batch lines
             if(speedChange){                                                                 //dont draw a profit line when changing speed or state
                // this.playerData[uid].profitJumps.push({timestamp: startTime, newPrice: 0, oldPrice: 0});
                this.playerData[uid].profitJumps.push({timestamp: nextBatchTime, newPrice: 0, oldPrice: 0});
             } 
             else {
+               nextBatchTime = this.calcClosestBatchTime(startTime);                         //snap vertical profit to the batch lines if not from speed change
                // this.playerData[uid].profitJumps.push({timestamp: startTime, newPrice: price, oldPrice: old});
                this.playerData[uid].profitJumps.push({timestamp: nextBatchTime, newPrice: price, oldPrice: old});
             }

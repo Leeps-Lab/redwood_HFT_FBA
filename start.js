@@ -27,11 +27,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             NO_LINES: 0,
             DRAW_FIRST: 1,
             FIRST_DRAWN: 2,
-            DRAW_SECOND: 3,
-            SECOND_DRAWN: 4,
-            REDRAW_FIRST: 5,
-            REDRAW_SECOND: 6,
-            OUT: 7
+            OUT: 4
          };
 
          $scope.e = {
@@ -203,6 +199,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             if($scope.dHistory.startBatch){
                $scope.dHistory.startBatch = false;
                // $scope.startTimer();
+               $scope.tradingGraph.BatchSVG.selectAll("*").remove();    //restart the batch progress bar
                $scope.tradingGraph.BatchStart();
                $scope.tradingGraph.BatchProgress();
             }
@@ -422,8 +419,14 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                   }
                   var msg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, $scope.tradingGraph.getCurOffsetTime()]);
                   $scope.sendToGroupManager(msg);
-                  $scope.tradingGraph.currSpreadTick = event.offsetY;            //sets the location to be graphed
 
+                  if ($scope.state != "state_maker") {
+                     var msg2 = new Message("USER", "UMAKER", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
+                     $scope.sendToGroupManager(msg2);
+                     $scope.setState("state_maker");
+                  }
+
+                  $scope.tradingGraph.currSpreadTick = event.offsetY;            //sets the location to be graphed
                   $scope.oldOffsetY = $scope.curOffsetY;                                //update our last y position for receding lines
                   $scope.curOffsetY = event.offsetY;                             //set event to be handled in FSM
                   $scope.event = $scope.e.CLICK;
@@ -445,6 +448,13 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                }
                var msg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, $scope.tradingGraph.getCurOffsetTime()]);
                $scope.sendToGroupManager(msg);
+
+               if ($scope.state != "state_maker") {
+                  var msg2 = new Message("USER", "UMAKER", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
+                  $scope.sendToGroupManager(msg2);
+                  $scope.setState("state_maker");
+               }
+
                $scope.tradingGraph.currSpreadTick = event.offsetY;               //sets the location to be graphed
                $scope.oldOffsetY = $scope.curOffsetY;                                   //update our last y position for receding lines
                $scope.curOffsetY = event.offsetY;                                //set event to be handled in FSM

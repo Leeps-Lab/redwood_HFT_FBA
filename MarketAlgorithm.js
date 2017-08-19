@@ -195,6 +195,7 @@ Redwood.factory("MarketAlgorithm", function () {
          // Confirmation that a buy offer has been placed in market
          if (msg.msgType == "C_EBUY") {
             if (msg.subjectID == this.myId) {   
+               this.buyEntered = true;
                this.sendToAllDataHistories(msg);               //changed 7/3/17
             }
          }
@@ -202,6 +203,7 @@ Redwood.factory("MarketAlgorithm", function () {
          // Confirmation that a sell offer has been placed in market
          if (msg.msgType == "C_ESELL") {
             if (msg.subjectID == this.myId) { 
+               this.sellEntered = true;
                this.sendToAllDataHistories(msg);               //changed 7/3/17
             }  
          }
@@ -222,7 +224,7 @@ Redwood.factory("MarketAlgorithm", function () {
                if (msg.subjectID == this.myId) { 
                   msg.msgType = "C_RSELL";
                   this.currentSellId = 0;
-                  this.sellEntered = false
+                  this.sellEntered = false;
                   this.sendToAllDataHistories(msg);
                }
             }
@@ -231,6 +233,7 @@ Redwood.factory("MarketAlgorithm", function () {
          // Confirmation that a buy offer has been updated
          if (msg.msgType == "C_UBUY") {
             if (msg.subjectID == this.myId) {
+               this.buyEntered = true;
                this.sendToAllDataHistories(msg);           
             }
          }
@@ -238,6 +241,7 @@ Redwood.factory("MarketAlgorithm", function () {
          // Confirmation that a sell offer has been updated
          if (msg.msgType == "C_USELL") {
             if (msg.subjectID == this.myId) {
+               this.sellEntered = true;
                this.sendToAllDataHistories(msg);            
             }
          }
@@ -261,7 +265,7 @@ Redwood.factory("MarketAlgorithm", function () {
                   this.sendToGroupManager(this.enterBuyOfferMsg());
                }
             }
-            this.sendToDataHistory(msg,msg.subjectID);   //8/14 moved this to bottom for graphical improvement
+            this.sendToDataHistory(msg,msg.subjectID);   
          }
       };
 
