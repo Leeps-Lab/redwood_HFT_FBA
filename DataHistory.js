@@ -541,8 +541,8 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
 
       dataHistory.calcClosestBatchTime = function (currTime) {
          var batchTime = this.batchLength * 1000000;              //time per batch
-         var batch = currTime - ((currTime - this.startTime) % batchTime);        //time since start of experiment
-         return batch + batchTime;
+         var timeOffset = (currTime - this.startTime) % batchTime;        //time until closest batch line
+         return timeOffset < batchTime / 2 ? currTime - timeOffset : currTime - timeOffset + batchTime;  //snap to closest batchline
       };
       // 
 
