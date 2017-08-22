@@ -82,16 +82,28 @@ Redwood.factory("MarketAlgorithm", function () {
                   if (this.buyEntered) {
                      nMsg3.msgData[2].push(this.updateSellOfferMsg());
                   }
+                  else{
+                      nMsg3.msgData[2].push(this.enterSellOfferMsg());     //enter a new order in the event yours transacted during a jump
+                  }
                   if (this.sellEntered) {
                      nMsg3.msgData[2].push(this.updateBuyOfferMsg());
+                  }
+                  else{
+                      nMsg3.msgData[2].push(this.enterBuyOfferMsg());      //enter a new order in the event yours transacted during a jump
                   }
                }
                else{                                     //the price moved down -> update buy order before sell order
                   if (this.buyEntered) {
                      nMsg3.msgData[2].push(this.updateBuyOfferMsg());
                   }
+                  else{
+                      nMsg3.msgData[2].push(this.enterBuyOfferMsg());      //enter a new order in the event yours transacted during a jump
+                  }
                   if (this.sellEntered) {
                      nMsg3.msgData[2].push(this.updateSellOfferMsg());
+                  }
+                  else{
+                      nMsg3.msgData[2].push(this.enterSellOfferMsg());     //enter a new order in the event yours transacted during a jump
                   }
                }
                
