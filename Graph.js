@@ -220,7 +220,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
                return graphRefr.mapTimeToXAxis(d);
             })
             .attr("y1", 0)
-            .attr("y2", this.elementHeight)
+            .attr("y2", this.profitElementHeight)
             .attr("class", "batch-line");
 
          //Draw labels for time grid lines
@@ -233,7 +233,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             .attr("x", function (d) {
                return graphRefr.mapTimeToXAxis(d) + 5;
             })
-            .attr("y", this.elementHeight - 5)
+            .attr("y", this.profitElementHeight - 5)
             .text(function (d) {
                return graphRefr.millisToTime(d)
             })
@@ -913,20 +913,26 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          }  
 
          //Invoke all of the draw functions
-         this.drawBatchLines(graphRefr, this.marketSVG);
          this.drawBatchLines(graphRefr, this.profitSVG);
 
-         this.drawPriceGridLines(graphRefr, this.marketPriceLines, this.marketSVG, this.mapMarketPriceToYAxis);
          this.drawPriceGridLines(graphRefr, this.profitPriceLines, this.profitSVG, this.mapProfitPriceToYAxis);
 
-         this.drawMarket(graphRefr, dataHistory.pastFundPrices, dataHistory.curFundPrice, "price-line");
          //this.drawOffers(graphRefr, dataHistory);        //ADDED AS TEST 5/1/17
-         this.drawAllBatches(graphRefr, dataHistory);
 
-         this.drawPriceAxis(graphRefr, this.marketPriceLines, this.marketSVG, this.mapMarketPriceToYAxis);
          this.drawPriceAxis(graphRefr, this.profitPriceLines, this.profitSVG, this.mapProfitPriceToYAxis);
 
          this.drawAllProfit(graphRefr, dataHistory);
+
+
+         // this.drawBatchLines(graphRefr, this.marketSVG);
+
+         // this.drawPriceAxis(graphRefr, this.marketPriceLines, this.marketSVG, this.mapMarketPriceToYAxis);
+         // this.drawPriceGridLines(graphRefr, this.marketPriceLines, this.marketSVG, this.mapMarketPriceToYAxis);
+         // this.drawAllBatches(graphRefr, dataHistory);
+         // this.drawMarket(graphRefr, dataHistory.pastFundPrices, dataHistory.curFundPrice, "price-line");
+
+
+
       };
 
       graph.init = function (startFP, maxSpread, startingWealth) {
@@ -940,7 +946,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
 
          this.calculateSize();
          //this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
-         this.timePerPixel = graph.timeInterval * 1000000000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
+         this.timePerPixel = graph.timeInterval * 1000000000 / (graph.profitElementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
          this.advanceTimeShown = graph.timePerPixel * (graph.axisLabelWidth + graph.graphPaddingRight);
 
          this.zoomAmount = maxSpread / 2;
