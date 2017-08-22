@@ -14,16 +14,44 @@ function printTime(nanoseconds){
   var seconds = Math.floor((nanoseconds / 1000000000) % 60);
   var minutes = Math.floor(nanoseconds / (60*1000000000) % 60);
   var hours   = Math.floor(nanoseconds / (60*60*1000000000) % 24);
+  // str = "[" + seconds + ":" + millis + "]";
   str = "[" + hours + ":" + minutes + ":" + seconds + ":" + millis + "]";
   return str;
 }
 
+function OuchMessage(msgType, subjectID, price, IOC) {
+   this.protocol = "OUCH";                   //Ouch, Update, Cancel -> 'O','U','X'
+   this.timeStamp = getTime();               //timeStamp is not sent to the server
+   this.msgType = msgType;                   //EBUY,ESELL,RBUY,RSELL,UBUY,USELL
+   this.price = price;                       //must be multiplied by 1000 before sent to server
+   this.subjectID = subjectID;               //0,1,2,3,4
+   this.IOC = IOC;                   //needs to be converted to either 3 or 99999
+   this.delay = false;                       //false by default
+   this.senderId;
+   this.msgId;
+   this.prevMsgId;
+   //this.numShares = 0;
+}
+
+function ItchMessage(msgType, subjectID, price, timeStamp, buyerID, sellerID){
+   this.protocol = "ITCH";                   //'A','C','U','E','S'
+   this.msgType = msgType;                   //C_UBUY,C_USELL,C_EBUY,C_ESELL,C_CANC,C_TRA,BATCH
+   //this.timeStamp = timeStamp;               //timeStamp from the server
+   this.timeStamp = getTime();               //test 7/18/17
+   this.price = price;                       //must be multiplied by 1000 before sent to server
+   this.buyerID = buyerID;                   //0,1,2,3,4
+   this.sellerID = sellerID;                 //0,1,2,3,4
+   this.subjectID = subjectID;               //0,1,2,3,4
+   this.FPC;
+   this.batchType;                           //'B' for Start, 'P' for End
+   this.msgId;
+   this.numShares = 0;
+}
 
 // Message object. Used to communicate between group manager, subject manager, and market algorithm
 function Message(protocol, msgType, msgData) {
    this.protocol = protocol;
    this.delay = false;
-   //this.timeStamp = Date.now();
    this.timeStamp = getTime();
    this.msgType = msgType;
    this.msgData = msgData;

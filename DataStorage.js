@@ -75,8 +75,9 @@ Redwood.factory("DataStorage", function () {
                //this.storeBatch(message.msgData[0], message.msgData[1], message.msgData[2], message.msgData[3], message.msgData[4]);
                break;
             case "C_TRA" :
-               //added 5/17/17 to update profits of users in CSV
-               this.storeTransaction(message.timeStamp, message.msgData[1], message.msgData[2], message.msgData[3], message.msgData[4]);
+               // this.storeTransaction(message.timeStamp, message.msgData[1], message.msgData[2], message.msgData[3], message.msgData[4]);
+               this.storeTransaction(message.timeStamp, message.price, message.FPC, message.buyerID, message.sellerID);
+               
                break;
             case "FPC" :
                this.storeFPC(message.timeStamp, message.msgData[1])
@@ -429,8 +430,7 @@ Redwood.factory("DataStorage", function () {
          data[0].push("num_transactions", "eq_price", "buy_orders_before", "buy_orders_after", "sell_orders_before", "sell_orders_after", "porder", "dvalue", "cumvalue", "investor_buy_sell");
 
          // get file name by formatting start time as readable string
-         var d = new Date(this.startTime / 1000000);
-         var filename = d.getHours() + '_' + d.getMinutes() + '_' + d.getSeconds() + '_fba_group_' + this.groupNum + '.csv';
+         var filename = printTime(this.startTime) + '_fba_group_' + this.groupNum + '.csv';
 
          // download data 2d array as csv
          // stolen from stackoverflow

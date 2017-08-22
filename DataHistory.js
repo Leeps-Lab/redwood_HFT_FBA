@@ -18,6 +18,9 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.maxSpread = maxSpread;
       dataHistory.batchLength = batchLength;
       dataHistory.batchNumber = 0;
+      dataHistory.startBatch = true;
+
+      dataHistory.currentBatchNumber = 0;    //added 8/14/17
 
       dataHistory.investorTransactions =[];
       dataHistory.otherTransactions = [];
@@ -42,6 +45,19 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.highestProfitPrice = startingWealth;
       dataHistory.lowestProfitPrice = startingWealth;
 
+      dataHistory.totalMakers = 0;
+      dataHistory.totalSnipers = 0;
+      dataHistory.fastMakers = 0;
+      dataHistory.fastSnipers = 0;
+      dataHistory.totalTraders = 0;
+
+      dataHistory.SnipeTransaction = false;
+      dataHistory.SnipeStyle = "";
+      dataHistory.snipeOP = 1;
+      
+      dataHistory.positive_sound;
+      dataHistory.negative_sound;
+
       dataHistory.debugMode = debugMode;
       if (debugMode) {
          dataHistory.logger = new MessageLogger("Data History " + String(myId), "orange", "subject-log");
@@ -57,13 +73,15 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                this.recordFPCchange(msg);
                break;
             case "BATCH"    :
-               this.pushToBatches();
+               this.pushToBatches(msg);
                //console.log(msg);
                break;
             case "C_TRA"    :
-               this.storeTransaction(msg);
+               if(msg.subjectID > 0) {             
+                  this.storeTransaction(msg);
+               }
                break;
-            case "C_USPEED" :
+            case "USPEED" :         //changed 6/27/17 for refactor
                this.storeSpeedChange(msg);
                break;
             case "C_UBUY"   :
@@ -75,22 +93,23 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                this.recordSellOffer(msg);
                break;
             case "C_RBUY"   :
-               this.storeBuyOffer(msg.msgData[1], msg.msgData[0]);
+               this.storeBuyOffer(msg.timeStamp, msg.subjectID);
                break;
             case "C_RSELL"  :
-               this.storeSellOffer(msg.msgData[1], msg.msgData[0]);
+               this.storeBuyOffer(msg.timeStamp, msg.subjectID);
                break;      
-            case "C_UMAKER" :
+            case "UMAKER" :      //changed 6/27/17 for refactor
                this.recordStateChange("Maker", msg.msgData[0], msg.msgData[1]);
                break;
-            case "C_USNIPE" :
+            case "USNIPE" :      //changed 6/27/17 for refactor
                this.recordStateChange("Snipe", msg.msgData[0], msg.msgData[1]);
                break;
-            case "C_UOUT" :
+            case "UOUT" :
                this.recordStateChange("Out", msg.msgData[0], msg.msgData[1]);
+               //this.recordStateChange("Out", msg.subjectID, msg.timeStamp);
                break;
-            case "C_UUSPR" :
-            console.log("C_UUSPR");
+            case "UUSPR" :
+               // console.log("UUSPR");
                this.playerData[msg.msgData[0]].spread = msg.msgData[1];
                this.calcLowestSpread();
                this.calcHighestSpread();
@@ -102,6 +121,10 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       
       //initializes player data storage
       dataHistory.init = function () {
+         dataHistory.positive_sound = new Audio("/static/experiments/redwood-high-frequency-trading-remote/Sounds/coin.ogg");
+         dataHistory.positive_sound.volume = .02;
+         dataHistory.negative_sound = new Audio("/static/experiments/redwood-high-frequency-trading-remote/Sounds/negative-beep.wav");
+         dataHistory.negative_sound.volume = .1;
          for (var uid of this.group) {
             this.playerData[uid] = {
                speed: false,
@@ -113,8 +136,27 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                state: "Out",
                spread: this.maxSpread / 2,
                curProfitSegment: [this.startTime, this.profit, 0, "Out"], // [start time, start profit, slope, state]
-               pastProfitSegments: []                              // [start time, end time, start price, end price, state]
+               pastProfitSegments: [],                              // [start time, end time, start price, end price, state]
+               profitJumps: []
             };
+         }
+      };
+
+      dataHistory.getCurrBuy = function () {    //function for updating start.html fields
+         if(this.playerData[this.myId].state == "Maker"){
+            return this.playerData[this.myId].curBuyOffer == null ? "N/A" : this.playerData[this.myId].curBuyOffer[1];
+         }
+         else{
+            return "N/A";
+         }
+      };
+
+      dataHistory.getCurrSell = function () {
+         if(this.playerData[this.myId].state == "Maker"){
+            return this.playerData[this.myId].curSellOffer == null ? "N/A" : this.playerData[this.myId].curSellOffer[1];
+         }
+         else{
+            return "N/A";
          }
       };
 
@@ -134,16 +176,20 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                this.highestSpread = this.playerData[player].spread;
             }
          }
-         console.log(this.highestSpread);
+         // console.log(this.highestSpread);
       };
 
       dataHistory.recordStateChange = function (newState, uid, timestamp) {
          this.playerData[uid].state = newState;
          this.calcLowestSpread();
 
-         // var curProfit = this.playerData[uid].curProfitSegment[1] - ((timestamp - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);        
          var curProfit = this.playerData[uid].curProfitSegment[1] - ((timestamp - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);     
-         this.recordProfitSegment(curProfit, timestamp, this.playerData[uid].curProfitSegment[2], uid, newState);
+         this.recordProfitSegment(curProfit, timestamp, this.playerData[uid].curProfitSegment[2], uid, newState, true);
+
+         if(newState != "Maker"){                           //added 8/9/17 to remove any orders that dont get shifted
+            this.playerData[uid].curBuyOffer = null;
+            this.playerData[uid].curSellOffer = null;
+         }
       };
 
       // Adds fundamental price change to history
@@ -165,232 +211,285 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          if(isUpdateMessage){
             return Math.ceil(timeElapsed / (this.batchLength * 1000000));
          }
-         //console.log(Math.floor(timeElapsed / (this.batchLength * 1000000)));
          else{
             return Math.round(timeElapsed / (this.batchLength * 1000000));
          }
       };
 
-      dataHistory.storeTransaction = function (msg) {    //[timestamp, price, fund-price, buyer, seller]
+      dataHistory.storeTransaction = function (msg) {
+         console.log("Transaction", msg.subjectID, printTime(getTime()));
+         var p;
          var myTransaction = {};       
          var investorTransaction = {};
-         var otherTransaction = {};        
-         //console.log(msg.msgData[2] - msg.msgData[1]);
-         if (msg.msgData[3] == this.myId) {                                      //I'm the buyer
-            this.profit += msg.msgData[2] - msg.msgData[1];                      //fundPrice - myPrice
-            
-            //ADDED 5/2/17 for graphing*************************************
+         var otherTransaction = {};     
+         if (msg.buyerID == this.myId) {                                            // if I'm the buyer
+            if(this.playerData[this.myId].state === "Snipe"){                       //set variables for flash
+               // p = msg.price - msg.FPC;                                             //profit calculated opposite for snipers
+               p = msg.FPC - msg.price;
+               this.SnipeTransaction = true;
+               this.SnipeStyle = p < 0 ? "snipe-loss" : "snipe-profit";
+               this.snipeOP = .5;
+            }
+            else{
+               p = msg.FPC - msg.price;
+            }
 
-            //push info on my transaction to graph
-            myTransaction.positive = msg.msgData[2] - msg.msgData[1] >= 0;         //calculate +/- transaction
-            myTransaction.price = msg.msgData[1];
+            this.profit += p;
+
+            myTransaction.positive = msg.FPC - msg.price >= 0;                      //calculate +/- transaction
+            myTransaction.price = msg.price;
             myTransaction.transacted = true;
-            myTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false);   
+            myTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false); //test -> 7/17/17
+            //myTransaction.batchNumber = this.calcClosestBatch(getTime(),false);   
             this.myTransactions.push(myTransaction);
 
             //push info on the investor I transacted with to graph
-            this.sellTransactionCount++;
-            console.log(this.sellTransactionCount, this.buyTransactionCount);
-            investorTransaction.price = msg.msgData[2] - this.highestSpread/2 - (this.sellTransactionCount*this.investorOrderSpacing);
-            //investorTransaction.price = msg.msgData[2] + this.investorOrderSpacing;    //investor has price of transaction + spacing
+            this.sellTransactionCount++;                                            //number of sell transactions in this batch
+            investorTransaction.price = msg.FPC - (this.highestSpread / 2) - (this.sellTransactionCount * this.investorOrderSpacing);
             investorTransaction.transacted = true;
-            investorTransaction.batchNumber = myTransaction.batchNumber; 
+            investorTransaction.batchNumber = myTransaction.batchNumber;
+            //console.log("investor transaction: ", investorTransaction);
             this.investorTransactions.push(investorTransaction);
-         }
-         else if (msg.msgData[4] == this.myId) {
-            //if I'm the seller
-            this.profit += msg.msgData[1] - msg.msgData[2];
 
-            //ADDED 5/2/17 for graphing*************************************
+            if(p > 0){
+               dataHistory.negative_sound.pause();
+               dataHistory.positive_sound.play();
+            }
+            else{
+               dataHistory.positive_sound.pause();
+               dataHistory.negative_sound.play();
+            }
+         }
+         else if (msg.sellerID == this.myId) {                                      //if I'm the seller
+            if(this.playerData[this.myId].state === "Snipe"){                       //set variables for flash
+               // p = msg.FPC - msg.price;                                             //profit calculated opposite for snipers
+               p = msg.price - msg.FPC;  
+               this.SnipeTransaction = true;
+               this.SnipeStyle = p < 0 ? "snipe-loss" : "snipe-profit";
+               this.snipeOP = .5;
+            }
+            else{
+               p = msg.price - msg.FPC;                                             //Im a maker
+            }
+            this.profit += p;
 
             //push info on my transaction to graph
-            myTransaction.positive = msg.msgData[1] - msg.msgData[2] >= 0;         //calculate +/- transaction
-            myTransaction.price = msg.msgData[1];
+            myTransaction.positive = msg.price - msg.FPC >= 0;                      //calculate +/- transaction
+            myTransaction.price = msg.price;
             myTransaction.transacted = true;
-            myTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false); 
+            myTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false); //test -> 7/17/17
+            //myTransaction.batchNumber = this.calcClosestBatch(getTime(),false);  
             this.myTransactions.push(myTransaction);
 
             //push info on the investor I transacted with to graph
             this.buyTransactionCount++;
-            investorTransaction.price = msg.msgData[2] + this.highestSpread/2 + (this.buyTransactionCount*this.investorOrderSpacing);    //investor has price of transaction + spacing
-            //investorTransaction.price = msg.msgData[2] - this.investorOrderSpacing;    //investor has price of transaction + spacing
+            investorTransaction.price = msg.FPC + (this.highestSpread / 2) + (this.buyTransactionCount * this.investorOrderSpacing);    //investor has price of transaction + spacing
             investorTransaction.transacted = true;
             investorTransaction.batchNumber = myTransaction.batchNumber; 
+            //console.log("investor transaction: ", investorTransaction);
             this.investorTransactions.push(investorTransaction);
-         }
-         else {
-            //someone else transacted, I need to push to otherTransactions
 
-            if (msg.msgData[3] == 0) { // buyer was an investor
+            if(p > 0){
+               dataHistory.negative_sound.pause();
+               dataHistory.positive_sound.play();
+            }
+            else{
+               dataHistory.positive_sound.pause();
+               dataHistory.negative_sound.play();
+            }
+         }
+ 
+         else {   //a different user transacted, need to push to investorTransaction to update my graph
+            if (msg.buyerID == 0) { // buyer was an investor
                this.buyTransactionCount++;
-               investorTransaction.price = msg.msgData[2] + this.highestSpread/2 + (this.buyTransactionCount*this.investorOrderSpacing);    //investor has price of transaction + spacing
+               investorTransaction.price = msg.FPC + (this.highestSpread / 2) + (this.buyTransactionCount * this.investorOrderSpacing);    //investor has price of transaction + spacing
                investorTransaction.transacted = true;
-               investorTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false); 
+               // investorTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false);    //changed 7/17/17
+               investorTransaction.batchNumber = this.calcClosestBatch(getTime(),false); 
+               //console.log("investor transaction: ", investorTransaction);
                this.investorTransactions.push(investorTransaction);
             }
-            else { // buyer was a player
-               otherTransaction.price = msg.msgData[1];
+            else { //other user is the buyer
+               otherTransaction.price = msg.price;
                otherTransaction.transacted = true;
-               otherTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false);
-               console.log(otherTransaction.batchNumber);
+               // otherTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false); //changed 7/17/17
+               otherTransaction.batchNumber = this.calcClosestBatch(getTime(),false);
+               //console.log("other transaction: ", otherTransaction);
                this.otherTransactions.push(otherTransaction);
             }
 
-            if (msg.msgData[4] == 0) { // seller was an investor
+            if (msg.sellerID == 0) { // seller was an investor
                this.sellTransactionCount++;
-               investorTransaction.price = msg.msgData[2] - this.highestSpread/2 - (this.sellTransactionCount*this.investorOrderSpacing);
+               investorTransaction.price = msg.FPC - (this.highestSpread / 2) - (this.sellTransactionCount * this.investorOrderSpacing);
                investorTransaction.transacted = true;
-               investorTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false); 
+               // investorTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false);       //changed 7/17/17
+               investorTransaction.batchNumber = this.calcClosestBatch(getTime(),false); 
+               //console.log("investor transaction: ", investorTransaction);
                this.investorTransactions.push(investorTransaction);
             }
-            else { // seller was a player
-               otherTransaction.price = msg.msgData[1];
+            else { //other user is the seller
+               otherTransaction.price = msg.price;
                otherTransaction.transacted = true;
-               otherTransaction.batchNumber = this.calcClosestBatch(msg.msgData[0],false); 
-               console.log(otherTransaction.batchNumber);
+               // otherTransaction.batchNumber = this.calcClosestBatch(msg.timeStamp,false);    //changed 7/17/17
+               otherTransaction.batchNumber = this.calcClosestBatch(getTime(),false); 
+               //console.log("other transaction: ", otherTransaction);
                this.otherTransactions.push(otherTransaction);
             }
 
          }
 
-         if (msg.msgData[3] != 0) {
-            //checks if the player that receieved the buy transaction has a current buy offer
-            if (this.playerData[msg.msgData[3]].curBuyOffer !== null) this.storeBuyOffer(msg.msgData[0], msg.msgData[3]);
-
-            var uid = msg.msgData[3];
-            var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.msgData[0] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); //changed from 1000
-            this.recordProfitSegment(curProfit + msg.msgData[2] - msg.msgData[1], msg.msgData[0], this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);
+         if(msg.subjectID > 0){                                               //ADDED 7/21/17 to fix transaction horizontal lines
+            this.transactions[0] = msg;                                       //added 7/24/17 -> we only need to graph the most recent transaction
          }
-         //checks if the player that receieved the buy transaction has a current sell offer
-         if (msg.msgData[4] != 0) {
-            if (this.playerData[msg.msgData[4]].curSellOffer !== null) this.storeSellOffer(msg.msgData[0], msg.msgData[4]);
 
-            var uid = msg.msgData[4];
-            var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.msgData[0] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); //changed from 1000
-            //console.log(curProfit);
-            this.recordProfitSegment(curProfit + msg.msgData[1] - msg.msgData[2], msg.msgData[0], this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);
+         if (msg.buyerID != 0) {
+            var uid = msg.buyerID;
+            if (this.playerData[uid].curBuyOffer != null) this.storeBuyOffer(msg.timeStamp, uid);
+            //p = this.playerData[uid].state === "Snipe" ? msg.price - msg.FPC : msg.FPC - msg.price;     //snipe message profit calculated opposite of makers
+            p = msg.FPC - msg.price;
+            var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.timeStamp - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); //changed from 1000
+            // console.log(this.playerData[uid].state, "buy for profit:", p);
+            this.recordProfitSegment(curProfit + p, msg.timeStamp, this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state, false, curProfit);
          }
-         this.transactions.push(msg.msgData);
+         if (msg.sellerID != 0) {
+            var uid = msg.sellerID;
+            if (this.playerData[uid].curSellOffer != null) this.storeSellOffer(msg.timeStamp, uid);
+            // p = this.playerData[uid].state === "Snipe" ? msg.FPC - msg.price : msg.price - msg.FPC;     //snipe message profit calculated opposite of makers
+            p = msg.price - msg.FPC;
+            var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.timeStamp - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000); //changed from 1000
+            // console.log(this.playerData[uid].state, "sell for profit:", p);
+            this.recordProfitSegment(curProfit + p, msg.timeStamp, this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state, false, curProfit);
+         }
+
+         // if(msg.subjectID > 0){                                               //ADDED 7/21/17 to fix transaction horizontal lines
+         //    this.transactions[0] = msg;                                       //added 7/24/17 -> we only need to graph the most recent transaction
+         // }
+         
+      };
+
+      dataHistory.pushToBatches = function(msg){
+         if(msg.batchType == 'B'){
+            // this.startBatch = true;
+         }
+         if(msg.batchType == 'P'){     //start of batch = B, end = P -> want to start timer as soon as last batch ends
+            this.startBatch = true;
+            this.currentBatchNumber = this.calcClosestBatch(getTime(), false);
+            let batchMinPrice = this.curFundPrice[1];
+            let batchMaxPrice = this.curFundPrice[1];
+            
+            for (var uid of this.group) {
+               if (this.playerData[uid].curBuyOffer != null) {
+                  batchMinPrice = Math.min(batchMinPrice, this.playerData[uid].curBuyOffer[1]);
+
+                  let update = {
+                     batchNumber: this.currentBatchNumber,
+                     price: this.playerData[uid].curBuyOffer[1],
+                     buy: this.playerData[uid].curBuyOffer[1],       //will make this less repetitive once legacy graph is removed
+                     sell: null,
+                     fpc: msg.FPC
+                  };
+                  if (uid == this.myId) {
+                     this.myOrders.push(update);
+                  }
+                  else {
+                     this.othersOrders.push(update);
+                  }
+               }
+
+               if (this.playerData[uid].curSellOffer != null) {
+                  batchMaxPrice = Math.max(batchMaxPrice, this.playerData[uid].curSellOffer[1]);
+
+                  let update = {
+                     batchNumber: this.currentBatchNumber,
+                     price: this.playerData[uid].curSellOffer[1],
+                     buy: null,       //will make this less repetitive once legacy graph is removed
+                     sell: this.playerData[uid].curSellOffer[1],
+                     fpc: msg.FPC
+                  };
+                  if (uid == this.myId) {
+                     this.myOrders.push(update);
+                  }
+                  else {
+                     this.othersOrders.push(update);
+                  }
+               }
+
+            }
+
+            // add investor orders from this batch to investor orders array
+            for(let order of this.investorOrdersThisBatch) {
+               if (order.isBuy) {
+                  batchMaxPrice += this.investorOrderSpacing;
+                  order.price = batchMaxPrice;
+               }
+               else {
+                  batchMinPrice -= this.investorOrderSpacing;
+                  order.price = batchMinPrice;
+               }
+               this.investorOrders.push(order);
+               //console.log(order,(getTime() - order.time)/1000000);
+            }
+            this.investorOrdersThisBatch = [];
+
+            window.setTimeout(function(){
+                  this.buyTransactionCount = 0;
+                  this.sellTransactionCount = 0;
+               }.bind(this), 200);
+         }
       };
 
       //records a new buy offer
-      dataHistory.recordBuyOffer = function (buyMsg) { //[id,price,timestamp]
-         // if this is an investor order
-         if (buyMsg.msgData[0] == 0) {
+      dataHistory.recordBuyOffer = function (buyMsg) { 
+         if (buyMsg.subjectID == 0) {     // if this is an investor order
             this.investorOrdersThisBatch.push({
-               batchNumber: this.calcClosestBatch(buyMsg.msgData[2], true),
-               price: buyMsg.msgData[1],
-               isBuy: true
+               batchNumber: this.calcClosestBatch(buyMsg.timeStamp, true),
+               price: buyMsg.price,
+               isBuy: true,
+               time: getTime()
             });
             return;
          }
 
-         if(this.playerData[buyMsg.msgData[0]].state == 'Snipe'){                                   //TEST -> don't want to graph snipe offer
-            console.log("Tried to record buy offer, state: "  + this.playerData[buyMsg.msgData[0]].state);
+         if(this.playerData[buyMsg.subjectID].state == 'Snipe'){  //TEST -> don't want to graph snipe offer
+            // console.log("Tried to record buy offer, state: "  + this.playerData[buyMsg.subjectID].state);
             return;
          }
          //Check if current buy offer needs to be stored
-         if (this.playerData[buyMsg.msgData[0]].curBuyOffer != null) {
-            this.storeBuyOffer(buyMsg.msgData[2], buyMsg.msgData[0]);
-            //console.log("Data being stored: " + buyMsg.msgData[2] + " : " + buyMsg.msgData[0]);
-            //console.log("Local timestamp: " + getTime());
+         if (this.playerData[buyMsg.subjectID].curBuyOffer != null) {
+            this.storeBuyOffer(buyMsg.timeStamp, buyMsg.subjectID);
          }
+         
          //Push on new buy offer
-         this.playerData[buyMsg.msgData[0]].curBuyOffer = [buyMsg.msgData[2], buyMsg.msgData[1]];   // [timestamp, price]
+         this.playerData[buyMsg.subjectID].curBuyOffer = [buyMsg.timeStamp, buyMsg.price];   // [timestamp, price]
 
          // check to see if new buy price is lowest price so far
-         if (buyMsg.msgData[1] < this.lowestMarketPrice) this.lowestMarketPrice = buyMsg.msgData[1];
-
+         if (buyMsg.price < this.lowestMarketPrice) this.lowestMarketPrice = buyMsg.price;
       };
 
-      dataHistory.pushToBatches = function(){
-         console.log("pushToBatches");
-
-         let currentBatch = this.calcClosestBatch(getTime(), false);
-
-         let batchMinPrice = this.curFundPrice[1];
-         let batchMaxPrice = this.curFundPrice[1];
-         
-         for (var uid of this.group) {
-            if (this.playerData[uid].curBuyOffer != null) {
-               batchMinPrice = Math.min(batchMinPrice, this.playerData[uid].curBuyOffer[1]);
-
-               let update = {
-                  batchNumber: currentBatch,
-                  price: this.playerData[uid].curBuyOffer[1]
-               };
-               if (uid == this.myId) {
-                  this.myOrders.push(update);
-               }
-               else {
-                  this.othersOrders.push(update);
-               }
-            }
-
-            if (this.playerData[uid].curSellOffer != null) {
-               batchMaxPrice = Math.max(batchMaxPrice, this.playerData[uid].curSellOffer[1]);
-
-               let update = {
-                  batchNumber: currentBatch,
-                  price: this.playerData[uid].curSellOffer[1]
-               };
-               if (uid == this.myId) {
-                  this.myOrders.push(update);
-               }
-               else {
-                  this.othersOrders.push(update);
-               }
-            }
-
-         }
-
-         // add investor orders from this batch to investor orders array
-         for(let order of this.investorOrdersThisBatch) {
-            if (order.isBuy) {
-               batchMaxPrice += this.investorOrderSpacing;
-               order.price = batchMaxPrice;
-            }
-            else {
-               batchMinPrice -= this.investorOrderSpacing;
-               order.price = batchMinPrice;
-            }
-            this.investorOrders.push(order);
-         }
-         this.investorOrdersThisBatch = [];
-
-         window.setTimeout(function(){
-               this.buyTransactionCount = 0;
-               this.sellTransactionCount = 0;
-            }.bind(this), 200);
-      };
-
-      // Records a new Sell offer
-      dataHistory.recordSellOffer = function (sellMsg) {
+      dataHistory.recordSellOffer = function (sellMsg) { //[id,price,timestamp]
          // if this is an investor order
-         if (sellMsg.msgData[0] == 0) {
+         if (sellMsg.subjectID == 0) {
             this.investorOrdersThisBatch.push({
-               batchNumber: this.calcClosestBatch(sellMsg.msgData[2], true),
-               isBuy: false
+               batchNumber: this.calcClosestBatch(sellMsg.timeStamp, true),
+               isBuy: false,
+               time: getTime()
             });
             return;
          }
 
-         if(this.playerData[sellMsg.msgData[0]].state == 'Snipe'){                                 //TEST -> don't want to graph snipe offer
-            console.log("Tried to record sell offer, state: "  + this.playerData[sellMsg.msgData[0]].state);
+         if(this.playerData[sellMsg.subjectID].state == 'Snipe'){     //TEST -> don't want to graph snipe offer
+            // console.log("Tried to record sell offer, state: "  + this.playerData[sellMsg.subjectID].state);
             return;
          }
          //Check if current sell offer needs to be stored
-         if (this.playerData[sellMsg.msgData[0]].curSellOffer != null) {
-            this.storeSellOffer(sellMsg.msgData[2], sellMsg.msgData[0]);
+         if (this.playerData[sellMsg.subjectID].curSellOffer != null) {
+            this.storeSellOffer(sellMsg.timeStamp, sellMsg.subjectID);
          }
          //Push on new sell offer
-         this.playerData[sellMsg.msgData[0]].curSellOffer = [sellMsg.msgData[2], sellMsg.msgData[1]];   // [timestamp, price]
+         this.playerData[sellMsg.subjectID].curSellOffer = [sellMsg.timeStamp, sellMsg.price];   // [timestamp, price]
 
          // check to see if new sell price is highest price so far
-         if (sellMsg.msgData[1] > this.highestMarketPrice) this.highestMarketPrice = sellMsg.msgData[1];
-
-         //window.setTimeout(this.myOrders.push(myUpdate),this.batchLength*1000000);
-         //window.setTimeout(this.othersOrders.push(otherUpdate),this.batchLength*1000000);
+         if (sellMsg.price > this.highestMarketPrice) this.highestMarketPrice = sellMsg.price;
       };
 
       // Shifts buy offer from currently being active into the history
@@ -411,101 +510,39 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          this.playerData[uid].curSellOffer = null;
       };
 
-      dataHistory.storeSpeedChange = function (msg) {
+      dataHistory.storeSpeedChange = function (msg) { //("USER", "USPEED", [rs.user_id, $scope.using_speed, $scope.tradingGraph.getCurOffsetTime()])
          var uid = msg.msgData[0];
          this.playerData[uid].speed = msg.msgData[1];
-         //var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
          var curProfit = this.playerData[uid].curProfitSegment[1] - ((msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);
-         this.recordProfitSegment(curProfit, msg.msgData[2], msg.msgData[1] ? this.speedCost : 0, uid, this.playerData[uid].state);
+         this.recordProfitSegment(curProfit, msg.msgData[2], msg.msgData[1] ? this.speedCost : 0, uid, this.playerData[uid].state, true);
       };
 
-      dataHistory.recordProfitSegment = function (price, startTime, slope, uid, state) {
+      dataHistory.recordProfitSegment = function (price, startTime, slope, uid, state, speedChange, old) {
          if (price > this.highestProfitPrice) this.highestProfitPrice = price;
          if (price < this.lowestProfitPrice) this.lowestProfitPrice = price;
 
+         var nextBatchTime = startTime;                                                      //initialize to start time in case fail next if statement
          if (this.playerData[uid].curProfitSegment != null) {
-            this.storeProfitSegment(startTime, uid);
+            if(speedChange){                                                                 //dont draw a profit line when changing speed or state
+               // this.playerData[uid].profitJumps.push({timestamp: startTime, newPrice: 0, oldPrice: 0});
+               this.playerData[uid].profitJumps.push({timestamp: nextBatchTime, newPrice: 0, oldPrice: 0});
+            } 
+            else {
+               nextBatchTime = this.calcClosestBatchTime(startTime);                         //snap vertical profit to the batch lines if not from speed change
+               // this.playerData[uid].profitJumps.push({timestamp: startTime, newPrice: price, oldPrice: old});
+               this.playerData[uid].profitJumps.push({timestamp: nextBatchTime, newPrice: price, oldPrice: old});
+            }
+            // this.storeProfitSegment(startTime, uid);
+            this.storeProfitSegment(nextBatchTime, uid);
          }
-         this.playerData[uid].curProfitSegment = [startTime, price, slope, state];
+         // this.playerData[uid].curProfitSegment = [startTime, price, slope, state];
+         this.playerData[uid].curProfitSegment = [nextBatchTime, price, slope, state];
       };
 
-      dataHistory.recordBatch = function (msg) {
-         // calculate offset buy investor price
-         // first find minimum non-investor sell order price
-         var buyInvestorPrice = msg.msgData[1].reduce(function (previousValue, currentElement) {
-            return currentElement.price > previousValue && currentElement.id != 0 ? currentElement.price : previousValue;
-         }, msg.msgData[4]);
-         //then add investor spacing
-         buyInvestorPrice += this.investorOrderSpacing;
-
-         for (var buyOrder of msg.msgData[0]) {
-            if (buyOrder.transacted && buyOrder.id != 0) {
-               var uid = buyOrder.id;
-               if (uid == this.myId) this.profit += msg.msgData[4] - msg.msgData[3];
-               
-               //var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
-               var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] * 1000000 - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);   //changed 4/17/17 to batchlength*1000000
-               this.recordProfitSegment(curProfit + msg.msgData[4] - msg.msgData[3], this.startTime + this.batchLength * msg.msgData[2] * 1000000, this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);         //changed 4/17/17 to batchlength*1000000
-            }
-
-            // split orders up into my orders, others' orders and investor orders
-            if (buyOrder.id == dataHistory.myId) {
-               // if it's my order, record whether the profit from it was positive
-               buyOrder.positive = msg.msgData[4] - msg.msgData[3] >= 0;
-               this.myOrders.push(buyOrder);
-            }
-            else if (buyOrder.id == 0) {
-               // if it's an investor order, change its price before pushing it on
-               buyOrder.price = buyInvestorPrice;
-               buyInvestorPrice += this.investorOrderSpacing;
-               this.investorOrders.push(buyOrder);
-            }
-            else this.othersOrders.push(buyOrder);
-         }
-
-         // highest order in this batch is buy investor price minus investor spacing
-         // check to see if new price is greater than current highest price
-         if (buyInvestorPrice - this.investorOrderSpacing > this.highestMarketPrice) {
-            this.highestMarketPrice = buyInvestorPrice - this.investorOrderSpacing;
-         }
-
-         // do the same calculation for sell investors
-         var sellInvestorPrice = msg.msgData[0].reduce(function (previousValue, currentElement) {
-            return currentElement.price < previousValue && currentElement.id != 0 ? currentElement.price : previousValue;
-         }, msg.msgData[4]);
-         sellInvestorPrice -= this.investorOrderSpacing;
-
-         for (var sellOrder of msg.msgData[1]) {
-            if (sellOrder.transacted && sellOrder.id != 0) {
-               var uid = sellOrder.id;
-               if (uid == this.myId) this.profit += msg.msgData[3] - msg.msgData[4];
-               
-               //var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
-               var curProfit = this.playerData[uid].curProfitSegment[1] - ((this.startTime + this.batchLength * msg.msgData[2] * 1000000 - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);  //changed 4/17/17 to batchlength*1000000
-               this.recordProfitSegment(curProfit + msg.msgData[3] - msg.msgData[4], this.startTime + this.batchLength * msg.msgData[2] * 1000000, this.playerData[uid].curProfitSegment[2], uid, this.playerData[uid].state);                  //changed 4/17/17 to batchlength*1000000
-            }
-
-            if (sellOrder.id == dataHistory.myId) {
-               sellOrder.positive = msg.msgData[3] - msg.msgData[4] >= 0;
-               this.myOrders.push(sellOrder);
-            }
-            else if (sellOrder.id == 0) {
-               sellOrder.price = sellInvestorPrice;
-               sellInvestorPrice -= this.investorOrderSpacing;
-               this.investorOrders.push(sellOrder);
-            }
-            else this.othersOrders.push(sellOrder);
-         }
-
-         if (sellInvestorPrice + this.investorOrderSpacing < this.lowestMarketPrice) this.lowestMarketPrice = sellInvestorPrice + this.investorOrderSpacing;
-
-         // save equilibrium price
-         this.priceHistory.push([msg.msgData[2], msg.msgData[3]]);
-
-         // update display spread for all players
-         for (var uid of this.group) {
-            this.playerData[uid].displaySpread = this.playerData[uid].spread;
-         }
+      dataHistory.calcClosestBatchTime = function (currTime) {
+         var batchTime = this.batchLength * 1000000;              //time per batch
+         var timeOffset = (currTime - this.startTime) % batchTime;        //time until closest batch line
+         return timeOffset < batchTime / 2 ? currTime - timeOffset : currTime - timeOffset + batchTime;  //snap to closest batchline
       };
 
       dataHistory.storeProfitSegment = function (endTime, uid) {
@@ -513,10 +550,36 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
             throw "Cannot store current profit segment because it is null";
          }
          //find end price by subtracting how far graph has descended from start price
-         //var endPrice = this.playerData[uid].curProfitSegment[1] - ((endTime - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000);
          var endPrice = this.playerData[uid].curProfitSegment[1] - ((endTime - this.playerData[uid].curProfitSegment[0]) * this.playerData[uid].curProfitSegment[2] / 1000000000);
          this.playerData[uid].pastProfitSegments.push([this.playerData[uid].curProfitSegment[0], endTime, this.playerData[uid].curProfitSegment[1], endPrice, this.playerData[uid].curProfitSegment[3]]);
          this.playerData[uid].curProfitSegment = null;
+      };
+
+      dataHistory.CalculatePlayerInfo = function() {        //calculates info on players for UI
+         dataHistory.totalMakers = 0;
+         dataHistory.totalSnipers = 0;
+         dataHistory.fastMakers = 0;
+         dataHistory.fastSnipers = 0;
+         dataHistory.totalTraders = 0;
+         for (var uid of this.group){
+            if(this.playerData[uid].state === "Maker"){
+               dataHistory.totalMakers++;
+               dataHistory.totalTraders++;
+               // console.log(dataHistory.totalMakers, "totalMakers");
+               if(this.playerData[uid].speed == true){
+                  dataHistory.fastMakers++;
+               }
+            }
+            if(this.playerData[uid].state === "Snipe"){
+               dataHistory.totalSnipers++;
+               dataHistory.totalTraders++;
+               // console.log(dataHistory.totalSnipers, "totalSnipers");
+               if(this.playerData[uid].speed == true){
+                  dataHistory.fastSnipers++;
+               }
+            }
+         }
+         // console.log("makers:",dataHistory.totalMakers,"snipers:",dataHistory.totalSnipers,"total:",dataHistory.totalTraders);
       };
 
       return dataHistory;

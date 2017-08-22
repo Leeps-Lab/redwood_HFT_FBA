@@ -232,7 +232,8 @@ Redwood.controller("AdminCtrl",
                         groupNumber: groupNum,
                         memberIDs: group,
                         isDebug: debugMode,
-                        mFlag: marketFlag
+                        mFlag: marketFlag,
+                        groupNum: groupNum
                      };
                      $scope.groupManagers[groupNum] = groupManager.createGroupManager(groupArgs, ra.sendCustom);
                      $scope.groupManagers[groupNum].market = marketManager.createMarketManager(ra.sendCustom, groupNum, $scope.groupManagers[groupNum], debugMode, $scope.config.batchLength);
@@ -281,7 +282,6 @@ Redwood.controller("AdminCtrl",
 
          ra.recv("set_player_time_offset", function (uid, data) {
             if ($scope.playerTimeOffsets[uid] === undefined) {
-               //$scope.playerTimeOffsets[uid] = data - Date.now();
                $scope.playerTimeOffsets[uid] = data - getTime();
             }
          });
@@ -296,7 +296,6 @@ Redwood.controller("AdminCtrl",
 
             // start experiment if all subjects are marked ready
             if ($scope.startSyncArrays[groupNum].allReady()) {
-               //$scope.startTime = Date.now();
 
                // calculate how long we have to wait so that start time coincides with a batch
                let delay = ($scope.groupManagers[groupNum].lastbatchTime - getTime()) / 1000000 + $scope.config.batchLength;
@@ -305,6 +304,11 @@ Redwood.controller("AdminCtrl",
                window.setTimeout(startExperiment, delay, groupNum);
             }
          });
+
+         // ra.recv("next_game", function (groupNum){
+         //    //export csv's
+         //    resetGroups();       //reset all the start pages with next config
+         // });
 
          // setup game state and send begin messages to clients
          var startExperiment = function(groupNum){
@@ -343,10 +347,8 @@ Redwood.controller("AdminCtrl",
 
             // if there are any price changes to send, start sending them
             if ($scope.priceChanges.length > 2) {
-               //window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, $scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - Date.now());
                window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, ($scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - getTime()) / 1000000);
             }
-            //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - Date.now());
             //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - getTime());
             //$scope.groupManagers[groupNum].intervalPromise = $interval($scope.groupManagers[groupNum].update.bind($scope.groupManagers[groupNum]), CLOCK_FREQUENCY);
             if ($scope.investorArrivals.length > 1) {
@@ -429,8 +431,7 @@ Redwood.controller("AdminCtrl",
                data.unshift(["player", "final_profit"]);
 
                // get file name by formatting start time as readable string
-               var d = new Date($scope.startTime);
-               var filename = d.getHours() + '_' + d.getMinutes() + '_' + d.getSeconds() + '_fba_final_profits.csv';
+               var filename = printTime(this.startTime) + '_fba_final_profits.csv';
 
                var csvRows = [];
                for (let index = 0; index < data.length; index++) {
