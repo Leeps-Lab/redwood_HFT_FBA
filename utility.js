@@ -12,10 +12,10 @@ function printTime(nanoseconds){
   var str = "";
   var millis  = Math.floor((nanoseconds / 1000000) % 1000);
   var seconds = Math.floor((nanoseconds / 1000000000) % 60);
-  // var minutes = Math.floor(nanoseconds / (60*1000000000) % 60);
-  // var hours   = Math.floor(nanoseconds / (60*60*1000000000) % 24);
-  str = "[" + seconds + ":" + millis + "]";
-  // str = "[" + hours + ":" + minutes + ":" + seconds + ":" + millis + "]";
+  var minutes = Math.floor(nanoseconds / (60*1000000000) % 60);
+  var hours   = Math.floor(nanoseconds / (60*60*1000000000) % 24);
+  // str = "[" + seconds + ":" + millis + "]";
+  str = "[" + hours + ":" + minutes + ":" + seconds + ":" + millis + "]";
   return str;
 }
 

@@ -44,10 +44,11 @@ Redwood.factory("GroupManager", function () {
 
          // open websocket with market
          //groupManager.marketURI = "ws://54.202.196.170:8000/";                       //PUT THIS BACK FOR VAGRANT TESTING
-         groupManager.marketURI = "ws://54.149.235.92:8000/";                          //this is the redwood/aws instance
+         groupManager.marketURI = "ws://54.149.235.92:800" + groupArgs.groupNum + "/";
          groupManager.socket = new WebSocket(groupManager.marketURI, ['binary', 'base64']);
          groupManager.socket.onopen = function(event) {
-            //groupManager.socket.send("Confirmed Opened Websocket connection");
+            // groupManager.socket.send("Confirmed Opened Websocket connection");
+            console.log("Group", groupArgs.groupNum, " Opened Websocket Connection");
          };
 
          // recieves messages from remote market
@@ -57,9 +58,10 @@ Redwood.factory("GroupManager", function () {
             reader.addEventListener("loadend", function() {
                // reader.result contains the raw ouch message as a DataBuffer, convert it to string
                var ouchStr = String.fromCharCode.apply(null, new Uint8Array(reader.result));
-               //logStringAsNums(ouchStr);
+               // logStringAsNums(ouchStr);
                if(ouchStr.charAt(0) == 'S'){                            //special batch msg -> no need to split
                   var msg = ouchToLeepsMsg(ouchStr);                    //adding for synchronization for admin
+                  // console.log(msg);
                   if(msg.batchType == 'B'){                             //only care about start messages
                      groupManager.lastbatchTime = getTime();               //msg.timeStamp;
                   }

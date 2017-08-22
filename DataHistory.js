@@ -544,7 +544,6 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          var timeOffset = (currTime - this.startTime) % batchTime;        //time until closest batch line
          return timeOffset < batchTime / 2 ? currTime - timeOffset : currTime - timeOffset + batchTime;  //snap to closest batchline
       };
-      // 
 
       dataHistory.storeProfitSegment = function (endTime, uid) {
          if (this.playerData[uid].curProfitSegment == null) {

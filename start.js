@@ -570,6 +570,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
 
          rs.recv("end_game", function (uid, msg) {
             console.log(msg);
+            // rs.send("next_game");
             rs.finish();
          });
 
