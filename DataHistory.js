@@ -54,6 +54,8 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       dataHistory.SnipeTransaction = false;
       dataHistory.SnipeStyle = "";
       dataHistory.snipeOP = 1;
+
+      dataHistory.receivedSpread = [];
       
       dataHistory.positive_sound;
       dataHistory.negative_sound;
@@ -112,7 +114,6 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                // console.log("UUSPR");
                this.playerData[msg.msgData[0]].spread = msg.msgData[1];
                this.calcLowestSpread();
-               this.calcHighestSpread();
                break;
          }
       };
@@ -167,16 +168,6 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
                this.lowestSpread = this.playerData[player].spread;
             }
          }
-      };
-
-      dataHistory.calcHighestSpread = function () {
-         this.highestSpread = "N/A";
-         for (var player in this.playerData) {
-            if (this.playerData[player].state == "Maker" && (this.highestSpread == "N/A" || this.playerData[player].spread > this.highestSpread)) {
-               this.highestSpread = this.playerData[player].spread;
-            }
-         }
-         // console.log(this.highestSpread);
       };
 
       dataHistory.recordStateChange = function (newState, uid, timestamp) {
@@ -462,6 +453,8 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          //Push on new buy offer
          this.playerData[buyMsg.subjectID].curBuyOffer = [buyMsg.timeStamp, buyMsg.price];   // [timestamp, price]
 
+         this.receivedSpread[buyMsg.subjectID] = this.playerData[buyMsg.subjectID].spread;         //added 8/22 because normal spread is processed too quickly
+
          // check to see if new buy price is lowest price so far
          if (buyMsg.price < this.lowestMarketPrice) this.lowestMarketPrice = buyMsg.price;
       };
@@ -487,6 +480,8 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
          }
          //Push on new sell offer
          this.playerData[sellMsg.subjectID].curSellOffer = [sellMsg.timeStamp, sellMsg.price];   // [timestamp, price]
+
+         this.receivedSpread[sellMsg.subjectID] = this.playerData[sellMsg.subjectID].spread;                 //added 8/22 because normal spread is processed too quickly
 
          // check to see if new sell price is highest price so far
          if (sellMsg.price > this.highestMarketPrice) this.highestMarketPrice = sellMsg.price;

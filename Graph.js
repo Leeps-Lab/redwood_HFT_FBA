@@ -37,7 +37,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       graph.graphAdjustSpeedProfit = .1;      //speed that market price axis adjusts in pixels per frame
       graph.marketPriceGridIncrement = 1;     //amount between each line on market price axis
       graph.profitPriceGridIncrement = 1;     //amount between each line on profit price axis
-      graph.contractedTimeInterval = 30;      //amount of time displayed on time axis when graph is contracted
+      graph.contractedTimeInterval = 60;      //amount of time displayed on time axis when graph is contracted
       graph.timeInterval = graph.contractedTimeInterval; //current amount in seconds displayed at once on full time axis
       graph.batchLength = batchLength;        //length in ms of a single batch
       graph.currentTime = 0;           //Time displayed on graph
@@ -110,7 +110,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
 
          this.expandedGraph = false;
          this.timeInterval = this.contractedTimeInterval;
-         //this.timePerPixel = graph.timeInterval * 1000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
          this.timePerPixel = graph.timeInterval * 1000000000 / (graph.elementWidth - graph.axisLabelWidth - graph.graphPaddingRight);
          this.advanceTimeShown = graph.timePerPixel * (graph.axisLabelWidth + graph.graphPaddingRight);
       };
@@ -475,6 +474,34 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
                .attr("class", styleClassName)  
 
          }
+
+         if((currentBuy || currentSell) && (styleClassName == "my-buy-offer")){            //only need one side to draw MY box
+            let color = "Aqua";                    //default color
+            let y, height;
+            height = 2 * (dataHistory.receivedSpread[dataHistory.myId] * graphRefr.newElementHeight / graphRefr.priceRange).toFixed(2);
+            // height = 2 * (dataHistory.playerData[dataHistory.myId].spread * graphRefr.newElementHeight / graphRefr.priceRange).toFixed(2);
+            
+            if(currentSell){
+               y = graphRefr.newElementHeight / 2 - (currentSell * graphRefr.newElementHeight / graphRefr.priceRange);
+            }
+            else {
+               y = graphRefr.newElementHeight / 2 + (currentBuy * graphRefr.newElementHeight / graphRefr.priceRange);
+               y -= height;
+            }
+            if(dataHistory.playerData[dataHistory.myId].spread == dataHistory.lowestSpread){  //I have the best spread
+               color = "LimeGreen";        //best spread color
+            }
+            graphRefr.newMarketSVG.append("rect")
+               .attr("id", "REMOVE")
+               .attr("opacity", .2)
+               .attr("x", graphRefr.newElementWidth / 2 - 20)
+               .attr("width", 40)
+               .attr("y", y)
+               .attr("height", height)
+               .style("fill", color)
+         }
+         
+
       };
 
       graph.drawLaserOffers = function (graphRefr, dataHistory){
@@ -482,7 +509,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          var lastBatch = dataHistory.othersOrders.filter(function(order){
             return order.batchNumber == dataHistory.currentBatchNumber;       //filters out only orders from the most recent batch to draw
          });
-         // console.log(lastBatch);
          for(var order of lastBatch){
             if(order.sell != null){
                p = (order.sell - order.fpc) * graphRefr.widthScale;
