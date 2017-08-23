@@ -786,7 +786,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       graph.drawAllProfit = function (graphRefr, dataHistory) {
          for (var user of dataHistory.group) {
             if (user !== dataHistory.myId) {
-               this.drawProfit(graphRefr, dataHistory.playerData[user].pastProfitSegments, dataHistory.playerData[user].curProfitSegment, "others-profit-out", "others-profit-maker", "others-profit-snipe", user);
+               //this.drawProfit(graphRefr, dataHistory.playerData[user].pastProfitSegments, dataHistory.playerData[user].curProfitSegment, "others-profit-out", "others-profit-maker", "others-profit-snipe", user);
             }
          }
          this.drawProfit(graphRefr, dataHistory.playerData[dataHistory.myId].pastProfitSegments, dataHistory.playerData[dataHistory.myId].curProfitSegment, "my-profit-out", "my-profit-maker", "my-profit-snipe", user);
