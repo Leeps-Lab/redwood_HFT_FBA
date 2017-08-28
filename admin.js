@@ -299,7 +299,6 @@ Redwood.controller("AdminCtrl",
 
                // calculate how long we have to wait so that start time coincides with a batch
                let delay = ($scope.groupManagers[groupNum].lastbatchTime - getTime()) / 1000000 + $scope.config.batchLength;
-
                console.log(delay);
                window.setTimeout(startExperiment, delay, groupNum);
             }

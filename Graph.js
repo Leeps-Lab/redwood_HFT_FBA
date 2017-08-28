@@ -489,6 +489,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
                y -= height;
             }
             if(dataHistory.playerData[dataHistory.myId].spread == dataHistory.lowestSpread){  //I have the best spread
+            // if(dataHistory.receivedSpread[dataHistory.myId] == dataHistory.lowestSpread){  //I have the best spread
                color = "LimeGreen";        //best spread color
             }
             graphRefr.newMarketSVG.append("rect")

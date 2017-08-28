@@ -43,9 +43,20 @@ Redwood.factory("GroupManager", function () {
       if(groupManager.marketFlag === "REMOTE"/*ZACH, D/N MODIFY!*/){
 
          // open websocket with market
-         //groupManager.marketURI = "ws://54.202.196.170:8000/";                       //PUT THIS BACK FOR VAGRANT TESTING
          groupManager.marketURI = "ws://54.149.235.92:800" + groupArgs.groupNum + "/";
+         // groupManager.marketURI = "ws://18.196.3.136:800" + groupArgs.groupNum + "/";
+
          groupManager.socket = new WebSocket(groupManager.marketURI, ['binary', 'base64']);
+
+         groupManager.socket.onerror = function(event) {
+            console.log("Failed to connect to Oregon Exchange, trying Frankfurt");
+            groupManager.marketURI = "ws://18.196.3.136:800" + groupArgs.groupNum + "/";
+            console.log("Connecting to Frankfurt Exchange");
+            groupManager.socket = new WebSocket(groupManager.marketURI, ['binary', 'base64']);
+            groupManager.socketRcv(groupManager.socket);
+         };
+
+
          groupManager.socket.onopen = function(event) {
             // groupManager.socket.send("Confirmed Opened Websocket connection");
             console.log("Group", groupArgs.groupNum, " Opened Websocket Connection");
@@ -76,9 +87,41 @@ Redwood.factory("GroupManager", function () {
                }
             });
             reader.readAsArrayBuffer(event.data);
-            //reader.readAsText(event.data, "ASCII");
          };
       }
+
+      groupManager.socketRcv = function (socket){
+
+         socket.onmessage = function(event){
+             // create reader to read "blob" object
+            var reader = new FileReader();
+            reader.addEventListener("loadend", function() {
+               // reader.result contains the raw ouch message as a DataBuffer, convert it to string
+               var ouchStr = String.fromCharCode.apply(null, new Uint8Array(reader.result));
+               // logStringAsNums(ouchStr);
+               if(ouchStr.charAt(0) == 'S'){                            //special batch msg -> no need to split
+                  var msg = ouchToLeepsMsg(ouchStr);                    //adding for synchronization for admin
+                  // console.log(msg);
+                  if(msg.batchType == 'B'){                             //only care about start messages
+                     groupManager.lastbatchTime = getTime();               //msg.timeStamp;
+                  }
+                  groupManager.recvFromMarket(msg);                     //send Batch message to Market Algorithm
+               }
+               else{
+                  // split the string in case messages are conjoined
+                  var ouchMsgArray = splitMessages(ouchStr);            // translate the message and pass it to the recieve function
+                  for(ouchMsg of ouchMsgArray){
+                     groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
+                  }
+               }
+            });
+            reader.readAsArrayBuffer(event.data);
+         };
+
+         socket.onopen = function(event){
+            console.log("Group", groupArgs.groupNum, " Opened Websocket Connection to Frankfurt");
+         };
+      };
 
       if(groupManager.marketFlag === "DEBUG"){
          
