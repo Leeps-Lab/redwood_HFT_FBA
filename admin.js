@@ -430,7 +430,7 @@ Redwood.controller("AdminCtrl",
                data.unshift(["player", "final_profit"]);
 
                // get file name by formatting start time as readable string
-               var filename = printTime(this.startTime) + '_fba_final_profits.csv';
+               var filename = printTime($scope.startTime) + '_fba_final_profits.csv';
 
                var csvRows = [];
                for (let index = 0; index < data.length; index++) {
