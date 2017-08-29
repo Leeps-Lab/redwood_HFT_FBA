@@ -159,6 +159,9 @@ Redwood.controller("AdminCtrl",
 
             $scope.config = ra.get_config(1, 0);
 
+            $scope.experimentLength = $scope.config.experimentLength;
+            $scope.exchangeRate = $scope.config.exchangeRate;
+
             $scope.priceChanges = [];
             var priceURL = $scope.config.priceChangesURL;
             $http.get(priceURL).then(function (response) {
@@ -304,11 +307,6 @@ Redwood.controller("AdminCtrl",
             }
          });
 
-         // ra.recv("next_game", function (groupNum){
-         //    //export csv's
-         //    resetGroups();       //reset all the start pages with next config
-         // });
-
          // setup game state and send begin messages to clients
          var startExperiment = function(groupNum){
             $scope.startTime = getTime();
@@ -355,7 +353,17 @@ Redwood.controller("AdminCtrl",
                console.log("Initial Delay: " + investorDelayTime);      //from cda
                window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, investorDelayTime / 1000000);  //from cda
             }
-            //window.setTimeout($scope.dHistory.pushToBatches, $scope.config.batchLength*1000000);
+
+            if($scope.experimentLength == null){
+                  $scope.experimentLength = 10000;      //default exp length of 5 mins
+               }
+               if($scope.exchangeRate == null){
+                  $scope.exchangeRate = 10;              //default exchange rate of 10
+               }
+               window.setTimeout(function (){
+                  console.log("Experiment ending after", $scope.experimentLength / 1000, "seconds");
+                  ra.sendCustom("end_game");
+               }, $scope.experimentLength);      //end the experiment after configurable experimentLength
          };
          
 
@@ -419,7 +427,8 @@ Redwood.controller("AdminCtrl",
                var data = [];
                for (var group in $scope.groupManagers) {
                   for (var player in $scope.groupManagers[group].dataStore.playerFinalProfits) {
-                     data.push([player, $scope.groupManagers[group].dataStore.playerFinalProfits[player]]);
+                     data.push([player, $scope.groupManagers[group].dataStore.playerFinalProfits[player],
+                        $scope.groupManagers[group].dataStore.playerFinalProfits[player] / $scope.exchangeRate]);
                   }
                }
 
