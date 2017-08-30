@@ -355,7 +355,7 @@ Redwood.controller("AdminCtrl",
             }
 
             if($scope.experimentLength == null){
-                  $scope.experimentLength = 10000;      //default exp length of 5 mins
+                  $scope.experimentLength = 300000;      //default exp length of 5 mins
                }
                if($scope.exchangeRate == null){
                   $scope.exchangeRate = 10;              //default exchange rate of 10
@@ -383,10 +383,10 @@ Redwood.controller("AdminCtrl",
          $("#buy-investor")
             .button()
             .click(function () {
-               var msg = new Message("OUCH", "EBUY", [0, 214748.3647, true]);
+               var msg = new OuchMessage("EBUY", 0, 214748.3647, true);   
                msg.delay = false;
+               msg.msgId = Math.floor(Math.random() * 1000 + 1000);  //lol
                for (var group in $scope.groupManagers) {
-                  //$scope.groupManagers[group].dataStore.investorArrivals.push([Date.now() - $scope.startTime, "BUY"]);
                   $scope.groupManagers[group].dataStore.investorArrivals.push([getTime() - $scope.startTime, "BUY"]);
                   $scope.groupManagers[group].sendToMarket(msg);
                }
@@ -395,10 +395,10 @@ Redwood.controller("AdminCtrl",
          $("#sell-investor")
             .button()
             .click(function () {
-               var msg = new Message("OUCH", "ESELL", [0, 214748.3647, true]);      
+               var msg = new OuchMessage("ESELL", 0, 0, true);   
                msg.delay = false;
+               msg.msgId = Math.floor(Math.random() * 1000 + 1000);  //lol
                for (var group in $scope.groupManagers) {
-                  //$scope.groupManagers[group].dataStore.investorArrivals.push([Date.now() - $scope.startTime, "SELL"]);
                   $scope.groupManagers[group].dataStore.investorArrivals.push([getTime() - $scope.startTime, "SELL"]);
                   $scope.groupManagers[group].sendToMarket(msg);
                }
@@ -407,12 +407,8 @@ Redwood.controller("AdminCtrl",
          $("#send-fpc")
             .button()
             .click(function () {
-               // get current FP from market algorithm of first player in first group
-               var oldFP = $scope.groupManagers[1].marketAlgorithms[$scope.groups[0][0]].fundamentalPrice;
-               var newFP = parseFloat( $("#fpc-input").val() );
-               console.log(oldFP);
-               //var msg = new Message("ITCH", "FPC", [Date.now(), newFP, 0, newFP > oldFP]);
-               var msg = new Message("ITCH", "FPC", [getTime(), newFP, 0, newFP > oldFP]);
+               // var msg = new Message("ITCH", "FPC", [getTime(), newFP, 0, newFP > oldFP]);
+               var msg = new Message("ITCH", "FPC", [getTime(), parseFloat( $("#fpc-input").val() )]);
                msg.delay = false;
                for (var group in $scope.groupManagers) {
                   $scope.groupManagers[group].dataStore.storeMsg(msg);
