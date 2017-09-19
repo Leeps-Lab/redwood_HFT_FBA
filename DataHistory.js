@@ -208,7 +208,7 @@ RedwoodHighFrequencyTrading.factory("DataHistory", function () {
       };
 
       dataHistory.storeTransaction = function (msg) {
-         console.log("Transaction", msg.subjectID, printTime(getTime()));
+         // console.log("Transaction", msg.subjectID, printTime(getTime()));
          var p;
          var myTransaction = {};       
          var investorTransaction = {};

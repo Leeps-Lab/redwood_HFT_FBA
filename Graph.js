@@ -260,121 +260,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
                return d != 0 ? "price-grid-line" : "price-grid-line-zero";
             });
       };
-
-      graph.drawAllBatches = function (graphRefr, dataHistory) {
-         // first batch that will be displayed on graph
-         var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000000000 - this.adminStartTime) / (this.batchLength*1000000)) - 1;  //changed to *1000000 4/17/17
-         //var firstVisibleBatch = Math.ceil((this.currentTime - this.timeInterval * 1000 - this.adminStartTime) / this.batchLength) - 1;
-         if (firstVisibleBatch < 0) firstVisibleBatch = 0;
-         // draw others' filled order circles
-
-         this.drawBatchCircles(graphRefr, dataHistory.othersOrders, "others-filled-orders", firstVisibleBatch);
-         this.drawBatchCircles(graphRefr, dataHistory.myTransactions.filter(function (element) {
-            return element.positive;
-         }), "my-filled-orders-positive", firstVisibleBatch);
-         this.drawBatchCircles(graphRefr, dataHistory.myTransactions.filter(function (element) {
-            return !element.positive;
-         }), "my-filled-orders-negative", firstVisibleBatch);
-         
-         this.drawBatchTicks(graphRefr, dataHistory.othersOrders, "others-orders", firstVisibleBatch);
-         this.drawBatchTicks(graphRefr, dataHistory.investorOrders, "investor-orders", firstVisibleBatch);
-         this.drawBatchTicks(graphRefr, dataHistory.myOrders, "my-orders", firstVisibleBatch);
-
-         // draw horizontal price lines
-         for (var batchIndex = firstVisibleBatch; batchIndex < dataHistory.priceHistory.length; batchIndex++) {
-            if (dataHistory.priceHistory[batchIndex][1] != null) {
-               this.marketSVG.append("line")
-                  .attr("id","REMOVE")
-                  .attr("x1", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * dataHistory.priceHistory[batchIndex][0] * 1000000) - 8) //changed to *1000000 4/17/17
-                  .attr("x2", this.mapTimeToXAxis(this.adminStartTime + this.batchLength * dataHistory.priceHistory[batchIndex][0] * 1000000) + 8) //changed to *1000000 4/17/17
-                  .attr("y1", this.mapMarketPriceToYAxis(dataHistory.priceHistory[batchIndex][1]))
-                  .attr("y2", this.mapMarketPriceToYAxis(dataHistory.priceHistory[batchIndex][1]))
-                  .attr("class", "equilibrium-price-line")
-            }
-         }
-      };
       
-      graph.drawBatchTicks = function (graphRefr, dataSet, styleClassName, firstVisibleBatch) {
-         this.marketSVG.selectAll("line." + styleClassName)
-            .data(dataSet)
-            .enter()
-            .append("line")
-            .attr("id","REMOVE")
-            .filter(function (d) {
-               return d.batchNumber >= firstVisibleBatch;
-            })
-            .attr("x1", function (d) {
-               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength * 1000000) - 8;  //changed to *1000000 4/17/17
-            })
-            .attr("x2", function (d) {
-               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength * 1000000) + 8;  //changed to *1000000 4/17/17
-            })
-            .attr("y1", function (d) {
-               return graphRefr.mapMarketPriceToYAxis(d.price); // + (d.isBuy ? -6 : 6);
-            })
-            .attr("y2", function (d) {
-               return graphRefr.mapMarketPriceToYAxis(d.price); // + (d.isBuy ? 6 : -6);
-            })
-            .attr("class", styleClassName);
-      };
-
-      graph.drawBatchCircles = function (graphRefr, dataSet, styleClassName, firstVisibleBatch) {
-         this.marketSVG.selectAll("circle." + styleClassName)
-            .data(dataSet)
-            .enter()
-            .append("circle")
-            .attr("id","REMOVE")
-            .filter(function (d) {
-               return d.transacted && d.batchNumber >= firstVisibleBatch;
-            })
-            .attr("cx", function (d) {
-               return graphRefr.mapTimeToXAxis(graphRefr.adminStartTime + d.batchNumber * graphRefr.batchLength * 1000000);   //changed to *1000000 4/17/17
-            })
-            .attr("cy", function (d) {
-               return graphRefr.mapMarketPriceToYAxis(d.price);
-            })
-            .attr("r", 5)
-            .attr("class", styleClassName);
-      };
-
-      //draws FP
-      graph.drawMarket = function (graphRefr, historyDataSet, currentData, styleClassName) {
-         this.marketSVG.selectAll("line." + styleClassName)
-            .data(historyDataSet, function (d) {
-               return d;
-            })
-            .enter()
-            .append("line")
-            .attr("id","REMOVE")
-            .filter(function (d) {
-               //return d[1] >= (graphRefr.currentTime - graphRefr.timeInterval * 1000);
-               return d[1] >= (graphRefr.currentTime - graphRefr.timeInterval * 1000000000);
-            })
-            .attr("x1", function (d) {
-               return graphRefr.mapTimeToXAxis(d[0]);
-            })
-            .attr("x2", function (d) {
-               return graphRefr.mapTimeToXAxis(d[1]);
-            })
-            .attr("y1", function (d) {
-               return graphRefr.mapMarketPriceToYAxis(d[2]);
-            })
-            .attr("y2", function (d) {
-               return graphRefr.mapMarketPriceToYAxis(d[2]);
-            })
-            .attr("class", styleClassName);
-
-         if (currentData != null) {
-            this.marketSVG.append("line")
-               .attr("id","REMOVE")
-               .attr("x1", this.mapTimeToXAxis(currentData[0]))
-               .attr("x2", this.curTimeX)
-               .attr("y1", this.mapMarketPriceToYAxis(currentData[1]))
-               .attr("y2", this.mapMarketPriceToYAxis(currentData[1]))
-               .attr("class", styleClassName);
-         }
-      };
-
       //draws profit line
       graph.drawProfit = function (graphRefr, historyDataSet, currentData, outStyleClass, makerStyleClass, snipeStyleClass, uid) {
          this.profitSVG.selectAll("line." + outStyleClass + " line." + makerStyleClass + " line." + snipeStyleClass)
@@ -857,6 +743,40 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          }
       };
 
+      graph.drawStaticLines = function(graphRefr){
+         // draw vertical center line
+         this.newMarketSVG.append("line").attr({
+               x1: this.newElementWidth / 2,
+               x2: this.newElementWidth / 2,
+               y1: 0, 
+               y2: this.newElementHeight, //this.elementHeight / 2,
+               class: "price-line",
+               id: "KEEP"
+            });
+
+         // // draw static current price tick
+         this.newMarketSVG.append("line").attr({
+               x1: this.newElementWidth / 2 - 30,
+               x2: this.newElementWidth / 2 + 30,
+               y1: this.newElementHeight / 2,// * graphRefr.heightScale - 30,//this.elementHeight / 2 - 30,//- 10,    //changed 7/26/17
+               y2: this.newElementHeight / 2,//* graphRefr.heightScale + 30,//this.elementHeight / 2 + 30,//+ 10,
+               class: "my-profit-out",
+               id: "KEEP"
+            });
+
+         for(var height = 0; height <= graphRefr.newElementHeight; height += graphRefr.newElementHeight / 10){
+            this.newMarketSVG.append("line")
+               .attr('x1', 0)
+               .attr('x2', graphRefr.newElementWidth)
+               .attr('y1', height)
+               .attr('y2', height)
+               .attr('class', "price-line")
+               .attr('id', "KEEP")
+               .style('opacity',.1)
+         }
+
+      };
+
       graph.draw = function (dataHistory) {
          //Clear the svg elements
          this.marketSVG.selectAll("#REMOVE").remove();
@@ -899,26 +819,6 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
             // console.log("failed if statement\n");
             this.batchLines = this.calcBatchLines(this.currentTime - this.timeInterval * 1000000000, this.currentTime + this.advanceTimeShown, this.batchLength * 1000000);    //remember to take this out 4/17/17
          }
-
-         // draw vertical center line
-         this.newMarketSVG.append("line").attr({
-               x1: this.newElementWidth / 2,
-               x2: this.newElementWidth / 2,
-               y1: 0, 
-               y2: this.newElementHeight, //this.elementHeight / 2,
-               class: "price-line",
-               id: "REMOVE"
-            });
-
-         // // draw static current price tick
-         this.newMarketSVG.append("line").attr({
-               x1: this.newElementWidth / 2 - 30,
-               x2: this.newElementWidth / 2 + 30,
-               y1: this.newElementHeight / 2,// * graphRefr.heightScale - 30,//this.elementHeight / 2 - 30,//- 10,    //changed 7/26/17
-               y2: this.newElementHeight / 2,//* graphRefr.heightScale + 30,//this.elementHeight / 2 + 30,//+ 10,
-               class: "my-profit-out",
-               id: "REMOVE"
-            });
 
          this.drawLaserOffers(graphRefr, dataHistory);
          this.drawLaserTransactions(graphRefr, dataHistory.transactions, dataHistory.myId);
@@ -982,6 +882,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          this.profitPriceLines = this.calcPriceGridLines(this.maxPriceProfit, this.minPriceProfit, this.profitPriceGridIncrement);
          //this.batchLines = this.calcBatchLines(this.adminStartTime, this.adminStartTime + this.timeInterval * 1000 + this.advanceTimeShown, this.batchLength);
          this.batchLines = this.calcBatchLines(this.adminStartTime, this.adminStartTime + this.timeInterval * 1000000000 + this.advanceTimeShown, this.batchLength * 1000000);      ///changed to *1000000 from * 1000000000 4/17/17
+         this.drawStaticLines(this);
       };
 
       return graph;
