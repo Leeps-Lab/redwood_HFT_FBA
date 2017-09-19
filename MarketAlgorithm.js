@@ -220,7 +220,6 @@ Redwood.factory("MarketAlgorithm", function () {
             if (msg.msgId === this.currentBuyId) {
                if (msg.subjectID == this.myId) {   
                   msg.msgType = "C_RBUY";                                          //Identify for Dhistory
-                  // this.buyEntered = false;
                   this.sendToAllDataHistories(msg);
                }
             }
