@@ -110,11 +110,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             $scope.maxSpread = data.maxSpread;
             $scope.sliderVal = $scope.maxSpread / 2;
             $scope.spread = $scope.maxSpread / 2;
-            $("#slider")
-               .slider({
-                  value: $scope.sliderVal,
-                  max: $scope.maxSpread
-               });
+            $scope.exchangeRate = data.exchangeRate;
+            $scope.period = data.period;
 
             // create associative array to go from uid to local group id for display purposes
             $scope.displayId = {};
@@ -562,9 +559,13 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          });
 
          rs.recv("end_game", function (uid, msg) {
-            console.log(msg);
-            // rs.send("next_game");
+            console.log("ending game");
             rs.finish();
+         });
+
+         rs.recv("_next_period", function (uid, msg) {
+            // console.log("Starting Next Period");
+            rs.trigger("_next_period");
          });
 
          $scope.processInputAction = function (inputIndex) {

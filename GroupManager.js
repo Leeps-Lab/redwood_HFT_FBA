@@ -4,124 +4,93 @@ Redwood.factory("GroupManager", function () {
    api.createGroupManager = function (groupArgs, sendFunction) {
       var groupManager = {};
 
-      groupManager.marketFlag = groupArgs.mFlag; // LOCAL  = use local market (i.e. this.market)
-                                                 // REMOTE = use remote market by making websockets connection
-                                                 // DEBUG  = use debug market (i.e. this.debugMarket)
+      groupManager.initGroupManager = function(groupArgs){
+         groupManager.marketFlag = groupArgs.mFlag; // LOCAL  = use local market (i.e. this.market)
+                                                    // REMOTE = use remote market by making websockets connection
+                                                    // DEBUG  = use debug market (i.e. this.debugMarket)
 
-      groupManager.marketAlgorithms = {};   // reference to all market algorithms in this group, mapped by subject id ---> marketAlgorithms[subjectID]
-      groupManager.market = {};             // reference to the market object for this group
-      groupManager.dataStore = {};
+         groupManager.marketAlgorithms = {};   // reference to all market algorithms in this group, mapped by subject id ---> marketAlgorithms[subjectID]
+         groupManager.market = {};             // reference to the market object for this group
+         groupManager.dataStore = {};
 
-      groupManager.priceChanges = groupArgs.priceChanges;         // array of all price changes that will occur
-      groupManager.investorArrivals = groupArgs.investorArrivals; // array of all investor arrivals that will occur
-      groupManager.priceIndex = 1;                                // index of last price index to occur. start at 1 because start FP is handled differently
-      groupManager.investorIndex = 0;                             // index of last investor arrival to occur
-      groupManager.intervalPromise = null;                        // promise for canceling interval when experiment ends
-      groupManager.lastbatchTime = 0;
+         groupManager.priceChanges = groupArgs.priceChanges;         // array of all price changes that will occur
+         groupManager.investorArrivals = groupArgs.investorArrivals; // array of all investor arrivals that will occur
+         groupManager.priceIndex = 1;                                // index of last price index to occur. start at 1 because start FP is handled differently
+         groupManager.investorIndex = 0;                             // index of last investor arrival to occur
+         groupManager.intervalPromise = null;                        // promise for canceling interval when experiment ends
+         groupManager.lastbatchTime = 0;
 
-      groupManager.groupNumber = groupArgs.groupNumber;
-      groupManager.memberIDs = groupArgs.memberIDs; // array that contains id number for each subject in this group
-      groupManager.syncFpArray = [];                // buffer that holds onto messages until received msg from all subjects
-      groupManager.delay = 500;                     // # of milliseconds that will be delayed by latency simulation
+         groupManager.groupNumber = groupArgs.groupNumber;
+         groupManager.memberIDs = groupArgs.memberIDs; // array that contains id number for each subject in this group
+         groupManager.syncFpArray = [];                // buffer that holds onto messages until received msg from all subjects
+         groupManager.delay = 500;                     // # of milliseconds that will be delayed by latency simulation
 
-      groupManager.syncFPArray = new SynchronizeArray(groupManager.memberIDs);
-      groupManager.FPMsgList = [];
-      groupManager.curMsgId = 1;
+         groupManager.syncFPArray = new SynchronizeArray(groupManager.memberIDs);
+         groupManager.FPMsgList = [];
+         groupManager.curMsgId = 1 + 500 * groupArgs.period;
 
-      groupManager.isDebug = groupArgs.isDebug;     //indicates if message logger should be used
-      groupManager.outboundMarketLog = "";          // string of debug info for messages outbound to market
-      groupManager.inboundMarketLog = "";           // string of debug info for messages inbound from market
+         groupManager.isDebug = groupArgs.isDebug;     //indicates if message logger should be used
+         groupManager.outboundMarketLog = "";          // string of debug info for messages outbound to market
+         groupManager.inboundMarketLog = "";           // string of debug info for messages inbound from market
 
-      groupManager.currentFundPrice = 0;
-      // if (groupManager.isDebug) {
-      //    // add the logging terminal to the ui section of the html
-      //    $("#ui").append('<div class="terminal-wrap"><div class="terminal-head">Group ' + groupManager.groupNumber +
-      //       ' Message Log</div><div id="group-' + groupManager.groupNumber + '-log" class="terminal"></div></div>');
-      //    groupManager.logger = new MessageLogger("Group Manager " + String(groupManager.groupNumber), "#5555FF", "group-" + groupManager.groupNumber + "-log");
-      // }
-
-      if(groupManager.marketFlag === "REMOTE"/*ZACH, D/N MODIFY!*/){
-
-         // open websocket with market
-         groupManager.marketURI = "ws://54.149.235.92:800" + groupArgs.groupNum + "/";
-         // groupManager.marketURI = "ws://18.196.3.136:800" + groupArgs.groupNum + "/";
-
-         groupManager.socket = new WebSocket(groupManager.marketURI, ['binary', 'base64']);
-
-         groupManager.socket.onerror = function(event) {
-            console.log("Failed to connect to Oregon Exchange, trying Frankfurt");
-            groupManager.marketURI = "ws://18.196.3.136:800" + groupArgs.groupNum + "/";
-            console.log("Connecting to Frankfurt Exchange");
-            groupManager.socket = new WebSocket(groupManager.marketURI, ['binary', 'base64']);
-            groupManager.socketRcv(groupManager.socket);
-         };
-
-
-         groupManager.socket.onopen = function(event) {
-            // groupManager.socket.send("Confirmed Opened Websocket connection");
-            console.log("Group", groupArgs.groupNum, " Opened Websocket Connection");
-         };
-
-         // recieves messages from remote market
-         groupManager.socket.onmessage = function(event) {
-            // create reader to read "blob" object
-            var reader = new FileReader();
-            reader.addEventListener("loadend", function() {
-               // reader.result contains the raw ouch message as a DataBuffer, convert it to string
-               var ouchStr = String.fromCharCode.apply(null, new Uint8Array(reader.result));
-               // logStringAsNums(ouchStr);
-               if(ouchStr.charAt(0) == 'S'){                            //special batch msg -> no need to split
-                  var msg = ouchToLeepsMsg(ouchStr);                    //adding for synchronization for admin
-                  // console.log(msg);
-                  if(msg.batchType == 'B'){                             //only care about start messages
-                     groupManager.lastbatchTime = getTime();               //msg.timeStamp;
-                  }
-                  groupManager.recvFromMarket(msg);                     //send Batch message to Market Algorithm
-               }
-               else{
-                  // split the string in case messages are conjoined
-                  var ouchMsgArray = splitMessages(ouchStr);            // translate the message and pass it to the recieve function
-                  for(ouchMsg of ouchMsgArray){
-                     groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
-                  }
-               }
-            });
-            reader.readAsArrayBuffer(event.data);
-         };
+         groupManager.currentFundPrice = 0;
+         groupManager.connection = false;
+         groupManager.establishConnection();
       }
+      
 
-      groupManager.socketRcv = function (socket){
+      groupManager.establishConnection = function(){
+         if(groupManager.marketFlag === "REMOTE"/*ZACH, D/N MODIFY!*/){
 
-         socket.onmessage = function(event){
-             // create reader to read "blob" object
-            var reader = new FileReader();
-            reader.addEventListener("loadend", function() {
-               // reader.result contains the raw ouch message as a DataBuffer, convert it to string
-               var ouchStr = String.fromCharCode.apply(null, new Uint8Array(reader.result));
-               // logStringAsNums(ouchStr);
-               if(ouchStr.charAt(0) == 'S'){                            //special batch msg -> no need to split
-                  var msg = ouchToLeepsMsg(ouchStr);                    //adding for synchronization for admin
-                  // console.log(msg);
-                  if(msg.batchType == 'B'){                             //only care about start messages
-                     groupManager.lastbatchTime = getTime();               //msg.timeStamp;
+            // open websocket with market
+            groupManager.marketURI = "ws://54.149.235.92:800" + groupArgs.groupNum + "/";
+            // groupManager.marketURI = "ws://18.196.3.136:800" + groupArgs.groupNum + "/";
+
+            groupManager.socket = new WebSocket(groupManager.marketURI, ['binary', 'base64']);
+
+            if(groupArgs.URI == null){
+               console.log("remember to add the correct URI to your config file...");
+               groupArgs.URI = "54.149.235.92";    //for testing purposes, default is oregon
+            }
+            // open websocket with market
+            groupManager.marketURI = "ws://" + groupArgs.URI + ":800" + groupArgs.groupNum + "/";
+            groupManager.socket = new WebSocket(groupManager.marketURI, ['binary', 'base64']);
+
+            groupManager.socket.onopen = function(event) {
+               console.log(printTime(getTime()), "Group", groupArgs.groupNum, "Connected to", groupArgs.URI);
+               this.send(generateSystemEventMsg('S'));
+            };
+
+
+            // recieves messages from remote market
+            groupManager.socket.onmessage = function(event) {
+               // create reader to read "blob" object
+               var reader = new FileReader();
+               reader.addEventListener("loadend", function() {
+                  // reader.result contains the raw ouch message as a DataBuffer, convert it to string
+                  var ouchStr = String.fromCharCode.apply(null, new Uint8Array(reader.result));
+                  // logStringAsNums(ouchStr);
+                  if(ouchStr.charAt(0) == 'S'){                            //special batch msg -> no need to split
+                     var msg = ouchToLeepsMsg(ouchStr);                    //adding for synchronization for admin
+                     // console.log(msg);
+                     if(msg.batchType == 'B'){                             //only care about start messages
+                        groupManager.lastbatchTime = getTime();               //msg.timeStamp;
+                     }
+                     groupManager.recvFromMarket(msg);                     //send Batch message to Market Algorithm
                   }
-                  groupManager.recvFromMarket(msg);                     //send Batch message to Market Algorithm
-               }
-               else{
-                  // split the string in case messages are conjoined
-                  var ouchMsgArray = splitMessages(ouchStr);            // translate the message and pass it to the recieve function
-                  for(ouchMsg of ouchMsgArray){
-                     groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
+                  else{
+                     // split the string in case messages are conjoined
+                     var ouchMsgArray = splitMessages(ouchStr);            // translate the message and pass it to the recieve function
+                     for(ouchMsg of ouchMsgArray){
+                        groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
+                     }
                   }
-               }
-            });
-            reader.readAsArrayBuffer(event.data);
-         };
-
-         socket.onopen = function(event){
-            console.log("Group", groupArgs.groupNum, " Opened Websocket Connection to Frankfurt");
-         };
+               });
+               reader.readAsArrayBuffer(event.data);
+            };
+         }
       };
+
 
       if(groupManager.marketFlag === "DEBUG"){
          
@@ -138,8 +107,8 @@ Redwood.factory("GroupManager", function () {
       }
 
       // wrapper for the redwood send function
-      groupManager.rssend = function (key, value) {
-         sendFunction(key, value, "admin", 1, this.groupNumber);
+      groupManager.rssend = function (key, value, period) {
+         sendFunction(key, value, "admin", period, this.groupNumber);
       };
 
       groupManager.sendToDataHistory = function (msg, uid) {
@@ -237,7 +206,7 @@ Redwood.factory("GroupManager", function () {
          // console.log("Inbound Message", msg);                //debug incoming ITCH messages
          if(msg.msgType === "C_TRA" || msg.msgType === "BATCH"){     
             // if(msg.buyerID != 0 && msg.buyerID != null) console.log(msg);
-            if(msg.msgType === "BATCH")console.log(msg.batchType === 'B' ? "Start" : "End", printTime(msg.timeStamp));
+            // if(msg.msgType === "BATCH")console.log(msg.batchType === 'B' ? "Start" : "End", printTime(msg.timeStamp));
             this.sendToMarketAlgorithms(msg);
          }
          else {

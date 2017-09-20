@@ -9,7 +9,7 @@
                 <td class="status-display">Fundamental Value: {{dHistory.curFundPrice[1] | number : 2}}</td>
             </tr>
             <tr>
-                <td class="status-display">Period # </td>
+                <td class="status-display">Period # {{period}}</td>
                 <td class="status-display">Number of Makers: {{dHistory.totalMakers}} ({{dHistory.fastMakers}} fast)</td>
                 <td class="status-display">Spread: {{GetSpread()}}</td>
                 <td class="status-display">Current Buy Offer: {{dHistory.getCurrBuy() | number : 2}}</td>

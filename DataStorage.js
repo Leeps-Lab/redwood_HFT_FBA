@@ -3,7 +3,7 @@
 Redwood.factory("DataStorage", function () {
    var api = {};
 
-   api.createDataStorage = function (group, groupNum, speedCost, startingWealth, batchLength) {
+   api.createDataStorage = function (group, groupNum, speedCost, startingWealth, batchLength, period) {
       var dataStorage = {};
 
       dataStorage.startTime = 0;          // experiment start time
@@ -46,7 +46,7 @@ Redwood.factory("DataStorage", function () {
             this.playerSpreadValues[user] = maxSpread / 2;
          }
 
-         $("#ui").append("<button class='btn' id='export-btn-" + groupNum + "' type='button'>Export Group " + this.groupNum + " CSV</button>");
+         $("#ui").append("<button class='btn' id='export-btn-" + groupNum + "' type='button'>Export Group " + this.groupNum + " Period " + this.period + " CSV</button>");
          $("#export-btn-" + groupNum)
             .button()
             .click(function () {
@@ -430,7 +430,7 @@ Redwood.factory("DataStorage", function () {
          data[0].push("num_transactions", "eq_price", "buy_orders_before", "buy_orders_after", "sell_orders_before", "sell_orders_after", "porder", "dvalue", "cumvalue", "investor_buy_sell");
 
          // get file name by formatting start time as readable string
-         var filename = printTime(this.startTime) + '_fba_group_' + this.groupNum + '.csv';
+         var filename = printTime(this.startTime) + '_fba_group_' + this.groupNum + '_period_' + this.period + '.csv';
 
          // download data 2d array as csv
          // stolen from stackoverflow
@@ -448,9 +448,11 @@ Redwood.factory("DataStorage", function () {
          a.click();
          a.remove();
 
+         this.playerFinalProfits = {};
          // fill player final profits array with cumulative profit value from last line of data
-         for (let index = 0; index < this.group.length; index++) {
-            this.playerFinalProfits[this.group[index]] = data[data.length - 1][index * 5 + 5];
+         for (let index = 0; index < this.group.length; index++) {      
+            var player = this.group[index];
+            this.playerFinalProfits[player] = data[data.length - 1][index * 5 + 5];
          }
       };
 
