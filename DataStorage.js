@@ -14,6 +14,7 @@ Redwood.factory("DataStorage", function () {
       dataStorage.startingWealth = startingWealth;
       dataStorage.batchLength = batchLength;
       dataStorage.playerSpreadValues = {};// associative array of each player's current spread value
+      dataStorage.period = period;
 
       dataStorage.speedChanges = [];      // array of speed change events: [timestamp, speed, uid]
       dataStorage.stateChanges = [];      // array of state change events: [timestamp, state, uid]
