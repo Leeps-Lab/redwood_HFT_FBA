@@ -129,7 +129,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             //Create data history and graph objects
             $scope.dHistory = dataHistory.createDataHistory(data.startTime, data.startFP, rs.user_id, $scope.group, $scope.isDebug, data.speedCost, data.startingWealth, data.maxSpread, data.batchLength);
             $scope.dHistory.init();
-            $scope.tradingGraph = graphing.makeTradingGraph("graph3", "graph2", data.startTime, data.playerTimeOffsets[rs.user_id], data.batchLength, "graph4");
+            $scope.tradingGraph = graphing.makeTradingGraph("market_graph", "profit_graph", data.startTime, data.playerTimeOffsets[rs.user_id], data.batchLength, "timer_graph");
             $scope.tradingGraph.init(data.startFP, data.maxSpread, data.startingWealth);
 
             //load the audio objects
@@ -385,7 +385,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          };
 
 
-         $("#graph3")
+         $("#market_graph")
             .mousedown( function(event) {
                $scope.mousePressed = true;                                       //set the flag so in case we leave the svg element we know it was a press
                if ($scope.state != "state_maker") {

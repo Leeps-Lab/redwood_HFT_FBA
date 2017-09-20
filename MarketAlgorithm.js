@@ -17,7 +17,8 @@ Redwood.factory("MarketAlgorithm", function () {
       marketAlgorithm.oldFundamentalPrice = 0;
       marketAlgorithm.currentMsgId = 0;
       marketAlgorithm.currentBuyId = 0;         
-      marketAlgorithm.currentSellId = 0;        
+      marketAlgorithm.currentSellId = 0; 
+      marketAlgorithm.numTransactions = 0;       
 
       marketAlgorithm.isDebug = subjectArgs.isDebug;
       if (marketAlgorithm.isDebug) {
@@ -199,6 +200,11 @@ Redwood.factory("MarketAlgorithm", function () {
          if (msg.msgType == "BATCH") {
             msg.FPC = this.fundamentalPrice;          //save fpc for graphing purposes
             this.sendToDataHistory(msg);
+            if(msg.batchType == 'P'){                 //store num of transactions that occurred in the last batch
+               msg.numTransactions = this.numTransactions;
+               // this.numTransactions = 0;
+            }
+            this.groupManager.dataStore.storeMsg(msg); 
          }
 
          // Confirmation that a buy offer has been placed in market
@@ -265,6 +271,7 @@ Redwood.factory("MarketAlgorithm", function () {
                   this.sendToGroupManager(this.enterBuyOfferMsg());
                }
             }
+            this.numTransactions++;
             this.sendToDataHistory(msg,msg.subjectID);   
             this.groupManager.dataStore.storeMsg(msg);   
          }

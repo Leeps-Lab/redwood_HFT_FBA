@@ -267,7 +267,7 @@ Redwood.controller("AdminCtrl",
                      $scope.groupManagers[groupNum].initGroupManager(groupArgs);
                      
                      // $scope.groupManagers[groupNum].market = marketManager.createMarketManager(ra.sendCustom, groupNum, $scope.groupManagers[groupNum]);
-                     $scope.groupManagers[groupNum].dataStore = dataStorage.createDataStorage(group, groupNum, $scope.speedCost, $scope.startingWealth, $scope.period);
+                     $scope.groupManagers[groupNum].dataStore = dataStorage.createDataStorage(group, groupNum, $scope.speedCost, $scope.startingWealth, $scope.config.batchLength, $scope.period);
                      for (var subjectNum of group) {
 
                         // map subject number to group number
@@ -473,7 +473,6 @@ Redwood.controller("AdminCtrl",
          $("#send-fpc")
             .button()
             .click(function () {
-               // var msg = new Message("ITCH", "FPC", [getTime(), newFP, 0, newFP > oldFP]);
                var msg = new Message("ITCH", "FPC", [getTime(), parseFloat( $("#fpc-input").val() )]);
                msg.delay = false;
                for (var group in $scope.groupManagers) {
