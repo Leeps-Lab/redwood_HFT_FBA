@@ -306,7 +306,7 @@ Redwood.controller("AdminCtrl",
 
          ra.on("start_session", function () {
             ra.start_session();
-            window.setTimeout(sendPeriod, 5000 + $scope.experimentLength);    //generous 5secs to load everything before recursive calls to send next period
+            window.setTimeout(sendPeriod, $scope.experimentLength);    //generous 5secs to load everything before recursive calls to send next period
          });
 
          $scope.playerTimeOffsets = {};
@@ -318,7 +318,7 @@ Redwood.controller("AdminCtrl",
          });
 
          ra.recv("Subject_Ready", function (uid) {
-
+            console.log("rcv Subject_Ready");
             // get group number
             var groupNum = $scope.idToGroup[uid];
 

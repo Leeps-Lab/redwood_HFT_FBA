@@ -204,9 +204,7 @@ Redwood.factory("GroupManager", function () {
       // handles a message from the market
       groupManager.recvFromMarket = function (msg) {
          // console.log("Inbound Message", msg);                //debug incoming ITCH messages
-         if(msg.msgType === "C_TRA" || msg.msgType === "BATCH"){     
-            // if(msg.buyerID != 0 && msg.buyerID != null) console.log(msg);
-            // if(msg.msgType === "BATCH")console.log(msg.batchType === 'B' ? "Start" : "End", printTime(msg.timeStamp));
+         if((msg.msgType === "C_TRA" && msg.subjectID > 0) || msg.msgType === "BATCH"){      //dont send investor half of the c_tra to MA
             this.sendToMarketAlgorithms(msg);
          }
          else {

@@ -300,7 +300,7 @@ Redwood.factory("DataStorage", function () {
             if (row[numColumns] == null) row[numColumns] = "NA";                 //batch type
          }
 
-         // fill empty cells with the value above them
+         // fill empty cells with the value above themeq
          for (let row = 1; row < data.length; row++) {
             for (let col = 0; col < data[row].length; col++) {
                if (data[row][col] === null) data[row][col] = data[row - 1][col];

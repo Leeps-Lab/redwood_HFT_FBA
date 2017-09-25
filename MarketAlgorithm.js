@@ -273,7 +273,7 @@ Redwood.factory("MarketAlgorithm", function () {
             }
             this.numTransactions++;
             this.sendToDataHistory(msg,msg.subjectID);   
-            this.groupManager.dataStore.storeMsg(msg);   
+            // this.groupManager.dataStore.storeMsg(msg);   
          }
       };
 
