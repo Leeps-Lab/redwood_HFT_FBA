@@ -188,6 +188,10 @@ function SynchronizeArray(key_array) {
       }
    };
    this.allReady = function () {
-      return this.readyCount === this.targetReadyCount;
+	return this.readyCount === this.targetReadyCount;
    };
+   this.reset = function() {
+        this.readyFlags = {};
+	this.readyCount = 0;
+   }
 }

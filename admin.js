@@ -306,7 +306,7 @@ Redwood.controller("AdminCtrl",
 
          ra.on("start_session", function () {
             ra.start_session();
-            window.setTimeout(sendPeriod, $scope.experimentLength);    //generous 5secs to load everything before recursive calls to send next period
+            window.setTimeout(sendPeriod, $scope.experimentLength + 3000);    //generous 5secs to load everything before recursive calls to send next period
          });
 
          $scope.playerTimeOffsets = {};
@@ -318,7 +318,7 @@ Redwood.controller("AdminCtrl",
          });
 
          ra.recv("Subject_Ready", function (uid) {
-            console.log("rcv Subject_Ready");
+            console.log("rcv Subject_Ready", uid);
             // get group number
             var groupNum = $scope.idToGroup[uid];
 
@@ -327,7 +327,7 @@ Redwood.controller("AdminCtrl",
 
             // start experiment if all subjects are marked ready
             if ($scope.startSyncArrays[groupNum].allReady()) {
-
+		$scope.startSyncArrays[groupNum].reset();
                // calculate how long we have to wait so that start time coincides with a batch
                let delay = ($scope.groupManagers[groupNum].lastbatchTime - getTime()) / 1000000 + $scope.config.batchLength;
                console.log("Starting on next Batch in:",delay);
@@ -374,7 +374,6 @@ Redwood.controller("AdminCtrl",
                var jumpDelay = $scope.startTime + $scope.priceChanges[$scope.groupManagers[groupNum].priceIndex][0] - getTime();
                window.setTimeout($scope.groupManagers[groupNum].sendNextPriceChange, jumpDelay / 1000000);
             }
-            //window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, $scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0] - getTime());
             //$scope.groupManagers[groupNum].intervalPromise = $interval($scope.groupManagers[groupNum].update.bind($scope.groupManagers[groupNum]), CLOCK_FREQUENCY);
             if ($scope.investorArrivals.length > 1) {
                var investorDelayTime = ($scope.startTime + $scope.investorArrivals[$scope.groupManagers[groupNum].investorIndex][0]) - getTime();     //from cda
@@ -407,8 +406,8 @@ Redwood.controller("AdminCtrl",
                // ra.sendCustom("_next_period");
                window.setTimeout(function (){
                   ra.sendCustom("_next_period");      //3100 gives enough time for websockify to establish + batch msg to come
-               }, 3100);
-               window.setTimeout(sendPeriod, $scope.experimentLength + 3100); //dont want each period to be 3100 shorter
+               }, 5100);
+               window.setTimeout(sendPeriod, $scope.experimentLength + 5100); //dont want each period to be 3100 shorter
                }
          };
 
