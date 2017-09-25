@@ -30,6 +30,15 @@ function splitMessages(messageStr){
 }
 
 
+function generateSystemEventMsg(eventcode) {
+  var sysMsg = new Uint8Array(10);
+  sysMsg[0] = charToByte('S');
+  spliceInArray(intToByteArray(getTime()), sysMsg, 8, 1);
+  sysMsg[9] = charToByte(eventcode);
+  return sysMsg;
+}
+
+
 
 // converts from the in-house leeps message format to an OUCH 4.2 formatted message
 function leepsMsgToOuch(leepsMsg){

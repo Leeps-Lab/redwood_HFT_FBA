@@ -17,7 +17,8 @@ Redwood.factory("MarketAlgorithm", function () {
       marketAlgorithm.oldFundamentalPrice = 0;
       marketAlgorithm.currentMsgId = 0;
       marketAlgorithm.currentBuyId = 0;         
-      marketAlgorithm.currentSellId = 0;        
+      marketAlgorithm.currentSellId = 0; 
+      marketAlgorithm.numTransactions = 0;       
 
       marketAlgorithm.isDebug = subjectArgs.isDebug;
       if (marketAlgorithm.isDebug) {
@@ -129,7 +130,7 @@ Redwood.factory("MarketAlgorithm", function () {
                   snipeBuyMsg.msgId = this.currentMsgId;
                   this.currentBuyId = this.currentMsgId;
                   this.currentMsgId++;
-                  // this.buyEntered = true;
+                  this.buyEntered = true;
                   nMsg3.msgData[2].push(snipeBuyMsg);
                }
                else{                   //the new price is less than the old price -> generate snipe sell message
@@ -138,7 +139,7 @@ Redwood.factory("MarketAlgorithm", function () {
                   snipeSellMsg.msgId = this.currentMsgId;
                   this.currentSellId = this.currentMsgId;
                   this.currentMsgId++;
-                  // this.sellEntered = true;
+                  this.sellEntered = true;
                   nMsg3.msgData[2].push(snipeSellMsg);
                }
             }
@@ -199,12 +200,16 @@ Redwood.factory("MarketAlgorithm", function () {
          if (msg.msgType == "BATCH") {
             msg.FPC = this.fundamentalPrice;          //save fpc for graphing purposes
             this.sendToDataHistory(msg);
+            if(msg.batchType == 'P'){                 //store num of transactions that occurred in the last batch
+               msg.numTransactions = this.numTransactions;
+               // this.numTransactions = 0;
+            }
+            this.groupManager.dataStore.storeMsg(msg); 
          }
 
          // Confirmation that a buy offer has been placed in market
          if (msg.msgType == "C_EBUY") {
             if (msg.subjectID == this.myId) {   
-               this.buyEntered = true;
                this.sendToAllDataHistories(msg);               //changed 7/3/17
             }
          }
@@ -212,7 +217,6 @@ Redwood.factory("MarketAlgorithm", function () {
          // Confirmation that a sell offer has been placed in market
          if (msg.msgType == "C_ESELL") {
             if (msg.subjectID == this.myId) { 
-               this.sellEntered = true;
                this.sendToAllDataHistories(msg);               //changed 7/3/17
             }  
          }
@@ -222,8 +226,6 @@ Redwood.factory("MarketAlgorithm", function () {
             if (msg.msgId === this.currentBuyId) {
                if (msg.subjectID == this.myId) {   
                   msg.msgType = "C_RBUY";                                          //Identify for Dhistory
-                  this.currentBuyId = 0;
-                  this.buyEntered = false;
                   this.sendToAllDataHistories(msg);
                }
             }
@@ -232,8 +234,7 @@ Redwood.factory("MarketAlgorithm", function () {
             if (msg.msgId === this.currentSellId) {
                if (msg.subjectID == this.myId) { 
                   msg.msgType = "C_RSELL";
-                  this.currentSellId = 0;
-                  this.sellEntered = false;
+                  // this.sellEntered = false;
                   this.sendToAllDataHistories(msg);
                }
             }
@@ -242,7 +243,6 @@ Redwood.factory("MarketAlgorithm", function () {
          // Confirmation that a buy offer has been updated
          if (msg.msgType == "C_UBUY") {
             if (msg.subjectID == this.myId) {
-               this.buyEntered = true;
                this.sendToAllDataHistories(msg);           
             }
          }
@@ -250,7 +250,6 @@ Redwood.factory("MarketAlgorithm", function () {
          // Confirmation that a sell offer has been updated
          if (msg.msgType == "C_USELL") {
             if (msg.subjectID == this.myId) {
-               this.sellEntered = true;
                this.sendToAllDataHistories(msg);            
             }
          }
@@ -259,11 +258,9 @@ Redwood.factory("MarketAlgorithm", function () {
          if (msg.msgType == "C_TRA") {
             msg.FPC = this.fundamentalPrice;    //add FPC to message for graphing
             if (msg.buyerID === this.myId) {    
-               this.currentBuyId = 0;
                this.buyEntered = false;         //added 7/18/17 for fixing OUT user input
             }
             if (msg.sellerID === this.myId) {
-               this.currentSellId = 0;
                this.sellEntered = false;        //added 7/18/17 for fixing OUT user input
             }
             if (this.state == "state_maker") {     //replenish filled orders if maker
@@ -274,8 +271,9 @@ Redwood.factory("MarketAlgorithm", function () {
                   this.sendToGroupManager(this.enterBuyOfferMsg());
                }
             }
+            this.numTransactions++;
             this.sendToDataHistory(msg,msg.subjectID);   
-            this.groupManager.dataStore.storeMsg(msg);   
+            // this.groupManager.dataStore.storeMsg(msg);   
          }
       };
 
@@ -286,7 +284,7 @@ Redwood.factory("MarketAlgorithm", function () {
          nMsg.msgId = this.currentMsgId;
          this.currentBuyId = this.currentMsgId;
          this.currentMsgId++;
-         // this.buyEntered = true;
+         this.buyEntered = true;
          return nMsg;
       };
 
@@ -297,7 +295,7 @@ Redwood.factory("MarketAlgorithm", function () {
          nMsg.msgId = this.currentMsgId;
          this.currentSellId = this.currentMsgId;
          this.currentMsgId++;
-         // this.sellEntered = true;
+         this.sellEntered = true;
          return nMsg;
       };
 
@@ -309,7 +307,7 @@ Redwood.factory("MarketAlgorithm", function () {
          nMsg.prevMsgId = this.currentBuyId;
          this.currentBuyId = this.currentMsgId;
          this.currentMsgId++;
-         // this.buyEntered = true;
+         this.buyEntered = true;
          return nMsg;
       };
 
@@ -321,7 +319,7 @@ Redwood.factory("MarketAlgorithm", function () {
          nMsg.prevMsgId = this.currentSellId;
          this.currentSellId = this.currentMsgId;
          this.currentMsgId++;
-         // this.sellEntered = true;
+         this.sellEntered = true;
          return nMsg;
       };
 
@@ -330,7 +328,7 @@ Redwood.factory("MarketAlgorithm", function () {
          nMsg.delay = !this.using_speed;
          nMsg.senderId = this.myId;
          nMsg.msgId = this.currentBuyId;
-         // this.buyEntered = false;
+         this.buyEntered = false;
          return nMsg;
       }
 
@@ -339,7 +337,7 @@ Redwood.factory("MarketAlgorithm", function () {
          nMsg.delay = !this.using_speed;
          nMsg.senderId = this.myId;
          nMsg.msgId = this.currentSellId;
-         // this.sellEntered = false;
+         this.sellEntered = false;
          return nMsg;
       }
 

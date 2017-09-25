@@ -110,11 +110,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             $scope.maxSpread = data.maxSpread;
             $scope.sliderVal = $scope.maxSpread / 2;
             $scope.spread = $scope.maxSpread / 2;
-            $("#slider")
-               .slider({
-                  value: $scope.sliderVal,
-                  max: $scope.maxSpread
-               });
+            $scope.exchangeRate = data.exchangeRate;
+            $scope.period = data.period;
 
             // create associative array to go from uid to local group id for display purposes
             $scope.displayId = {};
@@ -132,7 +129,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             //Create data history and graph objects
             $scope.dHistory = dataHistory.createDataHistory(data.startTime, data.startFP, rs.user_id, $scope.group, $scope.isDebug, data.speedCost, data.startingWealth, data.maxSpread, data.batchLength);
             $scope.dHistory.init();
-            $scope.tradingGraph = graphing.makeTradingGraph("graph1", "graph2", data.startTime, data.playerTimeOffsets[rs.user_id], data.batchLength, "graph3", "graph4");
+            $scope.tradingGraph = graphing.makeTradingGraph("market_graph", "profit_graph", data.startTime, data.playerTimeOffsets[rs.user_id], data.batchLength, "timer_graph");
             $scope.tradingGraph.init(data.startFP, data.maxSpread, data.startingWealth);
 
             //load the audio objects
@@ -230,7 +227,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
 
          $scope.CalculateYPOS = function (offset) {
             //reflects my current spread choice over the center of svg element
-            return $scope.tradingGraph.newElementHeight - offset;
+            return $scope.tradingGraph.elementHeight - offset;
          };
 
 
@@ -260,8 +257,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                   switch(event){
                      case $scope.e.CLICK:                                                       //user clicked before the lines were fully drawn
                         $scope.startTime = window.performance.now();                            //reset start time for the new lines
-                        $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();           //replace moving lines with your new spread
-                        // $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();               //clear old spread region if it's been drawn
+                        $scope.tradingGraph.marketSVG.selectAll("#current").remove();           //replace moving lines with your new spread
+                        // $scope.tradingGraph.marketSVG.selectAll("#box").remove();               //clear old spread region if it's been drawn
                         $scope.tradingGraph.callDrawSpreadTick($scope.curOffsetY, $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);                       //new top line at new spread
                         $scope.tradingGraph.callDrawSpreadTick($scope.CalculateYPOS($scope.curOffsetY), $scope.using_speed, timestamp - $scope.startTime, false, "current", 0); //new bot line at new spread
                         // $scope.tradingGraph.DrawBox($scope.tradingGraph, $scope.oldOffsetY, $scope.jumpOffsetY, $scope.CalculateYPOS($scope.oldOffsetY), "box");                                 //display your spread region at your old spread
@@ -271,8 +268,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
 
                      case $scope.e.JUMP:
                         $scope.startTime = window.performance.now();                            //reset start time for the new lines
-                        $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();           //moving spread lines will be replaced
-                        // $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();               //clear old spread region for shifted one
+                        $scope.tradingGraph.marketSVG.selectAll("#current").remove();           //moving spread lines will be replaced
+                        // $scope.tradingGraph.marketSVG.selectAll("#box").remove();               //clear old spread region for shifted one
                         $scope.tradingGraph.callDrawSpreadTick($scope.curOffsetY, $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);                        //send new top line at new spread
                         $scope.tradingGraph.callDrawSpreadTick($scope.CalculateYPOS($scope.curOffsetY), $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);  //send new bot line at new spread
                         $scope.oldOffsetY = $scope.curOffsetY;                                  //must set this so upon leaving this case so it will be correct in default
@@ -285,11 +282,11 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                      default:                                                                   //no event, so continue drawing the lines
                         if($scope.using_speed){
                            if(timestamp - $scope.startTime < $scope.tradingGraph.fastDelay){    //current spread lines havent reached the end
-                              $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();     //delete line history so they appear moving
+                              $scope.tradingGraph.marketSVG.selectAll("#current").remove();     //delete line history so they appear moving
                               $scope.tradingGraph.callDrawSpreadTick($scope.curOffsetY, $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);                        //current top line
                               $scope.tradingGraph.callDrawSpreadTick($scope.CalculateYPOS($scope.curOffsetY), $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);  //current bot line
                               if($scope.lastEvent != $scope.e.FIRST_TIME){                      //don't want to display spread region until the first lines reach the center
-                                 // $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();      //clear redundant spread regions for performance
+                                 // $scope.tradingGraph.marketSVG.selectAll("#box").remove();      //clear redundant spread regions for performance
                                  // $scope.tradingGraph.DrawBox($scope.tradingGraph, $scope.oldOffsetY, $scope.jumpOffsetY, $scope.CalculateYPOS($scope.oldOffsetY), "box");          //display your current spread region with offset if any
                               }
                            }
@@ -301,11 +298,11 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                         }
                         else {                                                                  //no event, so continue drawing the lines
                            if(timestamp - $scope.startTime < $scope.tradingGraph.slowDelay){    //current spread lines havent reached the end
-                              $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();     //delete line history so they appear moving
+                              $scope.tradingGraph.marketSVG.selectAll("#current").remove();     //delete line history so they appear moving
                               $scope.tradingGraph.callDrawSpreadTick($scope.curOffsetY, $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);                        //current top line
                               $scope.tradingGraph.callDrawSpreadTick($scope.CalculateYPOS($scope.curOffsetY), $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);  //current bot line
                               if($scope.lastEvent != $scope.e.FIRST_TIME){                      //don't want to display spread region until the first lines reach the center
-                                 // $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();      //clear redundant spread regions for performance
+                                 // $scope.tradingGraph.marketSVG.selectAll("#box").remove();      //clear redundant spread regions for performance
                                  // $scope.tradingGraph.DrawBox($scope.tradingGraph, $scope.oldOffsetY, $scope.jumpOffsetY, $scope.CalculateYPOS($scope.oldOffsetY), "box");          //display your current spread region
                               } 
                            }
@@ -323,8 +320,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                   switch(event){
                      case $scope.e.CLICK:                                                       //user clicked after lines reached the center point
                         $scope.startTime = window.performance.now();                            //reset start time for the new spread lines
-                        $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();           //remove static lines current spread
-                        // $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();               //remove current spread region for performance and safety
+                        $scope.tradingGraph.marketSVG.selectAll("#current").remove();           //remove static lines current spread
+                        // $scope.tradingGraph.marketSVG.selectAll("#box").remove();               //remove current spread region for performance and safety
                         $scope.tradingGraph.callDrawSpreadTick($scope.curOffsetY, $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);                        //new top line at spread
                         $scope.tradingGraph.callDrawSpreadTick($scope.CalculateYPOS($scope.curOffsetY), $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);  //new bot line at spread
                         // $scope.tradingGraph.DrawBox($scope.tradingGraph, $scope.oldOffsetY, $scope.jumpOffsetY, $scope.CalculateYPOS($scope.oldOffsetY), "box");                                  //display your current spread region            
@@ -335,8 +332,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
 
                      case $scope.e.JUMP:
                         $scope.startTime = window.performance.now();                            //reset start time for the new lines
-                        $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();           //remove your current static lines
-                        // $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();               //remove your spread region
+                        $scope.tradingGraph.marketSVG.selectAll("#current").remove();           //remove your current static lines
+                        // $scope.tradingGraph.marketSVG.selectAll("#box").remove();               //remove your spread region
                         $scope.tradingGraph.callDrawSpreadTick($scope.curOffsetY, $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);                                 //new top line at current spread
                         $scope.tradingGraph.callDrawSpreadTick($scope.CalculateYPOS($scope.curOffsetY), $scope.using_speed, timestamp - $scope.startTime, false, "current", 0);           //new bot line at current spread
                         $scope.oldOffsetY = $scope.curOffsetY;                                  //must set this so upon leaving this case, it will work in default
@@ -348,8 +345,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                         break;
 
                      default:                                                                   //continue to draw static current spread until the next event
-                        $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();           //clear static 
-                        // $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();               //clear old spread region displays for performance
+                        $scope.tradingGraph.marketSVG.selectAll("#current").remove();           //clear static 
+                        // $scope.tradingGraph.marketSVG.selectAll("#box").remove();               //clear old spread region displays for performance
                         // $scope.tradingGraph.DrawBox($scope.tradingGraph, $scope.oldOffsetY, $scope.jumpOffsetY, $scope.CalculateYPOS($scope.oldOffsetY), "box");        //draw my current spread region
                         break;
                   }
@@ -360,13 +357,13 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                      case $scope.e.FIRST_TIME:
                         if(!$scope.using_speed){
                            window.setTimeout(function(){                                              //wait your delay before removing
-                              $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();           //clear any graph elements
-                              // $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();               //clear any graph elements
+                              $scope.tradingGraph.marketSVG.selectAll("#current").remove();           //clear any graph elements
+                              // $scope.tradingGraph.marketSVG.selectAll("#box").remove();               //clear any graph elements
                            }, 500);
                         }
                         else{
-                           $scope.tradingGraph.newMarketSVG.selectAll("#current").remove();           //clear any graph elements
-                           // $scope.tradingGraph.newMarketSVG.selectAll("#box").remove();               //clear any graph elements
+                           $scope.tradingGraph.marketSVG.selectAll("#current").remove();           //clear any graph elements
+                           // $scope.tradingGraph.marketSVG.selectAll("#box").remove();               //clear any graph elements
                         }
                         $scope.jumpOffsetY = 0;                                                 //reset variable
                         $scope.oldOffsetY = $scope.curOffsetY;                                  //reset variable
@@ -388,7 +385,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          };
 
 
-         $("#graph3")
+         $("#market_graph")
             .mousedown( function(event) {
                $scope.mousePressed = true;                                       //set the flag so in case we leave the svg element we know it was a press
                if ($scope.state != "state_maker") {
@@ -400,13 +397,13 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             .mouseleave( function(event) {
                if ($scope.mousePressed) {                                        //only set the spread if svg has been clicked on
                   $scope.mousePressed = false;                                   //reset the flag
-                  if (event.offsetY <= $scope.tradingGraph.newElementHeight / 2) {      //you left the svg right of the center tick
-                     $scope.spread = (5 - Math.abs(10 * event.offsetY / $scope.tradingGraph.newElementHeight)).toPrecision(2); //.1 increments
+                  if (event.offsetY <= $scope.tradingGraph.elementHeight / 2) {      //you left the svg right of the center tick
+                     $scope.spread = (5 - Math.abs(10 * event.offsetY / $scope.tradingGraph.elementHeight)).toPrecision(2); //.1 increments
                      if($scope.spread > 5) $scope.spread = 5;                                       //cap max spread to 5
                      if($scope.spread <= .1) $scope.spread = .1;
                   } 
                   else {                                                            //you clicked below of the center tick
-                     $scope.spread = (((10 * event.offsetY - $scope.tradingGraph.newElementHeight / 5) / $scope.tradingGraph.newElementHeight) - 4.8).toPrecision(2); //.1 increments
+                     $scope.spread = (((10 * event.offsetY - $scope.tradingGraph.elementHeight / 5) / $scope.tradingGraph.elementHeight) - 4.8).toPrecision(2); //.1 increments
                      if($scope.spread > 5) $scope.spread = 5;                                       //cap max spread to 5
                      if($scope.spread <= .1) $scope.spread = .1;
                   }
@@ -429,13 +426,13 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             })
             .mouseup( function(event) {
                $scope.mousePressed = false;                                      //reset the flag
-               if (event.offsetY <= $scope.tradingGraph.newElementHeight / 2) {      //you clicked right of the center tick
-                  $scope.spread = (5 - Math.abs(10 * event.offsetY / $scope.tradingGraph.newElementHeight)).toPrecision(2); //.1 increments
+               if (event.offsetY <= $scope.tradingGraph.elementHeight / 2) {      //you clicked right of the center tick
+                  $scope.spread = (5 - Math.abs(10 * event.offsetY / $scope.tradingGraph.elementHeight)).toPrecision(2); //.1 increments
                   if($scope.spread > 5) $scope.spread = 5;                                       //cap max spread to 5
                   if($scope.spread <= .1) $scope.spread = .1;
                } 
                else {                                                            //you clicked left of the center tick
-                  $scope.spread = (((10 * event.offsetY - $scope.tradingGraph.newElementHeight / 5) / $scope.tradingGraph.newElementHeight) - 4.8).toPrecision(2); //.1 increments
+                  $scope.spread = (((10 * event.offsetY - $scope.tradingGraph.elementHeight / 5) / $scope.tradingGraph.elementHeight) - 4.8).toPrecision(2); //.1 increments
                   if($scope.spread > 5) $scope.spread = 5;                                       //cap max spread to 5
                   if($scope.spread <= .1) $scope.spread = .1;   
                }
@@ -483,7 +480,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                $scope.setState("state_maker");
                $scope.tickState = $scope.s.NO_LINES;        //fake a click event
                $scope.event = $scope.e.CLICK;
-               $scope.curOffsetY = $scope.tradingGraph.newElementHeight / 4;
+               $scope.curOffsetY = $scope.tradingGraph.elementHeight / 4;
                $scope.spread = 2.5;
                $scope.oldOffsetY = null;
                var nMsg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, $scope.tradingGraph.getCurOffsetTime()]);
@@ -562,9 +559,13 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          });
 
          rs.recv("end_game", function (uid, msg) {
-            console.log(msg);
-            // rs.send("next_game");
+            console.log("ending game");
             rs.finish();
+         });
+
+         rs.recv("_next_period", function (uid, msg) {
+            // console.log("Starting Next Period");
+            rs.trigger("_next_period");
          });
 
          $scope.processInputAction = function (inputIndex) {
@@ -597,7 +598,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                   
                   $scope.tickState = $scope.s.NO_LINES;        //fake a click event
                   $scope.event = $scope.e.CLICK;
-                  $scope.curOffsetY = $scope.tradingGraph.newElementHeight / 4;
+                  $scope.curOffsetY = $scope.tradingGraph.elementHeight / 4;
                   $scope.spread = 2.5;
                   $scope.oldOffsetY = null;
                   var nMsg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, $scope.tradingGraph.getCurOffsetTime()]);

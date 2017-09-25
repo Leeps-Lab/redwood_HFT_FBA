@@ -46,6 +46,7 @@ function ItchMessage(msgType, subjectID, price, timeStamp, buyerID, sellerID){
    this.batchType;                           //'B' for Start, 'P' for End
    this.msgId;
    this.numShares = 0;
+   this.numTransactions = null;
 }
 
 // Message object. Used to communicate between group manager, subject manager, and market algorithm

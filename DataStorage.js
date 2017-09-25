@@ -3,7 +3,7 @@
 Redwood.factory("DataStorage", function () {
    var api = {};
 
-   api.createDataStorage = function (group, groupNum, speedCost, startingWealth, batchLength) {
+   api.createDataStorage = function (group, groupNum, speedCost, startingWealth, batchLength, period) {
       var dataStorage = {};
 
       dataStorage.startTime = 0;          // experiment start time
@@ -14,6 +14,7 @@ Redwood.factory("DataStorage", function () {
       dataStorage.startingWealth = startingWealth;
       dataStorage.batchLength = batchLength;
       dataStorage.playerSpreadValues = {};// associative array of each player's current spread value
+      dataStorage.period = period;
 
       dataStorage.speedChanges = [];      // array of speed change events: [timestamp, speed, uid]
       dataStorage.stateChanges = [];      // array of state change events: [timestamp, state, uid]
@@ -26,7 +27,7 @@ Redwood.factory("DataStorage", function () {
       dataStorage.sellOrderChanges = [];  // array of changes in the sell order book: [timestamp, [sell order book], [buy order book before]]
       dataStorage.equilibriumPrices = []; // array of equilibrium prices for each batch
       dataStorage.numTransactions = [];   // array of numbers of transactions for for each batch
-
+      dataStorage.batches = [];
       dataStorage.playerFinalProfits = {};
 
       dataStorage.init = function (startFP, startTime, maxSpread) {
@@ -46,7 +47,7 @@ Redwood.factory("DataStorage", function () {
             this.playerSpreadValues[user] = maxSpread / 2;
          }
 
-         $("#ui").append("<button class='btn' id='export-btn-" + groupNum + "' type='button'>Export Group " + this.groupNum + " CSV</button>");
+         $("#ui").append("<button class='btn' id='export-btn-" + groupNum + "' type='button'>Export Group " + this.groupNum + " Period " + this.period + " CSV</button>");
          $("#export-btn-" + groupNum)
             .button()
             .click(function () {
@@ -72,7 +73,7 @@ Redwood.factory("DataStorage", function () {
                this.storeSpreadChange(message.msgData[2], message.msgData[1], message.msgData[0]);
                break;
             case "BATCH" :
-               //this.storeBatch(message.msgData[0], message.msgData[1], message.msgData[2], message.msgData[3], message.msgData[4]);
+               this.storeBatch(message.batchType, message.timeStamp, message.FPC, message.numTransactions);
                break;
             case "C_TRA" :
                // this.storeTransaction(message.timeStamp, message.msgData[1], message.msgData[2], message.msgData[3], message.msgData[4]);
@@ -92,11 +93,11 @@ Redwood.factory("DataStorage", function () {
          if (seller != 0) {
             this.profitChanges.push([timestamp - this.startTime, price - fundPrice, seller]);
          }
-         this.equilibriumPrices.push([timestamp - this.startTime, price]);
+         this.storeEqPrice(timestamp, price);
       };
 
-      dataStorage.storeNumTransactions = function (batchNumber, transactions) {
-         this.numTransactions.push([batchNumber * this.batchLength * 1000000, transactions]);   //changed to *1000000 4/17/17
+      dataStorage.storeNumTransactions = function (timestamp, transactions) {
+         this.numTransactions.push([timestamp - this.startTime, transactions]);   //changed to *1000000 4/17/17
       };
 
       dataStorage.storeEqPrice = function (timestamp, price) {
@@ -135,17 +136,9 @@ Redwood.factory("DataStorage", function () {
          this.playerSpreadValues[uid] = spread;
       };
 
-      dataStorage.storeBatch = function (buyOrders, sellOrders, batchNumber, equilibriumPrice, fundPrice) {
-         for (let order of buyOrders) {
-            if (order.id != 0 && order.transacted) {
-               this.profitChanges.push([this.startTime + batchNumber * this.batchLength * 1000000, fundPrice - equilibriumPrice, order.id]);    
-            }
-         }
-         for (let order of sellOrders) {
-            if (order.id != 0 && order.transacted) {
-               this.profitChanges.push([this.startTime + batchNumber * this.batchLength * 1000000, equilibriumPrice - fundPrice, order.id]);    
-            }
-         }
+      dataStorage.storeBatch = function (batchType, timestamp, fpc, transactions) {
+         this.batches.push([timestamp - this.startTime, batchType, timestamp, fpc]);
+         this.storeNumTransactions(timestamp, transactions);
       };
 
       dataStorage.storeFPC = function (timestamp, price) {
@@ -163,7 +156,7 @@ Redwood.factory("DataStorage", function () {
             playerToIndex[this.group[index]] = index;
          }
 
-         var numColumns = this.group.length * 5 + 11;
+         var numColumns = this.group.length * 5 + 7;
 
          // iterate through every entry in each storage array
 
@@ -184,6 +177,20 @@ Redwood.factory("DataStorage", function () {
             row[0] = entry[0];
             row[playerToIndex[entry[2]] * 5 + 1] = entry[1];
 
+            data.push(row);
+         }
+
+         //add batch start and finish to data array
+         for (let entry of this.batches) {
+            let row = new Array(numColumns).fill(null);
+
+            row[0] = entry[0];         //timestamp
+            if(entry[1] === 'B'){      //batch start
+               row[numColumns] = "Batch_Start";
+            }
+            else{                      //batch end
+               row[numColumns] = "Batch_End";
+            }
             data.push(row);
          }
 
@@ -238,102 +245,12 @@ Redwood.factory("DataStorage", function () {
             data.push(row);
          }
 
-         // add buy order changes to data array
-         for (let entry of this.buyOrderChanges) {
-            let row = new Array(numColumns).fill(null);
-
-            row[0] = entry[0];
-
-            // add before market state to data
-            if (entry[2].length === 0) row[numColumns - 8] = "EMPTY";
-            else {
-               let ids = [];
-               let times = [];
-               let origTimes = [];
-               let prices = [];
-
-               for (let order of entry[2]) {
-                  ids.push(order.id == 0 ? "'INV'" : playerToIndex[order.id] + 1);
-                  times.push(order.timestamp - this.startTime);
-                  prices.push(order.price);
-                  origTimes.push(order.originTimestamp - this.startTime);
-               }
-
-               row[numColumns - 8] = "\"{'id': (" + ids.join(', ') + "), 'time': (" + times.join(', ') + "), 'price': (" + prices.join(', ') + "), 'time_orig': (" + origTimes.join(', ') + ")}\"";
-            }
-
-            // add after market state to data
-            if (entry[1].length === 0) row[numColumns - 7] = "EMPTY";
-            else {
-               let ids = [];
-               let times = [];
-               let origTimes = [];
-               let prices = [];
-
-               for (let order of entry[1]) {
-                  ids.push(order.id == 0 ? "'INV'" : playerToIndex[order.id] + 1);
-                  times.push(order.timestamp - this.startTime);
-                  prices.push(order.price);
-                  origTimes.push(order.originTimestamp - this.startTime);
-               }
-
-               row[numColumns - 7] = "\"{'id': (" + ids.join(', ') + "), 'time': (" + times.join(', ') + "), 'price': (" + prices.join(', ') + "), 'time_orig': (" + origTimes.join(', ') + ")}\"";
-            }
-
-            data.push(row);
-         }
-
-         // add sell order changes to data array
-         for (let entry of this.sellOrderChanges) {
-            let row = new Array(numColumns).fill(null);
-
-            row[0] = entry[0];
-
-            // add before market state to data
-            if (entry[2].length === 0) row[numColumns - 6] = "EMPTY";
-            else {
-               let ids = [];
-               let times = [];
-               let origTimes = [];
-               let prices = [];
-
-               for (let order of entry[2]) {
-                  ids.push(order.id == 0 ? "'INV'" : playerToIndex[order.id] + 1);
-                  times.push(order.timestamp - this.startTime);
-                  prices.push(order.price);
-                  origTimes.push(order.originTimestamp - this.startTime);
-               }
-
-               row[numColumns - 6] = "\"{'id': (" + ids.join(', ') + "), 'time': (" + times.join(', ') + "), 'price': (" + prices.join(', ') + "), 'time_orig': (" + origTimes.join(', ') + ")}\"";
-            }
-
-            // add after market state to data
-            if (entry[1].length === 0) row[numColumns - 5] = "EMPTY";
-            else {
-               let ids = [];
-               let times = [];
-               let origTimes = [];
-               let prices = [];
-
-               for (let order of entry[1]) {
-                  ids.push(order.id == 0 ? "'INV'" : playerToIndex[order.id] + 1);
-                  times.push(order.timestamp - this.startTime);
-                  prices.push(order.price);
-                  origTimes.push(order.originTimestamp - this.startTime);
-               }
-
-               row[numColumns - 5] = "\"{'id': (" + ids.join(', ') + "), 'time': (" + times.join(', ') + "), 'price': (" + prices.join(', ') + "), 'time_orig': (" + origTimes.join(', ') + ")}\"";
-            }
-
-            data.push(row);
-         }
-
          // add equilibrium price data
          for (let entry of this.equilibriumPrices) {
             let row = new Array(numColumns).fill(null);
 
             row[0] = entry[0];
-            row[numColumns - 9] = entry[1];
+            row[numColumns - 5] = entry[1];
 
             data.push(row);
          }
@@ -343,7 +260,7 @@ Redwood.factory("DataStorage", function () {
             let row = new Array(numColumns).fill(null);
 
             row[0] = entry[0];
-            row[numColumns - 10] = entry[1];
+            row[numColumns - 6] = entry[1];
 
             data.push(row);
          }
@@ -370,36 +287,20 @@ Redwood.factory("DataStorage", function () {
             }
          }
 
-         // fill empty market state rows appropriately
-         for (let row = 1; row < data.length; row++) {
-            // if buy before column is empty, assume all buy state columns are empty
-            // probably not the best way to do this
-            if (data[row][numColumns - 8] === null) {
-               // copy after state from previous row into both columns for this row
-               data[row][numColumns - 8] = data[row - 1][numColumns - 7];
-               data[row][numColumns - 7] = data[row - 1][numColumns - 7];
-            }
-
-            // do the same for sell orders
-            if (data[row][numColumns - 6] === null) {
-               data[row][numColumns - 6] = data[row - 1][numColumns - 5];
-               data[row][numColumns - 5] = data[row - 1][numColumns - 5];
-            }
-         }
-
          // set empty delta and investor columns to 0 and NA respectively
          for (let row of data) {
             for (let index = 0; index < this.group.length; index++) {
                if (row[index * 5 + 4] === null) row[index * 5 + 4] = 0;
             }
-            if (row[numColumns - 3] === null) row[numColumns - 3] = 0;
-            if (row[numColumns - 1] === null) row[numColumns - 1] = "NA";
-            if (row[numColumns - 4] === null) row[numColumns - 4] = "NA";
-            if (row[numColumns - 9] === null) row[numColumns - 9] = "NA";
-            if (row[numColumns - 10] === null) row[numColumns - 10] = "NA";
+            if (row[numColumns - 3] == null) row[numColumns - 3] = 0;           //dvalue
+            if (row[numColumns - 1] == null) row[numColumns - 1] = "NA";        //investors
+            if (row[numColumns - 4] == null) row[numColumns - 4] = "NA";        //porder
+            if (row[numColumns - 5] == null) row[numColumns - 5] = "NA";        //eq price
+            if (row[numColumns - 6] == null) row[numColumns - 6] = "NA";        //num transactiosn
+            if (row[numColumns] == null) row[numColumns] = "NA";                 //batch type
          }
 
-         // fill empty cells with the value above them
+         // fill empty cells with the value above themeq
          for (let row = 1; row < data.length; row++) {
             for (let col = 0; col < data[row].length; col++) {
                if (data[row][col] === null) data[row][col] = data[row - 1][col];
@@ -427,10 +328,10 @@ Redwood.factory("DataStorage", function () {
          for (let index = 0; index < this.group.length; index++) {
             data[0].push("status_p" + (index + 1), "spread_p" + (index + 1), "speed_p" + (index + 1), "dprofit_p" + (index + 1), "cumprofit_p" + (index + 1));
          }
-         data[0].push("num_transactions", "eq_price", "buy_orders_before", "buy_orders_after", "sell_orders_before", "sell_orders_after", "porder", "dvalue", "cumvalue", "investor_buy_sell");
+         data[0].push("num_transactions", "price", "porder", "dvalue", "fund_value", "investor_buy_sell", "batch_type");
 
          // get file name by formatting start time as readable string
-         var filename = printTime(this.startTime) + '_fba_group_' + this.groupNum + '.csv';
+         var filename = printTime(this.startTime) + '_fba_group_' + this.groupNum + '_period_' + this.period + '.csv';
 
          // download data 2d array as csv
          // stolen from stackoverflow
@@ -448,9 +349,11 @@ Redwood.factory("DataStorage", function () {
          a.click();
          a.remove();
 
+         this.playerFinalProfits = {};
          // fill player final profits array with cumulative profit value from last line of data
-         for (let index = 0; index < this.group.length; index++) {
-            this.playerFinalProfits[this.group[index]] = data[data.length - 1][index * 5 + 5];
+         for (let index = 0; index < this.group.length; index++) {      
+            var player = this.group[index];
+            this.playerFinalProfits[player] = data[data.length - 1][index * 5 + 5];
          }
       };
 

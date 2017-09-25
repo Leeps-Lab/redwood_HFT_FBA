@@ -9,7 +9,7 @@
                 <td class="status-display">Fundamental Value: {{dHistory.curFundPrice[1] | number : 2}}</td>
             </tr>
             <tr>
-                <td class="status-display">Period # </td>
+                <td class="status-display">Period # {{period}}</td>
                 <td class="status-display">Number of Makers: {{dHistory.totalMakers}} ({{dHistory.fastMakers}} fast)</td>
                 <td class="status-display">Spread: {{GetSpread()}}</td>
                 <td class="status-display">Current Buy Offer: {{dHistory.getCurrBuy() | number : 2}}</td>
@@ -27,7 +27,7 @@
     <div class="row">
         <!-- graph the profit -->
         <div class="col-xs-8 profit-graph-container" style="padding: 5px">
-            <svg width="100%" height="100%" id="graph2">
+            <svg width="100%" height="100%" id="profit_graph">
                 <span class="zoom-in" id="profit-zoom-in" ng-class="{'zoom-disabled': tradingGraph.expandedGraph}">+</span>
                 <span class="zoom-out" id="profit-zoom-out" ng-class="{'zoom-disabled': tradingGraph.expandedGraph}">-</span>
             </svg>
@@ -35,7 +35,7 @@
 
         <!-- graph the experiment -->
         <div class="col-xs-6 user-graph-container" style="padding: 5px">
-            <svg width="100%" height="100%" id="graph3"></svg>
+            <svg width="100%" height="100%" id="market_graph"></svg>
         </div>
 
         <!-- user buttons -->
@@ -67,18 +67,10 @@
                 </div>
             </div> 
             <div class="batch-line-container">
-                <svg width="100%" height="100%" id="graph4"></svg>
+                <svg width="100%" height="100%" id="timer_graph"></svg>
             </div>
             <div id="timer"></div>
         </div>
-    </div>
-
-    <!--legacy graph-->
-    <!-- <div class="profit-graph-container">
-        <svg width="100%" height="100%" id="graph1">
-            <span class="zoom-in" id="market-zoom-in" ng-class="{'zoom-disabled': tradingGraph.expandedGraph}">+</span>
-            <span class="zoom-out" id="market-zoom-out" ng-class="{'zoom-disabled': tradingGraph.expandedGraph}">-</span>
-        </svg>
     </div>
  --></div>
 
