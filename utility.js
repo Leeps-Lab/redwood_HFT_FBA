@@ -192,6 +192,6 @@ function SynchronizeArray(key_array) {
    };
    this.reset = function() {
         this.readyFlags = {};
-	this.readyCount = 0;
+	     this.readyCount = 0;
    }
 }
