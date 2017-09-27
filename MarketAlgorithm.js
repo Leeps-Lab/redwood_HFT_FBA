@@ -202,7 +202,7 @@ Redwood.factory("MarketAlgorithm", function () {
             this.sendToDataHistory(msg);
             if(msg.batchType == 'P'){                 //store num of transactions that occurred in the last batch
                msg.numTransactions = this.numTransactions;
-               // this.numTransactions = 0;
+               this.numTransactions = 0;
             }
             this.groupManager.dataStore.storeMsg(msg); 
          }
