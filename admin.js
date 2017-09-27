@@ -327,7 +327,7 @@ Redwood.controller("AdminCtrl",
 
             // start experiment if all subjects are marked ready
             if ($scope.startSyncArrays[groupNum].allReady()) {
-		$scope.startSyncArrays[groupNum].reset();
+		          $scope.startSyncArrays[groupNum].reset();
                // calculate how long we have to wait so that start time coincides with a batch
                let delay = ($scope.groupManagers[groupNum].lastbatchTime - getTime()) / 1000000 + $scope.config.batchLength;
                console.log("Starting on next Batch in:",delay);

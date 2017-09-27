@@ -231,7 +231,7 @@ Redwood.factory("DataStorage", function () {
             let row = new Array(numColumns).fill(null);
 
             row[0] = entry[0];
-            row[numColumns - 3] = entry[1];
+            // row[numColumns - 3] = entry[1];
             row[numColumns - 2] = entry[2];
 
             data.push(row);
@@ -306,6 +306,14 @@ Redwood.factory("DataStorage", function () {
          for (let row = 1; row < data.length; row++) {
             for (let col = 0; col < data[row].length; col++) {
                if (data[row][col] === null) data[row][col] = data[row - 1][col];
+            }
+         }
+
+         //calculate dvalue based on fund_value
+         for (let row = 1; row < data.length; row++) {
+            dval = data[row][numColumns - 2] - data[row-1][numColumns -2];
+            if (dval != 0){ //change in fund
+               data[row][numColumns - 3] = dval;
             }
          }
 
