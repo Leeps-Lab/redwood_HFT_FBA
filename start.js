@@ -388,11 +388,11 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          $("#market_graph")
             .mousedown( function(event) {
                $scope.mousePressed = true;                                       //set the flag so in case we leave the svg element we know it was a press
-               if ($scope.state != "state_maker") {
-                     var msg = new Message("USER", "UMAKER", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
-                     $scope.sendToGroupManager(msg);
-                     $scope.setState("state_maker");
-               }  
+               // if ($scope.state != "state_maker") {
+               //       var msg = new Message("USER", "UMAKER", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
+               //       $scope.sendToGroupManager(msg);
+               //       $scope.setState("state_maker");
+               // }  
             })
             .mouseleave( function(event) {
                if ($scope.mousePressed) {                                        //only set the spread if svg has been clicked on
@@ -452,10 +452,6 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
 
                $scope.LaserSound.play(); 
             });   
-
-         
-
-
 
 
          // button for setting state to sniper

@@ -43,8 +43,18 @@ Redwood.factory("MarketAlgorithm", function () {
 
       // sends out buy and sell offer for entering market
       marketAlgorithm.enterMarket = function () {
-         this.sendToGroupManager(this.enterBuyOfferMsg());
-         this.sendToGroupManager(this.enterSellOfferMsg());
+         if (this.buyEntered) {
+               this.sendToGroupManager(this.updateBuyOfferMsg());
+         }
+         else{
+            this.sendToGroupManager(this.enterBuyOfferMsg());
+         }
+         if (this.sellEntered) {
+            this.sendToGroupManager(this.updateSellOfferMsg());
+         }
+         else{
+            this.sendToGroupManager(this.enterSellOfferMsg());
+         }
       };
 
       // sends out remove buy and sell messages for exiting market
@@ -186,14 +196,8 @@ Redwood.factory("MarketAlgorithm", function () {
          //User updated their spread
          if (msg.msgType === "UUSPR") {
             this.spread = msg.msgData[1];
-
-            //See if there are existing orders that need to be updated
-            if (this.buyEntered) {
-               this.sendToGroupManager(this.updateBuyOfferMsg());
-            }
-            if (this.sellEntered) {
-               this.sendToGroupManager(this.updateSellOfferMsg());
-            }
+            this.state = "state_maker";
+         
          }
          
          // the market sent the outcome of a batch
