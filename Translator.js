@@ -30,10 +30,10 @@ function splitMessages(messageStr){
 }
 
 
-function generateSystemEventMsg(eventcode) {
+function generateSystemEventMsg(eventcode, timestamp) {
   var sysMsg = new Uint8Array(10);
   sysMsg[0] = charToByte('S');
-  spliceInArray(intToByteArray(getTime()), sysMsg, 8, 1);
+  spliceInArray(intToByteArray(timestamp), sysMsg, 8, 1);
   sysMsg[9] = charToByte(eventcode);
   return sysMsg;
 }

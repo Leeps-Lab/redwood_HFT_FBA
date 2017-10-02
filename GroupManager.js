@@ -58,7 +58,7 @@ Redwood.factory("GroupManager", function () {
 
             groupManager.socket.onopen = function(event) {
                console.log(printTime(getTime()), "Group", groupArgs.groupNum, "Connected to", groupArgs.URI);
-               this.send(generateSystemEventMsg('S'));
+               // this.send(generateSystemEventMsg('S'));
             };
 
 
@@ -113,12 +113,12 @@ Redwood.factory("GroupManager", function () {
 
       groupManager.sendToDataHistory = function (msg, uid) {
          this.dataStore.storeMsg(msg);
-         this.rssend("To_Data_History_" + uid, msg);
+         this.rssend("To_Data_History_" + uid, msg, this.period);
       };
 
       groupManager.sendToAllDataHistories = function (msg) {
          this.dataStore.storeMsg(msg);
-         this.rssend("To_All_Data_Histories", msg);
+         this.rssend("To_All_Data_Histories", msg, this.period);
       };
 
       // sends a message to all of the market algorithms in this group
@@ -235,18 +235,16 @@ Redwood.factory("GroupManager", function () {
 
       // handles message from subject and passes it on to market algorithm
       groupManager.recvFromSubject = function (msg) {
-         if (this.isDebug) {
-            this.logger.logRecv(msg, "Subjects");
-         }
-
          // if this is a user message, handle it and don't send it to market
          if (msg.protocol === "USER") {
             var subjectID = msg.msgData[0];
-            this.marketAlgorithms[subjectID].recvFromGroupManager(msg);
-            
+
             this.sendToAllDataHistories(msg);            //updates the UI, doesn't work when directly sent from start.js
 
-            this.dataStore.storeMsg(msg);
+            this.marketAlgorithms[subjectID].recvFromGroupManager(msg);
+            
+
+            // this.dataStore.storeMsg(msg);
             if (msg.msgType == "UMAKER") this.dataStore.storeSpreadChange(msg.msgData[1], this.marketAlgorithms[subjectID].spread, msg.msgData[0]);
          }
       };
