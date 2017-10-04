@@ -32,7 +32,7 @@ Redwood.factory("GroupManager", function () {
          groupManager.isDebug = groupArgs.isDebug;     //indicates if message logger should be used
          groupManager.outboundMarketLog = "";          // string of debug info for messages outbound to market
          groupManager.inboundMarketLog = "";           // string of debug info for messages inbound from market
-
+	 groupManager.suppressMessages = false;
          groupManager.currentFundPrice = 0;
          groupManager.connection = false;
          groupManager.establishConnection();
@@ -112,13 +112,17 @@ Redwood.factory("GroupManager", function () {
       };
 
       groupManager.sendToDataHistory = function (msg, uid) {
-         this.dataStore.storeMsg(msg);
-         this.rssend("To_Data_History_" + uid, msg, this.period);
+	 if(!this.suppressMessages){
+            this.dataStore.storeMsg(msg);
+            this.rssend("To_Data_History_" + uid, msg, this.period);
+	 }
       };
 
       groupManager.sendToAllDataHistories = function (msg) {
-         this.dataStore.storeMsg(msg);
-         this.rssend("To_All_Data_Histories", msg, this.period);
+	 if(!this.suppressMessages){
+            this.dataStore.storeMsg(msg);
+            this.rssend("To_All_Data_Histories", msg, this.period);
+	 }
       };
 
       // sends a message to all of the market algorithms in this group
