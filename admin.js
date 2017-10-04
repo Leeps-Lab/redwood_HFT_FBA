@@ -265,7 +265,7 @@ Redwood.controller("AdminCtrl",
                         $scope.groupManagers[groupNum] = groupManager.createGroupManager(groupArgs, ra.sendCustom);
                      }
                      $scope.groupManagers[groupNum].initGroupManager(groupArgs);
-                     
+		     console.log($scope.investorArrivals);                     
                      // $scope.groupManagers[groupNum].market = marketManager.createMarketManager(ra.sendCustom, groupNum, $scope.groupManagers[groupNum]);
                      $scope.groupManagers[groupNum].dataStore = dataStorage.createDataStorage(group, groupNum, $scope.speedCost, $scope.startingWealth, $scope.config.batchLength, $scope.period);
                      for (var subjectNum of group) {
@@ -330,7 +330,7 @@ Redwood.controller("AdminCtrl",
 		          $scope.startSyncArrays[groupNum].reset();
                // calculate how long we have to wait so that start time coincides with a batch
                let delay = ($scope.groupManagers[groupNum].lastbatchTime - getTime()) / 1000000 + $scope.config.batchLength;
-               console.log("Starting on next Batch in:",delay);
+               console.log("Starting group " + groupNum + " on next Batch in: " +delay);
                window.setTimeout(startExperiment, delay, groupNum);
             }
          });
@@ -383,6 +383,7 @@ Redwood.controller("AdminCtrl",
             }
 
             $scope.groupManagers[groupNum].socket.send(generateSystemEventMsg('S',$scope.startTime));   //reset exchange + sync time
+	    //console.log(printTime($scope.startTime));
          };
 
 
@@ -392,6 +393,7 @@ Redwood.controller("AdminCtrl",
             for (var groupNum = 1; groupNum <= $scope.groups.length; groupNum++){         //download data and leave market
                var group = $scope.getGroup(groupNum);
                for (var user of group) {
+		  $scope.groupManagers[groupNum].suppressMessages = true;
                   if($scope.groupManagers[groupNum].marketAlgorithms[user] != null){
                      $scope.groupManagers[groupNum].marketAlgorithms[user].exitMarket();           //ensure each user is reset for next period
                   }
@@ -410,8 +412,8 @@ Redwood.controller("AdminCtrl",
                // ra.sendCustom("_next_period");
                window.setTimeout(function (){
                   ra.sendCustom("_next_period");      //3100 gives enough time for websockify to establish + batch msg to come
-               }, 5100);
-               window.setTimeout(sendPeriod, $scope.experimentLength + 5100); //dont want each period to be 3100 shorter
+               }, 3100);
+               window.setTimeout(sendPeriod, $scope.experimentLength + 3100); //dont want each period to be 3100 shorter
                }
          };
 
