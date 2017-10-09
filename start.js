@@ -394,7 +394,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                }
                //only allow mousePressed to register after 
                $scope.mousePressed = true;                                       //set the flag so in case we leave the svg element we know it was a press
-               
+               $scope.isAnimating = true;
                setTimeout(function() {
                     $scope.isAnimating = false;
                 }, $scope.spamDelay);

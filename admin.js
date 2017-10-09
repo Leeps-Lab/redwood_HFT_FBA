@@ -460,10 +460,10 @@ Redwood.controller("AdminCtrl",
                   a.sort(function (a,b) {
                      return a.msgId - b.msgId;
                   });
-                  console.log(groupNum, a);          //print whole array
+                  //console.log(groupNum, a);          //print whole array
                   for (var index = 0; index < $scope.groupManagers[groupNum].debugArray.length - 1; index+=2){  
                      if(a[index + 1].msgId == a[index].msgId){
-                        $scope.deltas.push({msgId: a[index].msgId, delta: printTime(Math.abs(a[index + 1].timeStamp - a[index].timeStamp)), msgType: a[index].msgType + "," + a[index + 1].msgType});
+                        $scope.deltas.push({msgId: a[index].msgId, delta: printTime(Math.abs(a[index + 1].timeStamp - a[index].timeStamp)), msgType: a[index].msgType + "," + a[index + 1].msgType, groupNum: groupNum});
                      }          
                   }
                }
