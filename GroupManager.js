@@ -24,6 +24,7 @@ Redwood.factory("GroupManager", function () {
          groupManager.memberIDs = groupArgs.memberIDs; // array that contains id number for each subject in this group
          groupManager.syncFpArray = [];                // buffer that holds onto messages until received msg from all subjects
          groupManager.delay = 500;                     // # of milliseconds that will be delayed by latency simulation
+         groupManager.fastDelay = 100;
 
          groupManager.syncFPArray = new SynchronizeArray(groupManager.memberIDs);
          groupManager.FPMsgList = [];
@@ -51,7 +52,7 @@ Redwood.factory("GroupManager", function () {
 
             if(groupArgs.URI == null){
                console.log("remember to add the correct URI to your config file...");
-               groupArgs.URI = "54.149.235.92";    //for testing purposes, default is oregon
+               groupArgs.URI = "54.219.182.118";    //for testing purposes, default is california
             }
             // open websocket with market
             groupManager.marketURI = "ws://" + groupArgs.URI + ":800" + groupArgs.groupNum + "/";
@@ -180,29 +181,11 @@ Redwood.factory("GroupManager", function () {
       // Function for sending messages, will route msg to remote or local market based on this.marketFLag
       groupManager.sendToMarket = function (leepsMsg) {
          //console.log("Outbound Message", leepsMsg);                //debug OUCH messages
-
-         //If no delay send msg now, otherwise send after delay
          if (leepsMsg.delay) {
-            if(this.marketFlag === "LOCAL"){
-               window.setTimeout(this.sendToLocalMarket.bind(this), this.delay, leepsMsg);
-            }
-            else if(this.marketFlag === "REMOTE"){
                window.setTimeout(this.sendToRemoteMarket.bind(this), this.delay, leepsMsg);
-            }
-            else if(this.marketFlag === "DEBUG"){
-               window.setTimeout(this.sendToDebugMarket.bind(this), this.delay, leepsMsg);
-            }
          }
          else {
-            if(this.marketFlag === "LOCAL"){
-               this.sendToLocalMarket(leepsMsg);
-            }
-            else if(this.marketFlag === "REMOTE"){
-               this.sendToRemoteMarket(leepsMsg);
-            }
-            else if(this.marketFlag === "DEBUG"){
-               this.sendToDebugMarket(leepsMsg);
-            }
+               window.setTimeout(this.sendToRemoteMarket.bind(this), this.fastDelay, leepsMsg); //fast have 100ms delay
          }
       };
 
