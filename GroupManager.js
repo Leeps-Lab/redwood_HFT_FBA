@@ -28,6 +28,7 @@ Redwood.factory("GroupManager", function () {
          groupManager.syncFPArray = new SynchronizeArray(groupManager.memberIDs);
          groupManager.FPMsgList = [];
          groupManager.curMsgId = 1 + 500 * groupArgs.period;
+         groupManager.debugArray = []
 
          groupManager.isDebug = groupArgs.isDebug;     //indicates if message logger should be used
          groupManager.outboundMarketLog = "";          // string of debug info for messages outbound to market
@@ -214,11 +215,11 @@ Redwood.factory("GroupManager", function () {
          else {
             if(msg.subjectID > 0) {                                 //Only send user messages to market algorithm
                this.marketAlgorithms[msg.subjectID].recvFromGroupManager(msg);
-            }
+               this.debugArray.push({msgId: msg.msgId, timeString: printTime(msg.timeStamp), msgType: msg.msgType, timeStamp: msg.timeStamp}); //push info to compare server msg to redwood   
+         }
             else {
                this.sendToAllDataHistories(msg);
             }
-            this.debugArray.push({msgId: msg.msgId, timeString: printTime(msg.timeStamp), msgType: msg.msgType, timeStamp: msg.timeStamp}); //push info to compare server msg to redwood
          }
       };
 
