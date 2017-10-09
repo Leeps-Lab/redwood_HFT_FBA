@@ -32,7 +32,7 @@ Redwood.factory("GroupManager", function () {
          groupManager.isDebug = groupArgs.isDebug;     //indicates if message logger should be used
          groupManager.outboundMarketLog = "";          // string of debug info for messages outbound to market
          groupManager.inboundMarketLog = "";           // string of debug info for messages inbound from market
-	 groupManager.suppressMessages = false;
+	      groupManager.suppressMessages = false;
          groupManager.currentFundPrice = 0;
          groupManager.connection = false;
          groupManager.establishConnection();
@@ -218,6 +218,7 @@ Redwood.factory("GroupManager", function () {
             else {
                this.sendToAllDataHistories(msg);
             }
+            this.debugArray.push({msgId: msg.msgId, timeString: printTime(msg.timeStamp), msgType: msg.msgType, timeStamp: msg.timeStamp}); //push info to compare server msg to redwood
          }
       };
 
@@ -229,6 +230,7 @@ Redwood.factory("GroupManager", function () {
       groupManager.sendToRemoteMarket = function(leepsMsg){ 
          var msg = leepsMsgToOuch(leepsMsg);                        //convert in house format to NASDAQ OUCH format
          //console.log(msg);                                        //debug for outgoing message
+         this.debugArray.push({msgId: leepsMsg.msgId, timeString: printTime(leepsMsg.timeStamp), msgType: leepsMsg.msgType, timeStamp: leepsMsg.timeStamp});   //push info to compare return msg from server
          this.socket.send(msg);
       }
 
