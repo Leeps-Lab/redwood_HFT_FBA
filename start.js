@@ -22,6 +22,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          $scope.jumpOffsetY = 0;
          $scope.LaserSound;
          $scope.statename = "Out";
+         $scope.spamDelay = 300;
+         $scope.isAnimating = false;
 
          $scope.s = {
             NO_LINES: 0,
@@ -387,12 +389,15 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
 
          $("#market_graph")
             .mousedown( function(event) {
+               if($scope.isAnimating){
+                  return;
+               }
+               //only allow mousePressed to register after 
                $scope.mousePressed = true;                                       //set the flag so in case we leave the svg element we know it was a press
-               // if ($scope.state != "state_maker") {
-               //       var msg = new Message("USER", "UMAKER", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
-               //       $scope.sendToGroupManager(msg);
-               //       $scope.setState("state_maker");
-               // }  
+               
+               setTimeout(function() {
+                    $scope.isAnimating = false;
+                }, $scope.spamDelay);
             })
             .mouseleave( function(event) {
                if ($scope.mousePressed) {                                        //only set the spread if svg has been clicked on
@@ -425,32 +430,34 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                }
             })
             .mouseup( function(event) {
-               $scope.mousePressed = false;                                      //reset the flag
-               if (event.offsetY <= $scope.tradingGraph.elementHeight / 2) {      //you clicked right of the center tick
-                  $scope.spread = (5 - Math.abs(10 * event.offsetY / $scope.tradingGraph.elementHeight)).toPrecision(2); //.1 increments
-                  if($scope.spread > 5) $scope.spread = 5;                                       //cap max spread to 5
-                  if($scope.spread <= .1) $scope.spread = .1;
-               } 
-               else {                                                            //you clicked left of the center tick
-                  $scope.spread = (((10 * event.offsetY - $scope.tradingGraph.elementHeight / 5) / $scope.tradingGraph.elementHeight) - 4.8).toPrecision(2); //.1 increments
-                  if($scope.spread > 5) $scope.spread = 5;                                       //cap max spread to 5
-                  if($scope.spread <= .1) $scope.spread = .1;   
+               if($scope.mousePressed){
+                  $scope.mousePressed = false;                                      //reset the flag
+                  if (event.offsetY <= $scope.tradingGraph.elementHeight / 2) {      //you clicked right of the center tick
+                     $scope.spread = (5 - Math.abs(10 * event.offsetY / $scope.tradingGraph.elementHeight)).toPrecision(2); //.1 increments
+                     if($scope.spread > 5) $scope.spread = 5;                                       //cap max spread to 5
+                     if($scope.spread <= .1) $scope.spread = .1;
+                  } 
+                  else {                                                            //you clicked left of the center tick
+                     $scope.spread = (((10 * event.offsetY - $scope.tradingGraph.elementHeight / 5) / $scope.tradingGraph.elementHeight) - 4.8).toPrecision(2); //.1 increments
+                     if($scope.spread > 5) $scope.spread = 5;                                       //cap max spread to 5
+                     if($scope.spread <= .1) $scope.spread = .1;   
+                  }
+                  var msg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, $scope.tradingGraph.getCurOffsetTime()]);
+                  $scope.sendToGroupManager(msg);
+
+                  if ($scope.state != "state_maker") {
+                     var msg2 = new Message("USER", "UMAKER", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
+                     $scope.sendToGroupManager(msg2);
+                     $scope.setState("state_maker");
+                  }
+
+                  $scope.tradingGraph.currSpreadTick = event.offsetY;               //sets the location to be graphed
+                  $scope.oldOffsetY = $scope.curOffsetY;                                   //update our last y position for receding lines
+                  $scope.curOffsetY = event.offsetY;                                //set event to be handled in FSM
+                  $scope.event = $scope.e.CLICK;
+
+                  $scope.LaserSound.play(); 
                }
-               var msg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, $scope.tradingGraph.getCurOffsetTime()]);
-               $scope.sendToGroupManager(msg);
-
-               if ($scope.state != "state_maker") {
-                  var msg2 = new Message("USER", "UMAKER", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
-                  $scope.sendToGroupManager(msg2);
-                  $scope.setState("state_maker");
-               }
-
-               $scope.tradingGraph.currSpreadTick = event.offsetY;               //sets the location to be graphed
-               $scope.oldOffsetY = $scope.curOffsetY;                                   //update our last y position for receding lines
-               $scope.curOffsetY = event.offsetY;                                //set event to be handled in FSM
-               $scope.event = $scope.e.CLICK;
-
-               $scope.LaserSound.play(); 
             });   
 
 
