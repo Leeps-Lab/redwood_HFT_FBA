@@ -402,6 +402,8 @@ Redwood.controller("AdminCtrl",
                $("#export-btn-" + groupNum).click().removeAttr("id");     //removes download link after the click
                getFinalProfits();
             }
+            $("#debug").click();
+            $scope.deltas = [];
 
             $scope.period++;
 
@@ -463,11 +465,29 @@ Redwood.controller("AdminCtrl",
                   //console.log(groupNum, a);          //print whole array
                   for (var index = 0; index < $scope.groupManagers[groupNum].debugArray.length - 1; index+=2){  
                      if(a[index + 1].msgId == a[index].msgId){
-                        $scope.deltas.push({msgId: a[index].msgId, delta: printTime(Math.abs(a[index + 1].timeStamp - a[index].timeStamp)), msgType: a[index].msgType + "," + a[index + 1].msgType, groupNum: groupNum});
+                        $scope.deltas.push({msgId: a[index].msgId, delta: printTime(Math.abs(a[index + 1].timeStamp - a[index].timeStamp)), msgType: a[index].msgType + "->" + a[index + 1].msgType, groupNum: groupNum});
                      }          
                   }
                }
                console.log($scope.deltas);
+               var filename = printTime($scope.startTime) + '_cda_deltas.csv';
+
+               var csvRows = [];
+               for (let index = 0; index < $scope.deltas.length; index++) {      //godbless stackoverflow
+                  csvRows[index] = $scope.deltas[index].msgId + "," + $scope.deltas[index].delta + "," + $scope.deltas[index].msgType + "," + $scope.deltas[index].groupNum;
+               }
+
+               csvRows.unshift(["msgId", "delta", "msgType", "groupNum"]);
+
+               var csvString = csvRows.join("\n");
+               var a = document.createElement('a');
+               a.href = 'data:attachment/csv,' + encodeURIComponent(csvString);
+               a.target = '_blank';
+               a.download = filename;
+
+               document.body.appendChild(a);
+               a.click();
+               a.remove();
             });
 
          $("#buy-investor")
