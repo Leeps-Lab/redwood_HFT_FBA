@@ -268,7 +268,7 @@ Redwood.controller("AdminCtrl",
                      $scope.groupManagers[groupNum].initGroupManager(groupArgs);
 		   //  console.log($scope.investorArrivals);                     
                      // $scope.groupManagers[groupNum].market = marketManager.createMarketManager(ra.sendCustom, groupNum, $scope.groupManagers[groupNum]);
-                     $scope.groupManagers[groupNum].dataStore = dataStorage.createDataStorage(group, groupNum, $scope.speedCost, $scope.startingWealth, $scope.config.batchLength, $scope.period);
+                     $scope.groupManagers[groupNum].dataStore = dataStorage.createDataStorage(group, groupNum, $scope.speedCost, $scope.startingWealth, $scope.config.batchLength, $scope.config.sessionNumber);
                      for (var subjectNum of group) {
 
                         // map subject number to group number
@@ -471,7 +471,7 @@ Redwood.controller("AdminCtrl",
                   }
                }
                console.log($scope.deltas);
-               var filename = printTime($scope.startTime) + '_fba_deltas.csv';
+               var filename = printTime($scope.startTime)+ '_period_'+ $scope.config.sessionNumber + '_fba_deltas.csv';
 
                var csvRows = [];
                for (let index = 0; index < $scope.deltas.length; index++) {      //godbless stackoverflow
@@ -547,7 +547,7 @@ Redwood.controller("AdminCtrl",
                $scope.profitData.unshift(["period, player", "final_profit", "after_exchange_rate_"]);    //adds to beginning of array
 
                // get file name by formatting end time as readable string
-               var filename = printTime($scope.startTime) + '_fba_final_profits.csv';
+               var filename = printTime($scope.startTime) +'_period_' + $scope.config.sessionNumber + '_fba_final_profits.csv';
 
                var csvRows = [];
                for (let index = 0; index < $scope.profitData.length; index++) {
