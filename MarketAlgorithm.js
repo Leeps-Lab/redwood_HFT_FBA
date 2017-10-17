@@ -211,7 +211,7 @@ Redwood.factory("MarketAlgorithm", function () {
                msg.numTransactions = null;
             }
             // this.groupManager.dataStore.storeMsg(msg);         //removed 10/16/17
-            this.sendToDataHistory(msg);
+            this.sendToAllDataHistories(msg); 
          }
 
          // Confirmation that a buy offer has been placed in market
@@ -279,8 +279,8 @@ Redwood.factory("MarketAlgorithm", function () {
                }
             }
             this.numTransactions++;
-            //this.sendToDataHistory(msg,msg.subjectID);   
-            this.sendToAllDataHistories(msg);   
+            this.sendToDataHistory(msg,msg.subjectID);   
+            // this.sendToAllDataHistories(msg);   
          }
       };
 
