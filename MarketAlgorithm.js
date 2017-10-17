@@ -203,12 +203,15 @@ Redwood.factory("MarketAlgorithm", function () {
          // the market sent the outcome of a batch
          if (msg.msgType == "BATCH") {
             msg.FPC = this.fundamentalPrice;          //save fpc for graphing purposes
-            this.sendToDataHistory(msg);
             if(msg.batchType == 'P'){                 //store num of transactions that occurred in the last batch
                msg.numTransactions = this.numTransactions;
                this.numTransactions = 0;
             }
-            this.groupManager.dataStore.storeMsg(msg); 
+            else{                                     //dont push for start messages
+               msg.numTransactions = null;
+            }
+            // this.groupManager.dataStore.storeMsg(msg);         //removed 10/16/17
+            this.sendToAllDataHistories(msg); 
          }
 
          // Confirmation that a buy offer has been placed in market
@@ -277,7 +280,7 @@ Redwood.factory("MarketAlgorithm", function () {
             }
             this.numTransactions++;
             this.sendToDataHistory(msg,msg.subjectID);   
-            // this.groupManager.dataStore.storeMsg(msg);   
+            // this.sendToAllDataHistories(msg);   
          }
       };
 

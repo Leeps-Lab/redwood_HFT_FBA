@@ -73,7 +73,7 @@ Redwood.factory("DataStorage", function () {
                this.storeSpreadChange(message.msgData[2], message.msgData[1], message.msgData[0]);
                break;
             case "BATCH" :
-               this.storeBatch(message.batchType, message.timeStamp, message.FPC, message.numTransactions);
+               this.storeBatch(message.batchType, message.timeStamp, message.numTransactions);
                break;
             case "C_TRA" :
                // this.storeTransaction(message.timeStamp, message.msgData[1], message.msgData[2], message.msgData[3], message.msgData[4]);
@@ -138,9 +138,11 @@ Redwood.factory("DataStorage", function () {
          this.playerSpreadValues[uid] = spread;
       };
 
-      dataStorage.storeBatch = function (batchType, timestamp, fpc, transactions) {
-         this.batches.push([timestamp - this.startTime, batchType, timestamp, fpc]);
-         this.storeNumTransactions(timestamp, transactions);
+      dataStorage.storeBatch = function (batchType, timestamp, transactions) {
+         this.batches.push([timestamp - this.startTime, batchType]);
+         if(transactions != null){
+            this.storeNumTransactions(timestamp, transactions);
+         }
       };
 
       dataStorage.storeFPC = function (timestamp, price) {
@@ -334,9 +336,9 @@ Redwood.factory("DataStorage", function () {
          }
 
          //make timestamps readable
-         for (let row = 1; row < data.length; row++) {
-            data[row][0] = printTime(data[row][0]);
-         }
+         // for (let row = 1; row < data.length; row++) {
+         //    data[row][0] = printTime(data[row][0]);
+         // }
 
          // set up headings for each column
          data.unshift(["timestamp"]);
