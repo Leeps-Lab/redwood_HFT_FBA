@@ -110,7 +110,8 @@ Redwood.controller("AdminCtrl",
                ra.on_set_config(function (config) { //Display the config file
                   $("table.config").empty();
                   var a = $.csv.toArrays(config);
-                  $scope.numPeriods = a.length - 1;
+                  // $scope.numPeriods = a.length - 1;   //CHANGED 10/17/18 TO BE ABLE TO START ON DIF PERIOD #S
+                  $scope.numPeriods = 1;
                   for (var i = 0; i < a.length; i++) {
                      var row = a[i];
                      var tr = $("<tr>");
@@ -307,7 +308,7 @@ Redwood.controller("AdminCtrl",
 
          ra.on("start_session", function () {
             ra.start_session();
-            window.setTimeout(sendPeriod, $scope.experimentLength + 3000);    //generous 5secs to load everything before recursive calls to send next period
+            // window.setTimeout(sendPeriod, $scope.experimentLength + 3000);    //generous 5secs to load everything before recursive calls to send next period
          });
 
          $scope.playerTimeOffsets = {};
@@ -331,7 +332,7 @@ Redwood.controller("AdminCtrl",
 		          $scope.startSyncArrays[groupNum].reset();
                // calculate how long we have to wait so that start time coincides with a batch
                let delay = ($scope.groupManagers[groupNum].lastbatchTime - getTime()) / 1000000 + $scope.config.batchLength;
-               console.log("Starting group " + groupNum + " on next Batch in: " +delay);
+               console.log("Starting group " + groupNum + " on next Batch in: " + delay);
                window.setTimeout(startExperiment, delay, groupNum);
             }
          });
@@ -384,6 +385,7 @@ Redwood.controller("AdminCtrl",
 
             $scope.groupManagers[groupNum].socket.send(generateSystemEventMsg('S',$scope.startTime));   //reset exchange + sync time
 	         //console.log(printTime($scope.startTime));
+            window.setTimeout(sendPeriod, $scope.experimentLength); 
          };
 
 
@@ -401,10 +403,10 @@ Redwood.controller("AdminCtrl",
                $("#export-btn-" + groupNum).click().removeAttr("id");     //removes download link after the click
                getFinalProfits();
             }
-            $("#debug").click();
-            $scope.deltas = [];
+            $("#debug").click();    //download deltas csv
+            $scope.deltas = [];     //reset delta array
 
-            $scope.period++;
+            $scope.period++;        //increment period
 
             if($scope.period > $scope.numPeriods){          //end game
                finishGame();
@@ -469,7 +471,7 @@ Redwood.controller("AdminCtrl",
                   }
                }
                console.log($scope.deltas);
-               var filename = printTime($scope.startTime) + '_cda_deltas.csv';
+               var filename = printTime($scope.startTime) + '_fba_deltas.csv';
 
                var csvRows = [];
                for (let index = 0; index < $scope.deltas.length; index++) {      //godbless stackoverflow
