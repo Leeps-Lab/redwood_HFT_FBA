@@ -334,9 +334,9 @@ Redwood.factory("DataStorage", function () {
          }
 
          //make timestamps readable
-         for (let row = 1; row < data.length; row++) {
-            data[row][0] = printTime(data[row][0]);
-         }
+         // for (let row = 1; row < data.length; row++) {
+         //    data[row][0] = printTime(data[row][0]);
+         // }
 
          // set up headings for each column
          data.unshift(["timestamp"]);
