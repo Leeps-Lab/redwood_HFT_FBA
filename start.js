@@ -141,42 +141,24 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             //$interval($scope.update, CLOCK_FREQUENCY);
             requestAnimationFrame($scope.update);
 
-            // if input data was provided, setup automatic input system
-            if (data.hasOwnProperty("input_addresses")) {
-               
-               // get unique index for this player
-               var index = $scope.group.findIndex(function (element) { return element == rs.user_id; });
-
-               // download input csv file
-               $http.get(data.input_addresses[index]).then(function (response) {
-                  var rows = response.data.split("\n");                    //split csv up line by line into an array of rows
-                  //Parse input CSV
-                  for (var i = 0; i < rows.length; i++) {                  //create a row in array for each line in csv
-                     $scope.inputData[i] = [];
-                  }
-                  for (let i = 0; i < rows.length; i++) {                  //for each row in array
-                     if (rows[i] === "") continue;                         //if reached end of csv line continue to next one
-                     var cells = rows[i].split(",");                       //if more data in csv row, add column to arrays row
-                     for (let j = 0; j < cells.length; j++) {              //for each column in csv row
-                        if(j == 1) {
-                           $scope.inputData[i][j] = String(cells[j]);;     //read as a string (MAKER,SNIPE,etc)
-                        }
-                        else{
-                           $scope.inputData[i][j] = parseFloat(cells[j]);  //read timestamps and spreads as ints
-                        }
-                     }
-                  }
-               }).then(function() {
-                  var delay = $scope.inputData[0][0] + ($scope.dHistory.startTime - $scope.tradingGraph.getCurOffsetTime())/1000000;
-                  console.log("delay: " + delay);
-                  window.setTimeout($scope.processInputAction, delay, 0);
-               });
+            if (data.input_arrays.length > 0) {
+               $scope.inputData = data.input_arrays[parseInt(rs.user_id)];           //save user's input array
+               var delay = $scope.inputData[0][0];             //time til first input action
+               var timeSinceStart = $scope.getTimeSinceStart();              //time (in ms) since the experiment began
+               window.setTimeout($scope.processInputAction, delay - timeSinceStart, 0);
             }
+
+            // if input data was provided, setup automatic input system
+            
          });
 
          rs.recv("From_Group_Manager", function (uid, msg) {
             handleMsgFromGM(msg);
          });
+
+         $scope.getTimeSinceStart = function () {
+            return (getTime() - $scope.adminStartTime) / 1000000;
+         };
 
          $scope.GetStateName = function (){
             if ($scope.state == "state_maker") return "Maker";
@@ -587,7 +569,12 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          });
 
          $scope.processInputAction = function (inputIndex) {
-            console.log($scope.inputData[inputIndex]);
+            if (inputIndex >= $scope.inputData.length - 1) return;
+            //delay
+            var delay = $scope.inputData[inputIndex + 1][0];      //time of the next input action
+            var timeSinceStart = $scope.getTimeSinceStart();              //time (in ms) since the experiment began
+            window.setTimeout($scope.processInputAction, delay - timeSinceStart, inputIndex + 1);
+
             switch ($scope.inputData[inputIndex][1]) {
                case "OUT":
                   var msg = new Message("USER", "UOUT", [rs.user_id, $scope.tradingGraph.getCurOffsetTime()]);
@@ -648,10 +635,5 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                default:
                   console.error("invalid input: " + $scope.inputData[inputIndex][1]);
             }
-
-            if (inputIndex >= $scope.inputData.length - 1) return;
-            var delay = parseInt($scope.inputData[inputIndex + 1][0]) + ($scope.dHistory.startTime - $scope.tradingGraph.getCurOffsetTime())/1000000; //from cda
-            console.log("delay: " + delay);
-            window.setTimeout($scope.processInputAction, delay, inputIndex + 1); //from cda
          }
       }]);
