@@ -18,7 +18,8 @@ Redwood.factory("MarketAlgorithm", function () {
       marketAlgorithm.currentMsgId = 0;
       marketAlgorithm.currentBuyId = 0;         
       marketAlgorithm.currentSellId = 0; 
-      marketAlgorithm.numTransactions = 0;       
+      marketAlgorithm.numTransactions = 0;   
+      marketAlgorithm.previousState = null;    
 
       marketAlgorithm.isDebug = subjectArgs.isDebug;
       if (marketAlgorithm.isDebug) {
@@ -92,6 +93,11 @@ Redwood.factory("MarketAlgorithm", function () {
                nMsg3 = new Message("SYNC_FP", "UOFFERS", [this.myId, this.using_speed, []]);
                nMsg3.timeStamp = msg.msgData[0]; // for debugging test output only
 
+               if(this.previousState == "state_snipe"){    
+                  this.previousState = null;    //clear for single use
+                  this.exitMarket();            //remove non IOC snipe messages
+               }
+
                //prevent maker from sniping themself
                if(positiveChange){                       //the price moved up -> update sell order before buy order
                   if (this.sellEntered) {
@@ -127,31 +133,55 @@ Redwood.factory("MarketAlgorithm", function () {
                nMsg3 = new Message("SYNC_FP", "SNIPE", [this.myId, this.using_speed, []]);
                nMsg3.timeStamp = msg.msgData[0]; // for debugging test output only
 
-               if(this.buyEntered) {    //remove stale snipe messages (no more IOC)
-                  this.sendToGroupManager(this.removeBuyOfferMsg());
+               // if(this.buyEntered) {    //remove stale snipe messages (no more IOC)
+               //    this.sendToGroupManager(this.removeBuyOfferMsg());
+               // }
+               // if(this.sellEntered){
+               //    this.sendToGroupManager(this.removeSellOfferMsg());
+               // }
+
+               if(positiveChange){                                            //value jumped upward
+                  if (this.buyEntered) {
+                     nMsg3.msgData[2].push(this.updateBuyOfferMsg());         //update stale SNIPE msg (if in book)
+                  }
+                  else{
+                      nMsg3.msgData[2].push(this.enterBuyOfferMsg());         //enter new SNIPE msg
+                  }
+                  if (this.sellEntered) {
+                     this.sendToGroupManager(this.removeSellOfferMsg());      //remove SNIPE sell msg (so you dont get sniped)
+                  }
                }
-               if(this.sellEntered){
-                  this.sendToGroupManager(this.removeSellOfferMsg());
+               else{                                                          //value jumped downward
+                  if (this.sellEntered) {
+                     nMsg3.msgData[2].push(this.updateSellOfferMsg());        //update stale SNIPE msg (if in book)
+                  }
+                  else{
+                      nMsg3.msgData[2].push(this.enterSellOfferMsg());        //enter new SNIPE msg
+                  }
+                  if (this.buyEntered) {                                      
+                     this.sendToGroupManager(this.removeBuyOfferMsg());       //remove SNIPE buy msg (so you dont get sniped)
+                     //aSDFASFASDF SHOOULD THIS BE SENT STRAIGHT TO SERVER OR PACKED IN THE FPC MESSAGE???
+                  }
                }
 
-               if(positiveChange){     //the new price is greater than the old price -> generate snipe buy message
-                  snipeBuyMsg = new OuchMessage("EBUY", this.myId, this.fundamentalPrice, true);
-                  snipeBuyMsg.delay = !this.using_speed;
-                  snipeBuyMsg.msgId = this.currentMsgId;
-                  this.currentBuyId = this.currentMsgId;
-                  this.currentMsgId++;
-                  this.buyEntered = true;
-                  nMsg3.msgData[2].push(snipeBuyMsg);
-               }
-               else{                   //the new price is less than the old price -> generate snipe sell message
-                  snipeSellMsg = new OuchMessage("ESELL", this.myId, this.fundamentalPrice, true);
-                  snipeSellMsg.delay = !this.using_speed;
-                  snipeSellMsg.msgId = this.currentMsgId;
-                  this.currentSellId = this.currentMsgId;
-                  this.currentMsgId++;
-                  this.sellEntered = true;
-                  nMsg3.msgData[2].push(snipeSellMsg);
-               }
+               // if(positiveChange){     //the new price is greater than the old price -> generate snipe buy message
+               //    snipeBuyMsg = new OuchMessage("EBUY", this.myId, this.fundamentalPrice, true);
+               //    snipeBuyMsg.delay = !this.using_speed;
+               //    snipeBuyMsg.msgId = this.currentMsgId;
+               //    this.currentBuyId = this.currentMsgId;
+               //    this.currentMsgId++;
+               //    this.buyEntered = true;
+               //    nMsg3.msgData[2].push(snipeBuyMsg);
+               // }
+               // else{                   //the new price is less than the old price -> generate snipe sell message
+               //    snipeSellMsg = new OuchMessage("ESELL", this.myId, this.fundamentalPrice, true);
+               //    snipeSellMsg.delay = !this.using_speed;
+               //    snipeSellMsg.msgId = this.currentMsgId;
+               //    this.currentSellId = this.currentMsgId;
+               //    this.currentMsgId++;
+               //    this.sellEntered = true;
+               //    nMsg3.msgData[2].push(snipeSellMsg);
+               // }
             }
             
             else {
@@ -172,7 +202,8 @@ Redwood.factory("MarketAlgorithm", function () {
          // user sent signal to change state to market maker. Need to enter market.
          if (msg.msgType === "UMAKER") {
             this.enterMarket();                 // enter market
-            this.state = "state_maker";         // set state
+            this.previousState = this.state;    //save previous state
+            this.state = "state_maker";         // set new state
          }
 
          // user sent signal to change state to sniper
@@ -180,12 +211,14 @@ Redwood.factory("MarketAlgorithm", function () {
             if (this.state === "state_maker") {   // if switching from being a maker, exit the market
                this.exitMarket();
             }
+            this.previousState = this.state;    //save previous state
             this.state = "state_snipe";         // update state
          }  
 
          // user sent signal to change state to "out of market"
          if (msg.msgType === "UOUT") {
             this.exitMarket();                  //remove any orders (snipe or maker)
+            this.previousState = this.state;    //save previous state
             this.state = "state_out";           // update state
          }
 
