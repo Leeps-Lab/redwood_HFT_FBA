@@ -22,8 +22,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          $scope.jumpOffsetY = 0;
          $scope.LaserSound;
          $scope.statename = "Out";
-         $scope.spamDelay = 300;
-         $scope.isAnimating = false;
+	 $scope.inputData;
+	 $scope.adminStartTime;
 
          $scope.s = {
             NO_LINES: 0,
@@ -140,7 +140,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
             $scope.lastTime = getTime();
             //$interval($scope.update, CLOCK_FREQUENCY);
             requestAnimationFrame($scope.update);
-
+            $scope.adminStartTime = data.startTime;
             if (data.input_arrays.length > 0) {
                $scope.inputData = data.input_arrays[parseInt(rs.user_id)];           //save user's input array
                var delay = $scope.inputData[0][0];             //time til first input action
@@ -386,15 +386,8 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
 
          $("#market_graph")
             .mousedown( function(event) {
-               if($scope.isAnimating){
-                  return;
-               }
                //only allow mousePressed to register after 
                $scope.mousePressed = true;                                       //set the flag so in case we leave the svg element we know it was a press
-               $scope.isAnimating = true;
-               setTimeout(function() {
-                    $scope.isAnimating = false;
-                }, $scope.spamDelay);
             })
             .mouseleave( function(event) {
                if ($scope.mousePressed) {                                        //only set the spread if svg has been clicked on
@@ -481,7 +474,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                $scope.curOffsetY = $scope.tradingGraph.elementHeight / 4;
                $scope.spread = $scope.maxSpread / 2;
                $scope.oldOffsetY = null;
-               var nMsg = new Message("USER", "UUSPR", [rs.user_id, getTime()]);
+               var nMsg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, getTime()]);
                $scope.sendToGroupManager(nMsg);
                var msg = new Message("USER", "UMAKER", [rs.user_id, getTime()]);
                $scope.sendToGroupManager(msg);
@@ -597,17 +590,20 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                   break;
 
                case "MAKER":
-                  var nMsg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, getTime()]);
-                  $scope.sendToGroupManager(msg);
-                  $scope.setState("state_maker");
-                  
+		  if($scope.state != "state_maker") {
+ 		  	$scope.setState("state_maker");
+		  }
+                  console.log($scope.state, rs.user_id); 
                   $scope.tickState = $scope.s.NO_LINES;        //fake a click event
                   $scope.event = $scope.e.CLICK;
                   $scope.curOffsetY = $scope.tradingGraph.elementHeight / 4;
-                  $scope.spread = 2.5;
+                  $scope.spread = $scope.maxSpread / 2;
                   $scope.oldOffsetY = null;
-                  var msg = new Message("USER", "UMAKER", [rs.user_id, getTime()]);
+                  var nMsg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, getTime()]);
                   $scope.sendToGroupManager(nMsg);
+ 
+		  var msg = new Message("USER", "UMAKER", [rs.user_id, getTime()]);
+                  $scope.sendToGroupManager(msg);
                   break;
 
                case "FAST":
@@ -621,14 +617,15 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                   break;
 
                case "SPREAD":
-                  var newVal = parseFloat($scope.inputData[inputIndex][2]);
-                  var msg = new Message("USER", "UUSPR", [rs.user_id, newVal, getTime()]);
+                  $scope.spread = parseFloat($scope.inputData[inputIndex][2]);
+                  var msg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, getTime()]);
                   $scope.sendToGroupManager(msg);
-                  if ($scope.state != "state_maker") {
-                     var msg2 = new Message("USER", "UMAKER", [rs.user_id, getTime()]);
-                     $scope.sendToGroupManager(msg2);
+                  
+		  var msg2 = new Message("USER", "UMAKER", [rs.user_id, getTime()]);
+                  $scope.sendToGroupManager(msg2);
+
+		  if ($scope.state != "state_maker") {
                      $scope.setState("state_maker");
-                     //rs.send("To_All_Data_Histories", msg2);    //Added 7/18/17 for refactor
                   }
                   break;
 
