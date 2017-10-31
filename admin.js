@@ -265,26 +265,12 @@ Redwood.controller("AdminCtrl",
                              if (xhr.readyState == 4){
                                  if(xhr.status == 200){
                                     var single_input_array = [];
-
                                     var response = {data:xhr.responseText};
-
-
                                     var rows = response.data.split("\n");                    //split csv up line by line into an array of rows
-
-
-                                 
-
                                     for (let i = 0; i < rows.length; i++) {                  //for each row in array
                                        if (rows[i] === "") continue;                         //if reached end of csv line continue to next one
-
                                        single_input_array[i] = [];
-
-
-
-
                                        var cells = rows[i].split(",");                       //if more data in csv row, add column to arrays row
-
-
                                        for (let j = 0; j < cells.length; j++) {              //for each column in csv row
                                           if(j == 1) {
                                                 single_input_array[i][j] = String(cells[j]);     //read as a string (MAKER,SNIPE,etc)
@@ -311,7 +297,8 @@ Redwood.controller("AdminCtrl",
                         mFlag: marketFlag,
                         groupNum: groupNum,
                         URI: $scope.exchangeURI,
-                        period: $scope.period
+                        period: $scope.period,
+                        batchLength: $scope.config.batchLength
                      };
                      
                      

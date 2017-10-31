@@ -25,7 +25,7 @@ Redwood.factory("GroupManager", function () {
          groupManager.syncFpArray = [];                // buffer that holds onto messages until received msg from all subjects
          groupManager.delay = 500;                     // # of milliseconds that will be delayed by latency simulation
          groupManager.fastDelay = 100;
-
+         groupManager.batchLength = groupArgs.batchLength;
          groupManager.syncFPArray = new SynchronizeArray(groupManager.memberIDs);
          groupManager.FPMsgList = [];
          groupManager.curMsgId = 1 + 500 * groupArgs.period;
@@ -272,6 +272,7 @@ Redwood.factory("GroupManager", function () {
          msg.delay = false;
          this.dataStore.storeMsg(msg);
          this.sendToMarketAlgorithms(msg);
+         console.log("jump at", printTime(getTime()));
 
          this.currentFundPrice = this.priceChanges[this.priceIndex][1]; //for knowing investor price
 
