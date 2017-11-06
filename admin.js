@@ -402,10 +402,6 @@ Redwood.controller("AdminCtrl",
                input_arrays: $scope.input_array
             };
 
-            // if($scope.config.hasOwnProperty("input_addresses")) {
-            //    beginData.input_addresses = $scope.config.input_addresses.split(',');
-            // }
-
             ra.sendCustom("Experiment_Begin", beginData, "admin", $scope.period, groupNum);
             $scope.groupManagers[groupNum].startTime = $scope.startTime;
             $scope.groupManagers[groupNum].dataStore.init(startFP, $scope.startTime, $scope.config.maxSpread);
@@ -425,7 +421,7 @@ Redwood.controller("AdminCtrl",
                window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, investorDelayTime / 1000000);  //from cda
             }
 
-            $scope.groupManagers[groupNum].socket.send(generateSystemEventMsg('S',$scope.startTime));   //reset exchange + sync time
+            //$scope.groupManagers[groupNum].socket.send(generateSystemEventMsg('S',$scope.startTime));   //reset exchange + sync time
 	         //console.log(printTime($scope.startTime));
             window.setTimeout(sendPeriod, $scope.experimentLength); 
          };
