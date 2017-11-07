@@ -135,7 +135,7 @@ Redwood.factory("MarketAlgorithm", function () {
             else if (this.state == "state_snipe") {
                nMsg3 = new Message("SYNC_FP", "SNIPE", [this.myId, this.using_speed, []]);
                nMsg3.timeStamp = msg.msgData[0]; // for debugging test output only
-               if(true){//groupManager.inSnipeWindow){                                               //only populate if in the sniping window
+               if(groupManager.inSnipeWindow){                                               //only populate if in the sniping window
                   //console.log("jump inside snipe window", printTime(getTime()));
                   
                   if (this.buyEntered) {
@@ -144,7 +144,7 @@ Redwood.factory("MarketAlgorithm", function () {
                   if (this.sellEntered) {
                      this.sendToGroupManager(this.removeSellOfferMsg());      //remove old SNIPE sell msg 
                   }
-                  this.snipeFPCArray[currentMsgId] = this.fundamentalPrice;   //keep track of the snipers price for C_TRA msg
+                  this.snipeFPCArray[this.currentMsgId] = this.fundamentalPrice;   //keep track of the snipers price for C_TRA msg
 
                   if(positiveChange){                                         //value jumped upward
                      nMsg3.msgData[2].push(this.enterBuyOfferMsg(true));      //enter new SNIPE buy msg
@@ -272,6 +272,7 @@ Redwood.factory("MarketAlgorithm", function () {
          if (msg.msgType == "C_TRA") {
             if(this.state == "state_snipe"){
                msg.FPC = this.snipeFPCArray[msg.msgId];  //prevents snipers from profiting on a transacting on zero spread investor
+		console.log(this.snipeFPCArray[msg.msgId],this.fundamentalPrice);
             }
             else{
                msg.FPC = this.fundamentalPrice;          //add current FPC to message for graphing

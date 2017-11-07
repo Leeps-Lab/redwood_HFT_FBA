@@ -508,7 +508,7 @@ Redwood.controller("AdminCtrl",
                      }          
                   }
                }
-               console.log($scope.deltas);
+               //console.log($scope.deltas);
                var filename = printTime($scope.startTime)+ '_period_'+ $scope.config.sessionNumber + '_fba_deltas.csv';
 
                var csvRows = [];
