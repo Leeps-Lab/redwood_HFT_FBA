@@ -283,7 +283,7 @@ Redwood.factory("GroupManager", function () {
          msg.delay = false;
          this.dataStore.storeMsg(msg);
          this.sendToMarketAlgorithms(msg);
-         console.log("jump at", printTime(getTime()));
+         //console.log("jump at", printTime(getTime()));
 
          this.currentFundPrice = this.priceChanges[this.priceIndex][1]; //for knowing investor price
 

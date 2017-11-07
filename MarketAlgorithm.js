@@ -21,6 +21,7 @@ Redwood.factory("MarketAlgorithm", function () {
       marketAlgorithm.currentSellId = 0; 
       marketAlgorithm.numTransactions = 0;   
       marketAlgorithm.previousState = null;    
+      marketAlgorithm.snipeFPCArray = [];
       // marketAlgorithm.inSnipeWindow = false;
 
       marketAlgorithm.isDebug = subjectArgs.isDebug;
@@ -134,8 +135,8 @@ Redwood.factory("MarketAlgorithm", function () {
             else if (this.state == "state_snipe") {
                nMsg3 = new Message("SYNC_FP", "SNIPE", [this.myId, this.using_speed, []]);
                nMsg3.timeStamp = msg.msgData[0]; // for debugging test output only
-               if(groupManager.inSnipeWindow){                                               //only populate if in the sniping window
-                  console.log("jump inside snipe window", printTime(getTime()));
+               if(true){//groupManager.inSnipeWindow){                                               //only populate if in the sniping window
+                  //console.log("jump inside snipe window", printTime(getTime()));
                   
                   if (this.buyEntered) {
                      this.sendToGroupManager(this.removeBuyOfferMsg());       //remove old SNIPE buy msg 
@@ -143,6 +144,7 @@ Redwood.factory("MarketAlgorithm", function () {
                   if (this.sellEntered) {
                      this.sendToGroupManager(this.removeSellOfferMsg());      //remove old SNIPE sell msg 
                   }
+                  this.snipeFPCArray[currentMsgId] = this.fundamentalPrice;   //keep track of the snipers price for C_TRA msg
 
                   if(positiveChange){                                         //value jumped upward
                      nMsg3.msgData[2].push(this.enterBuyOfferMsg(true));      //enter new SNIPE buy msg
@@ -152,7 +154,7 @@ Redwood.factory("MarketAlgorithm", function () {
                   }
                }
                else{
-                  console.log("tried to snipe outside window", printTime(getTime()));
+                 // console.log("tried to snipe outside window", printTime(getTime()));
                }
             }
             
@@ -211,14 +213,6 @@ Redwood.factory("MarketAlgorithm", function () {
             if(msg.batchType == 'P'){                 //store num of transactions that occurred in the last batch
                msg.numTransactions = this.numTransactions;
                this.numTransactions = 0;              //clear global for next batch
-
-               // //calculate time until snipe window
-               // var snipeWindowDelay = this.batchLength - this.windowDuration;
-               // // console.log("batch end:", printTime(getTime()));
-               // this.inSnipeWindow = false;            //next batchLength - windowDuration will be unsnipeable
-               // window.setTimeout(function (){
-               //    this.inSnipeWindow = true;     //this is lost in this scope
-               // }.bind(this), snipeWindowDelay);
             }
             else{                                     
                msg.numTransactions = null;            //dont push for start messages
@@ -276,7 +270,12 @@ Redwood.factory("MarketAlgorithm", function () {
 
          // Confirmation that a transaction has taken place
          if (msg.msgType == "C_TRA") {
-            msg.FPC = this.fundamentalPrice;    //add FPC to message for graphing
+            if(this.state == "state_snipe"){
+               msg.FPC = this.snipeFPCArray[msg.msgId];  //prevents snipers from profiting on a transacting on zero spread investor
+            }
+            else{
+               msg.FPC = this.fundamentalPrice;          //add current FPC to message for graphing
+            }
             if (msg.buyerID === this.myId) {    
                this.buyEntered = false;         //added 7/18/17 for fixing OUT user input
             }
