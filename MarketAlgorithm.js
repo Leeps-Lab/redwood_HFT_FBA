@@ -9,8 +9,8 @@ Redwood.factory("MarketAlgorithm", function () {
       marketAlgorithm.state = "state_out";   // user's state - can be "state_out", "state_maker", or "state_snipe"
       marketAlgorithm.buyEntered = false;    // flags for if this user has buy/sell orders still in the book
       marketAlgorithm.sellEntered = false;
-      marketAlgorithm.batchlength = groupManager.batchLength;
-      marketAlgorithm.windowDuration = groupManager.delay;
+      // marketAlgorithm.batchlength = groupManager.batchLength;
+      // marketAlgorithm.windowDuration = groupManager.delay;
       marketAlgorithm.myId = subjectArgs.myId;
       marketAlgorithm.groupId = subjectArgs.groupId;
       marketAlgorithm.groupManager = groupManager;   //Sends message to group manager, function obtained as parameter
@@ -21,7 +21,7 @@ Redwood.factory("MarketAlgorithm", function () {
       marketAlgorithm.currentSellId = 0; 
       marketAlgorithm.numTransactions = 0;   
       marketAlgorithm.previousState = null;    
-      marketAlgorithm.inSnipeWindow = false;
+      // marketAlgorithm.inSnipeWindow = false;
 
       marketAlgorithm.isDebug = subjectArgs.isDebug;
       if (marketAlgorithm.isDebug) {
@@ -134,29 +134,21 @@ Redwood.factory("MarketAlgorithm", function () {
             else if (this.state == "state_snipe") {
                nMsg3 = new Message("SYNC_FP", "SNIPE", [this.myId, this.using_speed, []]);
                nMsg3.timeStamp = msg.msgData[0]; // for debugging test output only
-               if(this.inSnipeWindow){                                               //only populate if in the sniping window
-                  console.log("snipe inside window", printTime(getTime()));
-                  if(positiveChange){                                            //value jumped upward
-                     if (this.buyEntered) {
-                        nMsg3.msgData[2].push(this.updateBuyOfferMsg(true));         //update stale SNIPE msg (if in book)
-                     }
-                     else{
-                         nMsg3.msgData[2].push(this.enterBuyOfferMsg(true));         //enter new SNIPE msg
-                     }
-                     if (this.sellEntered) {
-                        this.sendToGroupManager(this.removeSellOfferMsg());      //remove SNIPE sell msg (so you dont get sniped)
-                     }
+               if(groupManager.inSnipeWindow){                                               //only populate if in the sniping window
+                  console.log("jump inside snipe window", printTime(getTime()));
+                  
+                  if (this.buyEntered) {
+                     this.sendToGroupManager(this.removeBuyOfferMsg());       //remove old SNIPE buy msg 
                   }
-                  else{                                                          //value jumped downward
-                     if (this.sellEntered) {
-                        nMsg3.msgData[2].push(this.updateSellOfferMsg(true));        //update stale SNIPE msg (if in book)
-                     }
-                     else{
-                         nMsg3.msgData[2].push(this.enterSellOfferMsg(true));        //enter new SNIPE msg
-                     }
-                     if (this.buyEntered) {     
-                        this.sendToGroupManager(this.removeBuyOfferMsg());       //remove SNIPE buy msg (so you dont get sniped)
-                     }
+                  if (this.sellEntered) {
+                     this.sendToGroupManager(this.removeSellOfferMsg());      //remove old SNIPE sell msg 
+                  }
+
+                  if(positiveChange){                                         //value jumped upward
+                     nMsg3.msgData[2].push(this.enterBuyOfferMsg(true));      //enter new SNIPE buy msg
+                  }
+                  else{                                                       //value jumped downward
+                     nMsg3.msgData[2].push(this.enterSellOfferMsg(true));     //enter new SNIPE sell msg
                   }
                }
                else{
@@ -220,19 +212,18 @@ Redwood.factory("MarketAlgorithm", function () {
                msg.numTransactions = this.numTransactions;
                this.numTransactions = 0;              //clear global for next batch
 
-               //calculate time until snipe window
-               var snipeWindowDelay = this.batchLength - this.windowDuration;
-               // console.log("batch end:", printTime(getTime()));
-               window.setTimeout(function (){
-                  marketAlgorithm.inSnipeWindow = true;     //this is lost in this scope
-               }, snipeWindowDelay);
+               // //calculate time until snipe window
+               // var snipeWindowDelay = this.batchLength - this.windowDuration;
+               // // console.log("batch end:", printTime(getTime()));
+               // this.inSnipeWindow = false;            //next batchLength - windowDuration will be unsnipeable
+               // window.setTimeout(function (){
+               //    this.inSnipeWindow = true;     //this is lost in this scope
+               // }.bind(this), snipeWindowDelay);
             }
             else{                                     
                msg.numTransactions = null;            //dont push for start messages
-               this.inSnipeWindow = false;            //next batchLength - windowDuration will be unsnipeable
                // console.log("batch start:", printTime(getTime()));
             }
-            // this.groupManager.dataStore.storeMsg(msg);         //removed 10/16/17
             this.sendToAllDataHistories(msg); 
          }
 
@@ -302,7 +293,6 @@ Redwood.factory("MarketAlgorithm", function () {
             }
             this.numTransactions++;
             this.sendToDataHistory(msg,msg.subjectID);   
-            // this.sendToAllDataHistories(msg);   
          }
       };
 

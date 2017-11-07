@@ -29,7 +29,10 @@ Redwood.factory("GroupManager", function () {
          groupManager.syncFPArray = new SynchronizeArray(groupManager.memberIDs);
          groupManager.FPMsgList = [];
          groupManager.curMsgId = 1 + 500 * groupArgs.period;
-         groupManager.debugArray = []
+         groupManager.debugArray = [];
+         groupManager.inSnipeWindow = false;
+
+
 
          groupManager.isDebug = groupArgs.isDebug;     //indicates if message logger should be used
          groupManager.outboundMarketLog = "";          // string of debug info for messages outbound to market
@@ -194,6 +197,14 @@ Redwood.factory("GroupManager", function () {
          // console.log("Inbound Message", msg);                //debug incoming ITCH messages
          if((msg.msgType === "C_TRA" && msg.subjectID > 0) || msg.msgType === "BATCH"){      //dont send investor half of the c_tra to MA
             this.sendToMarketAlgorithms(msg);
+            if(msg.batchType == 'P'){
+               //calculate time until snipe window (done in groupmanager because 4x marketalg = bad behavior)
+               var snipeWindowDelay = this.batchLength - this.delay;
+               this.inSnipeWindow = false;            //next batchLength - msg delay will be unsnipeable
+               window.setTimeout(function (){
+                  groupManager.inSnipeWindow = true;     //this is lost in this scope, use groupManager
+               }, snipeWindowDelay);
+            } 
          }
          else {
             if(msg.subjectID > 0) {                                 //Only send user messages to market algorithm

@@ -90,12 +90,7 @@ function leepsMsgToOuch(leepsMsg){
       // Time in Force
       //if(leepsMsg.msgData[2] === true){
       if(leepsMsg.IOC === true){
-        if(leepsMsg.subjectID != 0){   //if youre not an investor
-          spliceInArray(intToByteArray(1), ouchMsg, 4, 32);      //changed 5/24 to test sniping (time of force of 1)
-        }
-        else{
           spliceInArray(intToByteArray(3), ouchMsg, 4, 32);       //investors have TOF of 3 seconds
-        }
       }
       else{    
           spliceInArray(intToByteArray(99999), ouchMsg, 4, 32);   //users have TOF of infinity
