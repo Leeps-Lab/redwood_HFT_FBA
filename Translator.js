@@ -31,10 +31,10 @@ function splitMessages(messageStr){
 
 
 function generateSystemEventMsg(eventcode, timestamp) {
-  var sysMsg = new Uint8Array(10);
+  var sysMsg = new Uint8Array(18);
   sysMsg[0] = charToByte('S');
-  spliceInArray(intToByteArray(timestamp), sysMsg, 8, 1);
-  sysMsg[9] = charToByte(eventcode);
+  spliceInArray(timeToByteArray(timestamp, 16), sysMsg, 16, 1);
+  sysMsg[17] = charToByte(eventcode);
   return sysMsg;
 }
 
@@ -426,6 +426,15 @@ function intToByteArray(num){
    num = num >> 8
    bytes[0] = num & (255);
 
+   return bytes;
+}
+
+function timeToByteArray(num, length){
+  var bytes = new Uint8Array(length);
+  for(let i = length - 1; i >= 0; i--){
+    bytes[i] = num & (0xF);
+    num = num >>> 4;
+  }
    return bytes;
 }
 
