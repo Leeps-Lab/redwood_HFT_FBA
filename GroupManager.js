@@ -195,6 +195,8 @@ Redwood.factory("GroupManager", function () {
       // handles a message from the market
       groupManager.recvFromMarket = function (msg) {
          // console.log("Inbound Message", msg);                //debug incoming ITCH messages
+         if(msg.msgType === "C_TRA") console.log(msg);
+
          if((msg.msgType === "C_TRA" && msg.subjectID > 0) || msg.msgType === "BATCH"){      //dont send investor half of the c_tra to MA
             this.sendToMarketAlgorithms(msg);
             if(msg.batchType == 'P'){

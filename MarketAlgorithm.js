@@ -104,30 +104,30 @@ Redwood.factory("MarketAlgorithm", function () {
                //prevent maker from sniping themself
                if(positiveChange){                       //the price moved up -> update sell order before buy order
                   if (this.sellEntered) {
-                     nMsg3.msgData[2].push(this.updateSellOfferMsg(false));
+                     nMsg3.msgData[2].push(this.updateSellOfferMsg());
                   }
                   else{
-                      nMsg3.msgData[2].push(this.enterSellOfferMsg(false));     //enter a new order in the event yours transacted during a jump
+                      nMsg3.msgData[2].push(this.enterSellOfferMsg());     //enter a new order in the event yours transacted during a jump
                   }
                   if (this.buyEntered) {
-                     nMsg3.msgData[2].push(this.updateBuyOfferMsg(false));
+                     nMsg3.msgData[2].push(this.updateBuyOfferMsg());
                   }
                   else{
-                      nMsg3.msgData[2].push(this.enterBuyOfferMsg(false));      //enter a new order in the event yours transacted during a jump
+                      nMsg3.msgData[2].push(this.enterBuyOfferMsg());      //enter a new order in the event yours transacted during a jump
                   }
                }
                else{                                     //the price moved down -> update buy order before sell order
                   if (this.buyEntered) {
-                     nMsg3.msgData[2].push(this.updateBuyOfferMsg(false));
+                     nMsg3.msgData[2].push(this.updateBuyOfferMsg());
                   }
                   else{
-                      nMsg3.msgData[2].push(this.enterBuyOfferMsg(false));      //enter a new order in the event yours transacted during a jump
+                      nMsg3.msgData[2].push(this.enterBuyOfferMsg());      //enter a new order in the event yours transacted during a jump
                   }
                   if (this.sellEntered) {
-                     nMsg3.msgData[2].push(this.updateSellOfferMsg(false));
+                     nMsg3.msgData[2].push(this.updateSellOfferMsg());
                   }
                   else{
-                      nMsg3.msgData[2].push(this.enterSellOfferMsg(false));     //enter a new order in the event yours transacted during a jump
+                      nMsg3.msgData[2].push(this.enterSellOfferMsg());     //enter a new order in the event yours transacted during a jump
                   }
                }
                
@@ -147,10 +147,10 @@ Redwood.factory("MarketAlgorithm", function () {
                   this.snipeFPCArray[this.currentMsgId] = this.fundamentalPrice;   //keep track of the snipers price for C_TRA msg
 
                   if(positiveChange){                                         //value jumped upward
-                     nMsg3.msgData[2].push(this.enterBuyOfferMsg(true));      //enter new SNIPE buy msg
+                     nMsg3.msgData[2].push(this.enterSnipeBuyOfferMsg());      //enter new SNIPE buy msg
                   }
                   else{                                                       //value jumped downward
-                     nMsg3.msgData[2].push(this.enterSellOfferMsg(true));     //enter new SNIPE sell msg
+                     nMsg3.msgData[2].push(this.enterSnipeBuyOfferMsg());     //enter new SNIPE sell msg
                   }
                }
                else{
@@ -270,18 +270,18 @@ Redwood.factory("MarketAlgorithm", function () {
 
          // Confirmation that a transaction has taken place
          if (msg.msgType == "C_TRA") {
-            if(this.state == "state_snipe"){
-               msg.FPC = this.snipeFPCArray[msg.msgId];  //prevents snipers from profiting on a transacting on zero spread investor
-		console.log(this.snipeFPCArray[msg.msgId],this.fundamentalPrice);
-            }
-            else{
-               msg.FPC = this.fundamentalPrice;          //add current FPC to message for graphing
-            }
             if (msg.buyerID === this.myId) {    
                this.buyEntered = false;         //added 7/18/17 for fixing OUT user input
             }
             if (msg.sellerID === this.myId) {
                this.sellEntered = false;        //added 7/18/17 for fixing OUT user input
+            }
+            if(this.state == "state_snipe"){
+               msg.FPC = this.snipeFPCArray[msg.msgId];  //prevents snipers from profiting on a transaction with zero spread investor
+		         // console.log(this.snipeFPCArray[msg.msgId],this.fundamentalPrice); 
+            }
+            else{
+               msg.FPC = this.fundamentalPrice;          //add current FPC to message for graphing
             }
             if (this.state == "state_maker") {     //replenish filled orders if maker
                if(this.sellEntered == false){
@@ -296,9 +296,8 @@ Redwood.factory("MarketAlgorithm", function () {
          }
       };
 
-      marketAlgorithm.enterBuyOfferMsg = function (IOC) {
-         if(IOC == null) IOC = false;
-         var nMsg = new OuchMessage("EBUY", this.myId, this.fundamentalPrice - this.spread / 2, IOC);
+      marketAlgorithm.enterSnipeBuyOfferMsg = function () {
+         var nMsg = new OuchMessage("EBUY", this.myId, this.fundamentalPrice, true);
          nMsg.delay = !this.using_speed;
          nMsg.senderId = this.myId;
          nMsg.msgId = this.currentMsgId;
@@ -308,9 +307,8 @@ Redwood.factory("MarketAlgorithm", function () {
          return nMsg;
       };
 
-      marketAlgorithm.enterSellOfferMsg = function (IOC) {
-         if(IOC == null) IOC = false;
-         var nMsg = new OuchMessage("ESELL", this.myId, this.fundamentalPrice + this.spread / 2, IOC);
+      marketAlgorithm.enterSnipeSellOfferMsg = function () {
+         var nMsg = new OuchMessage("ESELL", this.myId, this.fundamentalPrice, true);
          nMsg.delay = !this.using_speed;
          nMsg.senderId = this.myId;
          nMsg.msgId = this.currentMsgId;
@@ -320,9 +318,30 @@ Redwood.factory("MarketAlgorithm", function () {
          return nMsg;
       };
 
-      marketAlgorithm.updateBuyOfferMsg = function (IOC) {
-         if(IOC == null) IOC = false;
-         var nMsg = new OuchMessage("UBUY", this.myId, this.fundamentalPrice - this.spread / 2, IOC);
+      marketAlgorithm.enterBuyOfferMsg = function () {
+         var nMsg = new OuchMessage("EBUY", this.myId, this.fundamentalPrice - this.spread / 2, false);
+         nMsg.delay = !this.using_speed;
+         nMsg.senderId = this.myId;
+         nMsg.msgId = this.currentMsgId;
+         this.currentBuyId = this.currentMsgId;
+         this.currentMsgId++;
+         this.buyEntered = true;
+         return nMsg;
+      };
+
+      marketAlgorithm.enterSellOfferMsg = function () {
+         var nMsg = new OuchMessage("ESELL", this.myId, this.fundamentalPrice + this.spread / 2, false);
+         nMsg.delay = !this.using_speed;
+         nMsg.senderId = this.myId;
+         nMsg.msgId = this.currentMsgId;
+         this.currentSellId = this.currentMsgId;
+         this.currentMsgId++;
+         this.sellEntered = true;
+         return nMsg;
+      };
+
+      marketAlgorithm.updateBuyOfferMsg = function () {
+         var nMsg = new OuchMessage("UBUY", this.myId, this.fundamentalPrice - this.spread / 2);
          nMsg.delay = !this.using_speed;
          nMsg.senderId = this.myId;
          nMsg.msgId = this.currentMsgId;
@@ -333,9 +352,8 @@ Redwood.factory("MarketAlgorithm", function () {
          return nMsg;
       };
 
-      marketAlgorithm.updateSellOfferMsg = function (IOC) {
-         if(IOC == null) IOC = false;
-         var nMsg = new OuchMessage("USELL", this.myId, this.fundamentalPrice + this.spread / 2, IOC);
+      marketAlgorithm.updateSellOfferMsg = function () {
+         var nMsg = new OuchMessage("USELL", this.myId, this.fundamentalPrice + this.spread / 2);
          nMsg.delay = !this.using_speed;
          nMsg.senderId = this.myId;
          nMsg.msgId = this.currentMsgId;
