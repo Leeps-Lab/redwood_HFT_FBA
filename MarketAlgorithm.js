@@ -9,8 +9,6 @@ Redwood.factory("MarketAlgorithm", function () {
       marketAlgorithm.state = "state_out";   // user's state - can be "state_out", "state_maker", or "state_snipe"
       marketAlgorithm.buyEntered = false;    // flags for if this user has buy/sell orders still in the book
       marketAlgorithm.sellEntered = false;
-      // marketAlgorithm.batchlength = groupManager.batchLength;
-      // marketAlgorithm.windowDuration = groupManager.delay;
       marketAlgorithm.myId = subjectArgs.myId;
       marketAlgorithm.groupId = subjectArgs.groupId;
       marketAlgorithm.groupManager = groupManager;   //Sends message to group manager, function obtained as parameter
@@ -22,7 +20,6 @@ Redwood.factory("MarketAlgorithm", function () {
       marketAlgorithm.numTransactions = 0;   
       marketAlgorithm.previousState = null;    
       marketAlgorithm.snipeFPCArray = [];
-      // marketAlgorithm.inSnipeWindow = false;
 
       marketAlgorithm.isDebug = subjectArgs.isDebug;
       if (marketAlgorithm.isDebug) {
@@ -285,10 +282,10 @@ Redwood.factory("MarketAlgorithm", function () {
             }
             if (this.state == "state_maker") {     //replenish filled orders if maker
                if(this.sellEntered == false){
-                  this.sendToGroupManager(this.enterSellOfferMsg(false));
+                  this.sendToGroupManager(this.enterSellOfferMsg());
                }
                if(this.buyEntered == false){
-                  this.sendToGroupManager(this.enterBuyOfferMsg(false));
+                  this.sendToGroupManager(this.enterBuyOfferMsg());
                }
             }
             this.numTransactions++;
@@ -297,7 +294,7 @@ Redwood.factory("MarketAlgorithm", function () {
       };
 
       marketAlgorithm.enterSnipeBuyOfferMsg = function () {
-         var nMsg = new OuchMessage("EBUY", this.myId, this.fundamentalPrice, true);
+         var nMsg = new OuchMessage("EBUY", this.myId, this.fundamentalPrice, true); //ioc and no spread
          nMsg.delay = !this.using_speed;
          nMsg.senderId = this.myId;
          nMsg.msgId = this.currentMsgId;
