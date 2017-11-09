@@ -10,7 +10,7 @@
 // for referance on the OUTCH 4.1 format
 
 
-var ouchMsgSizes = {'A' : 66, 'U' : 80, 'C' : 28, 'E' : 40};
+var ouchMsgSizes = {'A' : 66, 'U' : 80, 'C' : 28, 'E' : 40, 'S' : 10};
 
 // splits a string that can contain multiple messages into an array of messages
 function splitMessages(messageStr){
@@ -227,6 +227,9 @@ function leepsMsgToOuch(leepsMsg){
 
 // converts from the OUCH 4.2 formatted message to the in-house leeps message format
 function ouchToLeepsMsg(ouchMsg){
+  if(string10ToInt(ouchMsg.substring(14, 23))==112 && ouchMsg.charCodeAt(47) - 64 == 1 && ouchMsg.charAt(0) != 'U'){
+	var poop = 101;
+  }
   // Acctepted message
   if(ouchMsg.charAt(0) === 'A'){
 
@@ -372,8 +375,6 @@ function ouchToLeepsMsg(ouchMsg){
       console.error("Unable to recognize type of tranaction: " + transactionType);
     }
     msg.msgId = msgId;
-
-    //console.log(msg);
     return msg;
   }
 

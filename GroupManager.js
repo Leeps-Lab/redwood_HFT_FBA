@@ -74,10 +74,9 @@ Redwood.factory("GroupManager", function () {
                reader.addEventListener("loadend", function() {
                   // reader.result contains the raw ouch message as a DataBuffer, convert it to string
                   var ouchStr = String.fromCharCode.apply(null, new Uint8Array(reader.result));
-                  // logStringAsNums(ouchStr);
+                  console.log(printTime(getTime()),logStringAsNums(ouchStr));
                   if(ouchStr.charAt(0) == 'S'){                            //special batch msg -> no need to split
                      var msg = ouchToLeepsMsg(ouchStr);                    //adding for synchronization for admin
-                     // console.log(msg);
                      if(msg.batchType == 'B'){                             //only care about start messages
                         groupManager.lastbatchTime = getTime();               //msg.timeStamp;
                      }
@@ -87,7 +86,8 @@ Redwood.factory("GroupManager", function () {
                      // split the string in case messages are conjoined
                      var ouchMsgArray = splitMessages(ouchStr);            // translate the message and pass it to the recieve function
                      for(ouchMsg of ouchMsgArray){
-                        groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
+  //                      console.log(ouchStr);
+			groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
                      }
                   }
                });
