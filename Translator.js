@@ -530,7 +530,7 @@ function logStringAsNums(str){
     outString += "(" + i + ":" + char.charCodeAt(0) + ")";
     i++;
   }
-  console.log(outString);
+  //console.log(outString);
 }
 
 function printOuchMsg(str){

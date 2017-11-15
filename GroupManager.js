@@ -74,7 +74,7 @@ Redwood.factory("GroupManager", function () {
                reader.addEventListener("loadend", function() {
                   // reader.result contains the raw ouch message as a DataBuffer, convert it to string
                   var ouchStr = String.fromCharCode.apply(null, new Uint8Array(reader.result));
-                  console.log(printTime(getTime()),logStringAsNums(ouchStr));
+                  //console.log(printTime(getTime()),logStringAsNums(ouchStr));
                   if(ouchStr.charAt(0) == 'S'){                            //special batch msg -> no need to split
                      var msg = ouchToLeepsMsg(ouchStr);                    //adding for synchronization for admin
                      if(msg.batchType == 'B'){                             //only care about start messages
@@ -195,7 +195,7 @@ Redwood.factory("GroupManager", function () {
       // handles a message from the market
       groupManager.recvFromMarket = function (msg) {
          // console.log("Inbound Message", msg);                //debug incoming ITCH messages
-         if(msg.msgType === "C_TRA") console.log(msg);
+         //if(msg.msgType === "C_TRA") console.log(msg);
 
          if((msg.msgType === "C_TRA" && msg.subjectID > 0) || msg.msgType === "BATCH"){      //dont send investor half of the c_tra to MA
             this.sendToMarketAlgorithms(msg);
