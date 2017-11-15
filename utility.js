@@ -8,6 +8,17 @@ function getTime(){
    return hours+minutes+seconds+millis;
 }
 
+// Adds padding to a javascript printTime() fomratted timestamp
+// position: which interval is to be padded [hr:min:sec:ms] => [0:1:2:3]
+// padwidth: number of digits allowed
+function padTime(timestamp, position=3, padWidth=3){
+   var splitTimestamp = timestamp.split(':');
+   while(splitTimestamp[position].length != padWidth + 1){
+      splitTimestamp[position] = '0' + splitTimestamp[position];
+   }
+   return splitTimestamp.join(':');
+}
+
 function printTime(nanoseconds){
   var str = "";
   var millis  = Math.floor((nanoseconds / 1000000) % 1000);

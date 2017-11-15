@@ -63,7 +63,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
       graph.op = 1;                    //added 7/24/17 for adding opacity to transaction lines
       graph.currentTransaction = null;    //added 7/24/17 for ensuring only the correct orders are drawn as transacted
       graph.currTransactionID = null;     //added 7/24/17 for ensuring only the correct orders are drawn as transacted
-      graph.widthScale = 2;            //added 7/28/17 to widen the graphs of ticks to be better fit spread 
+      graph.widthScale = 0;            //added 7/28/17 to widen the graphs of ticks to be better fit spread 
       graph.oldFundPrice = null;
       graph.FPCop = 1;
       graph.currSpreadTick = 0;
@@ -360,7 +360,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          if((currentBuy || currentSell) && (styleClassName == "my-buy-offer")){            //only need one side to draw MY box
             let color = "Aqua";                    //default color
             let y, height;
-            height = 2 * (dataHistory.receivedSpread[dataHistory.myId] * graphRefr.elementHeight / graphRefr.priceRange).toFixed(2);
+            height = 2 * (dataHistory.receivedSpread[dataHistory.myId] * graphRefr.elementHeight / (dataHistory.maxSpread * 2)).toFixed(2);
             // height = 2 * (dataHistory.playerData[dataHistory.myId].spread * graphRefr.elementHeight / graphRefr.priceRange).toFixed(2);
             
             if(currentSell){
@@ -852,6 +852,7 @@ RedwoodHighFrequencyTrading.factory("Graphing", function () {
          this.advanceTimeShown = graph.timePerPixel * (graph.axisLabelWidth + graph.graphPaddingRight);
 
          this.zoomAmount = maxSpread / 2;
+	 this.widthScale = 10 / maxSpread;
 
          this.marketPriceLines = this.calcPriceGridLines(this.maxPriceMarket, this.minPriceMarket, this.marketPriceGridIncrement);
          this.profitPriceLines = this.calcPriceGridLines(this.maxPriceProfit, this.minPriceProfit, this.profitPriceGridIncrement);

@@ -10,7 +10,7 @@
 // for referance on the OUTCH 4.1 format
 
 
-var ouchMsgSizes = {'A' : 66, 'U' : 80, 'C' : 28, 'E' : 40};
+var ouchMsgSizes = {'A' : 66, 'U' : 80, 'C' : 28, 'E' : 40, 'S' : 10};
 
 // splits a string that can contain multiple messages into an array of messages
 function splitMessages(messageStr){
@@ -31,10 +31,10 @@ function splitMessages(messageStr){
 
 
 function generateSystemEventMsg(eventcode, timestamp) {
-  var sysMsg = new Uint8Array(10);
+  var sysMsg = new Uint8Array(18);
   sysMsg[0] = charToByte('S');
-  spliceInArray(intToByteArray(timestamp), sysMsg, 8, 1);
-  sysMsg[9] = charToByte(eventcode);
+  spliceInArray(timeToByteArray(timestamp, 16), sysMsg, 16, 1);
+  sysMsg[17] = charToByte(eventcode);
   return sysMsg;
 }
 
@@ -90,12 +90,7 @@ function leepsMsgToOuch(leepsMsg){
       // Time in Force
       //if(leepsMsg.msgData[2] === true){
       if(leepsMsg.IOC === true){
-        if(leepsMsg.subjectID != 0){   //if youre not an investor
-          spliceInArray(intToByteArray(1), ouchMsg, 4, 32);      //changed 5/24 to test sniping (time of force of 1)
-        }
-        else{
           spliceInArray(intToByteArray(3), ouchMsg, 4, 32);       //investors have TOF of 3 seconds
-        }
       }
       else{    
           spliceInArray(intToByteArray(99999), ouchMsg, 4, 32);   //users have TOF of infinity
@@ -232,6 +227,9 @@ function leepsMsgToOuch(leepsMsg){
 
 // converts from the OUCH 4.2 formatted message to the in-house leeps message format
 function ouchToLeepsMsg(ouchMsg){
+  if(string10ToInt(ouchMsg.substring(14, 23))==112 && ouchMsg.charCodeAt(47) - 64 == 1 && ouchMsg.charAt(0) != 'U'){
+	var poop = 101;
+  }
   // Acctepted message
   if(ouchMsg.charAt(0) === 'A'){
 
@@ -377,8 +375,6 @@ function ouchToLeepsMsg(ouchMsg){
       console.error("Unable to recognize type of tranaction: " + transactionType);
     }
     msg.msgId = msgId;
-
-    //console.log(msg);
     return msg;
   }
 
@@ -426,6 +422,15 @@ function intToByteArray(num){
    num = num >> 8
    bytes[0] = num & (255);
 
+   return bytes;
+}
+
+function timeToByteArray(num, length){
+  var bytes = new Uint8Array(length);
+  for(let i = length - 1; i >= 0; i--){
+    bytes[i] = num & (0xF);
+    num = num >>> 4;
+  }
    return bytes;
 }
 
@@ -525,7 +530,7 @@ function logStringAsNums(str){
     outString += "(" + i + ":" + char.charCodeAt(0) + ")";
     i++;
   }
-  console.log(outString);
+  //console.log(outString);
 }
 
 function printOuchMsg(str){

@@ -242,11 +242,51 @@ Redwood.controller("AdminCtrl",
                      }
                   }
 
+                  $scope.input_array = []; 
+
                   // loop through groups and create their groupManager, market, dataStorage and marketAlgorithms
                   for (var groupNum = 1; groupNum <= $scope.groups.length; groupNum++) {
 
                      var group = $scope.getGroup(groupNum); // fetch group from array
 
+                     for (var subjectNum of group) {
+                     // download user input csvs
+                        $scope.input_array[subjectNum] = [];
+
+                        if ($scope.config.hasOwnProperty("input_addresses")) {
+                           var input_addresses = $scope.config.input_addresses.split(',');
+                           
+                           var xhr = new XMLHttpRequest();
+
+                           xhr.open('GET', input_addresses[subjectNum-1],false);
+
+                           xhr.onload = function (e) {
+
+                             if (xhr.readyState == 4){
+                                 if(xhr.status == 200){
+                                    var single_input_array = [];
+                                    var response = {data:xhr.responseText};
+                                    var rows = response.data.split("\n");                    //split csv up line by line into an array of rows
+                                    for (let i = 0; i < rows.length; i++) {                  //for each row in array
+                                       if (rows[i] === "") continue;                         //if reached end of csv line continue to next one
+                                       single_input_array[i] = [];
+                                       var cells = rows[i].split(",");                       //if more data in csv row, add column to arrays row
+                                       for (let j = 0; j < cells.length; j++) {              //for each column in csv row
+                                          if(j == 1) {
+                                                single_input_array[i][j] = String(cells[j]);     //read as a string (MAKER,SNIPE,etc)
+                                          }
+                                          else{
+                                                single_input_array[i][j] = parseFloat(cells[j]);  //read timestamps and spreads as ints
+                                          }
+                                       }
+                                    }
+                                 $scope.input_array[subjectNum] = single_input_array;
+                                 }
+                              }
+                           };
+                           xhr.send(null);
+                        }
+                     }
                      // package arguments into an object
                      var groupArgs = {
                         priceChanges: $scope.priceChanges,
@@ -257,7 +297,8 @@ Redwood.controller("AdminCtrl",
                         mFlag: marketFlag,
                         groupNum: groupNum,
                         URI: $scope.exchangeURI,
-                        period: $scope.period
+                        period: $scope.period,
+                        batchLength: $scope.config.batchLength
                      };
                      
                      
@@ -357,12 +398,9 @@ Redwood.controller("AdminCtrl",
                playerTimeOffsets: $scope.playerTimeOffsets,
                batchLength: $scope.config.batchLength,
                exchangeRate: $scope.exchangeRate,
-               period: $scope.period
+               period: $scope.period,
+               input_arrays: $scope.input_array
             };
-
-            if($scope.config.hasOwnProperty("input_addresses")) {
-               beginData.input_addresses = $scope.config.input_addresses.split(',');
-            }
 
             ra.sendCustom("Experiment_Begin", beginData, "admin", $scope.period, groupNum);
             $scope.groupManagers[groupNum].startTime = $scope.startTime;
@@ -383,8 +421,8 @@ Redwood.controller("AdminCtrl",
                window.setTimeout($scope.groupManagers[groupNum].sendNextInvestorArrival, investorDelayTime / 1000000);  //from cda
             }
 
-            $scope.groupManagers[groupNum].socket.send(generateSystemEventMsg('S',$scope.startTime));   //reset exchange + sync time
-	         //console.log(printTime($scope.startTime));
+            $scope.groupManagers[groupNum].socket.send(generateSystemEventMsg('S',$scope.startTime / 1000000));   //reset exchange + sync time
+	         console.log(printTime($scope.startTime),$scope.startTime);
             window.setTimeout(sendPeriod, $scope.experimentLength); 
          };
 
@@ -470,7 +508,7 @@ Redwood.controller("AdminCtrl",
                      }          
                   }
                }
-               console.log($scope.deltas);
+               //console.log($scope.deltas);
                var filename = printTime($scope.startTime)+ '_period_'+ $scope.config.sessionNumber + '_fba_deltas.csv';
 
                var csvRows = [];

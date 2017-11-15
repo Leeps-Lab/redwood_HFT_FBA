@@ -25,11 +25,14 @@ Redwood.factory("GroupManager", function () {
          groupManager.syncFpArray = [];                // buffer that holds onto messages until received msg from all subjects
          groupManager.delay = 500;                     // # of milliseconds that will be delayed by latency simulation
          groupManager.fastDelay = 100;
-
+         groupManager.batchLength = groupArgs.batchLength;
          groupManager.syncFPArray = new SynchronizeArray(groupManager.memberIDs);
          groupManager.FPMsgList = [];
          groupManager.curMsgId = 1 + 500 * groupArgs.period;
-         groupManager.debugArray = []
+         groupManager.debugArray = [];
+         groupManager.inSnipeWindow = false;
+
+
 
          groupManager.isDebug = groupArgs.isDebug;     //indicates if message logger should be used
          groupManager.outboundMarketLog = "";          // string of debug info for messages outbound to market
@@ -71,10 +74,9 @@ Redwood.factory("GroupManager", function () {
                reader.addEventListener("loadend", function() {
                   // reader.result contains the raw ouch message as a DataBuffer, convert it to string
                   var ouchStr = String.fromCharCode.apply(null, new Uint8Array(reader.result));
-                  // logStringAsNums(ouchStr);
+                  //console.log(printTime(getTime()),logStringAsNums(ouchStr));
                   if(ouchStr.charAt(0) == 'S'){                            //special batch msg -> no need to split
                      var msg = ouchToLeepsMsg(ouchStr);                    //adding for synchronization for admin
-                     // console.log(msg);
                      if(msg.batchType == 'B'){                             //only care about start messages
                         groupManager.lastbatchTime = getTime();               //msg.timeStamp;
                      }
@@ -84,7 +86,8 @@ Redwood.factory("GroupManager", function () {
                      // split the string in case messages are conjoined
                      var ouchMsgArray = splitMessages(ouchStr);            // translate the message and pass it to the recieve function
                      for(ouchMsg of ouchMsgArray){
-                        groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
+  //                      console.log(ouchStr);
+			groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
                      }
                   }
                });
@@ -192,8 +195,18 @@ Redwood.factory("GroupManager", function () {
       // handles a message from the market
       groupManager.recvFromMarket = function (msg) {
          // console.log("Inbound Message", msg);                //debug incoming ITCH messages
+         //if(msg.msgType === "C_TRA") console.log(msg);
+
          if((msg.msgType === "C_TRA" && msg.subjectID > 0) || msg.msgType === "BATCH"){      //dont send investor half of the c_tra to MA
             this.sendToMarketAlgorithms(msg);
+            if(msg.batchType == 'P'){
+               //calculate time until snipe window (done in groupmanager because 4x marketalg = bad behavior)
+               var snipeWindowDelay = this.batchLength - this.delay;
+               this.inSnipeWindow = false;            //next batchLength - msg delay will be unsnipeable
+               window.setTimeout(function (){
+                  groupManager.inSnipeWindow = true;     //this is lost in this scope, use groupManager
+               }, snipeWindowDelay);
+            } 
          }
          else {
             if(msg.subjectID > 0) {                                 //Only send user messages to market algorithm
@@ -272,6 +285,7 @@ Redwood.factory("GroupManager", function () {
          msg.delay = false;
          this.dataStore.storeMsg(msg);
          this.sendToMarketAlgorithms(msg);
+         //console.log("jump at", printTime(getTime()));
 
          this.currentFundPrice = this.priceChanges[this.priceIndex][1]; //for knowing investor price
 
