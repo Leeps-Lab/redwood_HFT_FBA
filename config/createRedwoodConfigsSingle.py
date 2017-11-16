@@ -11,7 +11,7 @@ exchangeType = "fba"
 subject = "default"
 startingWealth = 20
 speedCost = 0.01
-maxSpread = 5
+maxSpread = 2
 exchangeRate = 2
 filePath = dateStr+"/"+sys.argv[4]+"/"
 marketEventsURLRoot = "https://raw.githubusercontent.com/Leeps-Lab/redwood-high-frequency-trading-remote/master/config/"+dateStr+"/Investors/investors_period"
@@ -27,7 +27,7 @@ for period in range(1,periods+1):
     priceChangesURL = priceChangesURLRoot+str(period)+"_group1.csv" 
     fName = filePath+exchangeType+"_config_"+str(experimentLength/1000)+"s_"+str(nGroups)+"groups_"+str(nPlayersPerGroup)+"players_"+"period"+str(period)+".csv"
     fOut = open(fName,"w")
-    fOut.write("period,subject,groups,startingWealth,speedCost,maxSpread,batchLength,marketEventsURL,priceChangesURL,NULL,experimentLength,exchangeRate,exchangeURI\n")
-    fOut.write(str(period)+","+subject+",\""+str(groupList)+"\","+str(startingWealth)+","+str(speedCost)+","+str(maxSpread)+","+str(batchLength)+","+marketEventsURL+","+priceChangesURL+",'',"+str(experimentLength)+","+str(exchangeRate)+","+exchangeURI)
+    fOut.write("period,subject,groups,startingWealth,speedCost,maxSpread,batchLength,marketEventsURL,priceChangesURL,NULL,experimentLength,exchangeRate,exchangeURI,sessionNumber\n")
+    fOut.write("1,"+subject+",\""+str(groupList).replace(" ","")+"\","+str(startingWealth)+","+str(speedCost)+","+str(maxSpread)+","+str(batchLength)+","+marketEventsURL+","+priceChangesURL+",'',"+str(experimentLength)+","+str(exchangeRate)+","+exchangeURI+","+str(period))
     fOut.close()
     
