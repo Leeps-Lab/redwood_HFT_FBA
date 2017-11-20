@@ -76,7 +76,7 @@ Redwood.factory("GroupManager", function () {
                      // split the string in case messages are conjoined
                      var ouchMsgArray = splitMessages(ouchStr);            // translate the message and pass it to the recieve function
                      for(ouchMsg of ouchMsgArray){
-                        if(msg.batchType == 'B'){                             //only care about start messages
+                        if(ouchMsg.batchType == 'B'){                             //only care about start messages
                            groupManager.lastbatchTime = getTime();               //msg.timeStamp;
                         }  
                         groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
