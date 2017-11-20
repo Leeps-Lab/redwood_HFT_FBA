@@ -180,7 +180,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          $scope.setSpeed = function (value) {
             if (value !== $scope.using_speed) {
                $scope.using_speed = value;
-               var msg = new Message("USER", "USPEED", [rs.user_id, $scope.using_speed, $scope.tradingGraph.getCurOffsetTime()]);
+               var msg = new Message("USER", "USPEED", [rs.user_id, $scope.using_speed, getTime()]);
                $scope.sendToGroupManager(msg);           //still have to send to market algorithm to update player state
                
             }
