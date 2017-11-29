@@ -44,28 +44,14 @@ Redwood.factory("MarketAlgorithm", function () {
 
       // sends out buy and sell offer for entering market
       marketAlgorithm.enterMarket = function () {
-         if (this.buyEntered) {
-               this.sendToGroupManager(this.updateBuyOfferMsg(false));
-         }
-         else{
-            this.sendToGroupManager(this.enterBuyOfferMsg(false));
-         }
-         if (this.sellEntered) {
-            this.sendToGroupManager(this.updateSellOfferMsg(false));
-         }
-         else{
-            this.sendToGroupManager(this.enterSellOfferMsg(false));
-         }
+         this.sendToGroupManager(this.enterBuyOfferMsg());
+         this.sendToGroupManager(this.enterSellOfferMsg());
       };
 
       // sends out remove buy and sell messages for exiting market
       marketAlgorithm.exitMarket = function () {
-         if(this.buyEntered) {    
-            this.sendToGroupManager(this.removeBuyOfferMsg());
-         }
-         if(this.sellEntered){
-            this.sendToGroupManager(this.removeSellOfferMsg());
-         }
+         this.sendToGroupManager(this.removeBuyOfferMsg());
+         this.sendToGroupManager(this.removeSellOfferMsg());
       };
 
       // Handle message sent to the market algorithm
@@ -133,7 +119,7 @@ Redwood.factory("MarketAlgorithm", function () {
                nMsg3 = new Message("SYNC_FP", "SNIPE", [this.myId, this.using_speed, []]);
                nMsg3.timeStamp = msg.msgData[0]; // for debugging test output only
                if(groupManager.inSnipeWindow){                                               //only populate if in the sniping window
-                  //console.log("jump inside snipe window", printTime(getTime()));
+                  console.log("jump inside snipe window", printTime(getTime()));
                   
                   if (this.buyEntered) {
                      this.sendToGroupManager(this.removeBuyOfferMsg());       //remove old SNIPE buy msg 
@@ -141,17 +127,17 @@ Redwood.factory("MarketAlgorithm", function () {
                   if (this.sellEntered) {
                      this.sendToGroupManager(this.removeSellOfferMsg());      //remove old SNIPE sell msg 
                   }
-                  this.snipeFPCArray[this.currentMsgId] = this.fundamentalPrice;   //keep track of the snipers price for C_TRA msg
-
                   if(positiveChange){                                         //value jumped upward
                      nMsg3.msgData[2].push(this.enterSnipeBuyOfferMsg());      //enter new SNIPE buy msg
                   }
                   else{                                                       //value jumped downward
-                     nMsg3.msgData[2].push(this.enterSnipeBuyOfferMsg());     //enter new SNIPE sell msg
+                     nMsg3.msgData[2].push(this.enterSnipeSellOfferMsg());     //enter new SNIPE sell msg
                   }
+                  this.snipeFPCArray[this.currentMsgId] = this.fundamentalPrice;   //keep track of the snipers price for C_TRA msg
+
                }
                else{
-                 // console.log("tried to snipe outside window", printTime(getTime()));
+                  console.log("tried to snipe outside window", printTime(getTime()));
                }
             }
             
@@ -172,6 +158,7 @@ Redwood.factory("MarketAlgorithm", function () {
 
          // user sent signal to change state to market maker. Need to enter market.
          if (msg.msgType === "UMAKER") {
+            this.exitMarket();
             this.enterMarket();                 // enter market
             this.previousState = this.state;    //save previous state
             this.state = "state_maker";         // set new state

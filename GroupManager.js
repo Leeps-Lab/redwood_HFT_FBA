@@ -63,6 +63,7 @@ Redwood.factory("GroupManager", function () {
 
             groupManager.socket.onopen = function(event) {
                console.log(printTime(getTime()), "Group", groupArgs.groupNum, "Connected to", groupArgs.URI);
+               setBatchLength(groupManager.batchLength);
             };
 
 
@@ -81,21 +82,6 @@ Redwood.factory("GroupManager", function () {
                         }  
                         groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
                      }
-  //                 if(ouchStr.charAt(0) == 'S'){                            //special batch msg -> no need to split
-  //                    var msg = ouchToLeepsMsg(ouchStr);                    //adding for synchronization for admin
-  //                    if(msg.batchType == 'B'){                             //only care about start messages
-  //                       groupManager.lastbatchTime = getTime();               //msg.timeStamp;
-  //                    }
-  //                    groupManager.recvFromMarket(msg);                     //send Batch message to Market Algorithm
-  //                 }
-  //                 else{
-  //                    // split the string in case messages are conjoined
-  //                    var ouchMsgArray = splitMessages(ouchStr);            // translate the message and pass it to the recieve function
-  //                    for(ouchMsg of ouchMsgArray){
-  // //                    console.log(ouchStr);
-		// 	               groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
-  //                    }
-  //                 }
                });
                reader.readAsArrayBuffer(event.data);
             };
