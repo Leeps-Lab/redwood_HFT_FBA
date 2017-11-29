@@ -77,10 +77,11 @@ Redwood.factory("GroupManager", function () {
                      // split the string in case messages are conjoined
                      var ouchMsgArray = splitMessages(ouchStr);            // translate the message and pass it to the recieve function
                      for(ouchMsg of ouchMsgArray){
-                        if(ouchMsg.batchType == 'B'){                             //only care about start messages
-                           groupManager.lastbatchTime = getTime();               //msg.timeStamp;
+                        var leepsMsg = ouchToLeepsMsg(ouchMsg);            //convert to leeps msg
+                        if(leepsMsg.batchType == 'B'){                     //only care about start messages timestamp
+                           groupManager.lastbatchTime = getTime();         
                         }  
-                        groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
+                        groupManager.recvFromMarket(leepsMsg);             //send msg to marketalg
                      }
                });
                reader.readAsArrayBuffer(event.data);
