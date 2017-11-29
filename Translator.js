@@ -15,7 +15,6 @@ var batchLength;
 
 function setBatchLength(length){
   batchLength = length / 1000;
-  console.log(batchLength);
 }
 
 // splits a string that can contain multiple messages into an array of messages
@@ -95,10 +94,10 @@ function leepsMsgToOuch(leepsMsg){
 
       // Time in Force
       //if(leepsMsg.msgData[2] === true){
-      if(leepsMsg.IOC === true){
+      if(leepsMsg.IOC == true){
           spliceInArray(intToByteArray(batchLength), ouchMsg, 4, 32);       //investors have TOF of 3 seconds
       }
-      else{    
+      else{   
           spliceInArray(intToByteArray(99999), ouchMsg, 4, 32);   //users have TOF of infinity
       }
 
