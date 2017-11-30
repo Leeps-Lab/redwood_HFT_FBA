@@ -119,7 +119,7 @@ Redwood.factory("MarketAlgorithm", function () {
                nMsg3 = new Message("SYNC_FP", "SNIPE", [this.myId, this.using_speed, []]);
                nMsg3.timeStamp = msg.msgData[0]; // for debugging test output only
                if(groupManager.inSnipeWindow){                                               //only populate if in the sniping window
-                  console.log("jump inside snipe window", printTime(getTime()));
+                 // console.log("jump inside snipe window", printTime(getTime()));
                   
                   if (this.buyEntered) {
                      this.sendToGroupManager(this.removeBuyOfferMsg());       //remove old SNIPE buy msg 
@@ -137,7 +137,7 @@ Redwood.factory("MarketAlgorithm", function () {
 
                }
                else{
-                  console.log("tried to snipe outside window", printTime(getTime()));
+                  //console.log("tried to snipe outside window", printTime(getTime()));
                }
             }
             
