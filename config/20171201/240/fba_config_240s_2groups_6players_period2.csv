@@ -1,2 +1,0 @@
-period,subject,groups,startingWealth,speedCost,maxSpread,batchLength,marketEventsURL,priceChangesURL,NULL,experimentLength,exchangeRate,exchangeURI,sessionNumber
-1,default,"[[1,2,3,4,5,6],[7,8,9,10,11,12]]",20,0.02,2,3000,https://raw.githubusercontent.com/Leeps-Lab/redwood-high-frequency-trading-remote/master/config/20171201/Investors/investors_period2_group1.csv,https://raw.githubusercontent.com/Leeps-Lab/redwood-high-frequency-trading-remote/master/config/20171201/Jumps/jumps_period2_group1.csv,'',240000,1,54.219.182.118,2
