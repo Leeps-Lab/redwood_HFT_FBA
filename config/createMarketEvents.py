@@ -26,7 +26,7 @@ def createMarketEvents(nGroups,nPeriods,experimentLength,dateStr,lambdaJVec,lamb
 
       # Simulate times and sizes
       jumpTimes = np.cumsum(np.around(np.random.exponential(1/lambdaJ,nSimJ)))
-      jumpTimes = jumpTimes[jumpTimes < experimentLength]
+      jumpTimes = np.hstack((jumpTimes[jumpTimes < experimentLength], jumpTimes[jumpTimes >= experimentLength][0]))
       nJump = len(jumpTimes)
       jumpSizes = startPrice + np.cumsum(np.random.normal(muJump,sigJump,nJump))
 
@@ -37,7 +37,7 @@ def createMarketEvents(nGroups,nPeriods,experimentLength,dateStr,lambdaJVec,lamb
 
       # Simulate investor arrivals and directions
       investorTimes = np.cumsum(np.around(np.random.exponential(1/lambdaI,nSimI)))
-      investorTimes = investorTimes[investorTimes < experimentLength]
+      investorTimes = np.hstack((investorTimes[investorTimes < experimentLength], investorTimes[investorTimes >= experimentLength][0]))
       nInvestor = len(investorTimes)
       investorDirections = np.random.binomial(1,buyProb,nInvestor)
 
