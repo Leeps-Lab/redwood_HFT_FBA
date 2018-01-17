@@ -17,8 +17,8 @@ lambdaIVec = [1/2000.0]*12
 maxSpread = 2
 exchangeRate = 2
 filePath = dateStr+"/"+sys.argv[4]+"/"
-marketEventsURLRoot = "https://raw.githubusercontent.com/Leeps-Lab/redwood-high-frequency-trading-remote/master/config/"+dateStr+"/Investors/investors_period"
-priceChangesURLRoot = "https://raw.githubusercontent.com/Leeps-Lab/redwood-high-frequency-trading-remote/master/config/"+dateStr+"/Jumps/jumps_period"
+marketEventsURLRoot = "https://raw.githubusercontent.com/Leeps-Lab/redwood-high-frequency-trading-FBA/master/config/"+dateStr+"/Investors/investors_period"
+priceChangesURLRoot = "https://raw.githubusercontent.com/Leeps-Lab/redwood-high-frequency-trading-FBA/master/config/"+dateStr+"/Jumps/jumps_period"
 exchangeURI = "54.219.182.118"
 
 # Generate jump and investor files
