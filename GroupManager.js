@@ -31,7 +31,7 @@ Redwood.factory("GroupManager", function () {
          groupManager.curMsgId = 1 + 500 * groupArgs.period;
          groupManager.debugArray = [];
          groupManager.inSnipeWindow = false;
-
+	 groupManager.startFlag = true;
 
 
          groupManager.isDebug = groupArgs.isDebug;     //indicates if message logger should be used
@@ -79,7 +79,11 @@ Redwood.factory("GroupManager", function () {
                      for(ouchMsg of ouchMsgArray){
                         var leepsMsg = ouchToLeepsMsg(ouchMsg);            //convert to leeps msg
                         if(leepsMsg.batchType == 'B'){                     //only care about start messages timestamp
-                           groupManager.lastbatchTime = getTime();         
+                           groupManager.lastbatchTime = getTime();
+			   if(groupManager.startFlag == true){
+				groupManager.startFlag = false;
+				console.log("Safe to start Exp");
+			   }         
                         }  
                         groupManager.recvFromMarket(leepsMsg);             //send msg to marketalg
                      }

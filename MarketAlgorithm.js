@@ -19,7 +19,6 @@ Redwood.factory("MarketAlgorithm", function () {
       marketAlgorithm.currentSellId = 0; 
       marketAlgorithm.numTransactions = 0;   
       marketAlgorithm.previousState = null;    
-      marketAlgorithm.snipeFPCArray = [];
 
       marketAlgorithm.isDebug = subjectArgs.isDebug;
       if (marketAlgorithm.isDebug) {
@@ -133,8 +132,6 @@ Redwood.factory("MarketAlgorithm", function () {
                   else{                                                       //value jumped downward
                      nMsg3.msgData[2].push(this.enterSnipeSellOfferMsg());     //enter new SNIPE sell msg
                   }
-                  this.snipeFPCArray[this.currentMsgId] = this.fundamentalPrice;   //keep track of the snipers price for C_TRA msg
-
                }
                else{
                   //console.log("tried to snipe outside window", printTime(getTime()));
@@ -260,13 +257,7 @@ Redwood.factory("MarketAlgorithm", function () {
             if (msg.sellerID === this.myId) {
                this.sellEntered = false;        //added 7/18/17 for fixing OUT user input
             }
-            if(this.state == "state_snipe"){
-               msg.FPC = this.snipeFPCArray[msg.msgId];  //prevents snipers from profiting on a transaction with zero spread investor
-		         // console.log(this.snipeFPCArray[msg.msgId],this.fundamentalPrice); 
-            }
-            else{
-               msg.FPC = this.fundamentalPrice;          //add current FPC to message for graphing
-            }
+            msg.FPC = this.fundamentalPrice;          //add current FPC to message for graphing
             if (this.state == "state_maker") {     //replenish filled orders if maker
                if(this.sellEntered == false){
                   this.sendToGroupManager(this.enterSellOfferMsg());
