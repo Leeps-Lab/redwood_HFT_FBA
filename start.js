@@ -22,6 +22,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          $scope.jumpOffsetY = 0;
          $scope.LaserSound;
          $scope.statename = "Out";
+         $scope.minSpread = .01;
 	 $scope.inputData;
 	 $scope.adminStartTime;
 
@@ -180,7 +181,7 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
          $scope.setSpeed = function (value) {
             if (value !== $scope.using_speed) {
                $scope.using_speed = value;
-               var msg = new Message("USER", "USPEED", [rs.user_id, $scope.using_speed, $scope.tradingGraph.getCurOffsetTime()]);
+               var msg = new Message("USER", "USPEED", [rs.user_id, $scope.using_speed, getTime()]);
                $scope.sendToGroupManager(msg);           //still have to send to market algorithm to update player state
                
             }
@@ -395,12 +396,12 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                   if (event.offsetY <= $scope.tradingGraph.elementHeight / 2) {      //you left the svg right of the center tick
                      $scope.spread = ($scope.maxSpread - Math.abs(2 * $scope.maxSpread * event.offsetY / $scope.tradingGraph.elementHeight)).toPrecision(2); //.1 increments
                      if($scope.spread > $scope.maxSpread) $scope.spread = $scope.maxSpread;                                       //cap max spread to 5
-                     if($scope.spread <= .1) $scope.spread = .1;
+                     if($scope.spread <= $scope.minSpread) $scope.spread = $scope.minSpread;
                   } 
                   else {                                                            //you clicked below of the center tick
                      $scope.spread = (((2 * $scope.maxSpread * event.offsetY - $scope.tradingGraph.elementHeight / $scope.maxSpread) / $scope.tradingGraph.elementHeight) - $scope.maxSpread - .2).toPrecision(2); //.1 increments
                      if($scope.spread > $scope.maxSpread) $scope.spread = $scope.maxSpread;                                       //cap max spread to 5
-                     if($scope.spread <= .1) $scope.spread = .1;
+                     if($scope.spread <= $scope.minSpread) $scope.spread = $scope.minSpread;
                   }
                   var msg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, getTime()]);
                   $scope.sendToGroupManager(msg);
@@ -425,12 +426,12 @@ RedwoodHighFrequencyTrading.controller("HFTStartController",
                   if (event.offsetY <= $scope.tradingGraph.elementHeight / 2) {      //you clicked right of the center tick
                      $scope.spread = ($scope.maxSpread - Math.abs(2 * $scope.maxSpread * event.offsetY / $scope.tradingGraph.elementHeight)).toPrecision(2); //.1 increments
                      if($scope.spread > $scope.maxSpread) $scope.spread = $scope.maxSpread;                                       //cap max spread to 5
-                     if($scope.spread <= .1) $scope.spread = .1;
+                     if($scope.spread <= $scope.minSpread) $scope.spread = $scope.minSpread;
                   } 
                   else {                                                            //you clicked left of the center tick
                      $scope.spread = (((2 * $scope.maxSpread * event.offsetY - $scope.tradingGraph.elementHeight / $scope.maxSpread) / $scope.tradingGraph.elementHeight) - $scope.maxSpread - .2).toPrecision(2); //.1 increments
                      if($scope.spread > $scope.maxSpread) $scope.spread = $scope.maxSpread;                                       //cap max spread to 5
-                     if($scope.spread <= .1) $scope.spread = .1;   
+                     if($scope.spread <= $scope.minSpread) $scope.spread = $scope.minSpread;   
                   }
                   var msg = new Message("USER", "UUSPR", [rs.user_id, $scope.spread, getTime()]);
                   $scope.sendToGroupManager(msg);

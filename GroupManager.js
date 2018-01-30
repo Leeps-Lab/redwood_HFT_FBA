@@ -31,7 +31,7 @@ Redwood.factory("GroupManager", function () {
          groupManager.curMsgId = 1 + 500 * groupArgs.period;
          groupManager.debugArray = [];
          groupManager.inSnipeWindow = false;
-
+	 groupManager.startFlag = true;
 
 
          groupManager.isDebug = groupArgs.isDebug;     //indicates if message logger should be used
@@ -63,7 +63,7 @@ Redwood.factory("GroupManager", function () {
 
             groupManager.socket.onopen = function(event) {
                console.log(printTime(getTime()), "Group", groupArgs.groupNum, "Connected to", groupArgs.URI);
-               // this.send(generateSystemEventMsg('S'));
+               setBatchLength(groupManager.batchLength);
             };
 
 
@@ -74,22 +74,19 @@ Redwood.factory("GroupManager", function () {
                reader.addEventListener("loadend", function() {
                   // reader.result contains the raw ouch message as a DataBuffer, convert it to string
                   var ouchStr = String.fromCharCode.apply(null, new Uint8Array(reader.result));
-                  //console.log(printTime(getTime()),logStringAsNums(ouchStr));
-                  if(ouchStr.charAt(0) == 'S'){                            //special batch msg -> no need to split
-                     var msg = ouchToLeepsMsg(ouchStr);                    //adding for synchronization for admin
-                     if(msg.batchType == 'B'){                             //only care about start messages
-                        groupManager.lastbatchTime = getTime();               //msg.timeStamp;
-                     }
-                     groupManager.recvFromMarket(msg);                     //send Batch message to Market Algorithm
-                  }
-                  else{
                      // split the string in case messages are conjoined
                      var ouchMsgArray = splitMessages(ouchStr);            // translate the message and pass it to the recieve function
                      for(ouchMsg of ouchMsgArray){
-  //                      console.log(ouchStr);
-			groupManager.recvFromMarket(ouchToLeepsMsg(ouchMsg));
+                        var leepsMsg = ouchToLeepsMsg(ouchMsg);            //convert to leeps msg
+                        if(leepsMsg.batchType == 'B'){                     //only care about start messages timestamp
+                           groupManager.lastbatchTime = getTime();
+			   if(groupManager.startFlag == true){
+				groupManager.startFlag = false;
+				console.log("Safe to start Exp");
+			   }         
+                        }  
+                        groupManager.recvFromMarket(leepsMsg);             //send msg to marketalg
                      }
-                  }
                });
                reader.readAsArrayBuffer(event.data);
             };
@@ -203,6 +200,7 @@ Redwood.factory("GroupManager", function () {
                //calculate time until snipe window (done in groupmanager because 4x marketalg = bad behavior)
                var snipeWindowDelay = this.batchLength - this.delay;
                this.inSnipeWindow = false;            //next batchLength - msg delay will be unsnipeable
+               
                window.setTimeout(function (){
                   groupManager.inSnipeWindow = true;     //this is lost in this scope, use groupManager
                }, snipeWindowDelay);

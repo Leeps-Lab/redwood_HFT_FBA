@@ -11,6 +11,11 @@
 
 
 var ouchMsgSizes = {'A' : 66, 'U' : 80, 'C' : 28, 'E' : 40, 'S' : 10};
+var batchLength;
+
+function setBatchLength(length){
+  batchLength = length / 1000;
+}
 
 // splits a string that can contain multiple messages into an array of messages
 function splitMessages(messageStr){
@@ -89,10 +94,10 @@ function leepsMsgToOuch(leepsMsg){
 
       // Time in Force
       //if(leepsMsg.msgData[2] === true){
-      if(leepsMsg.IOC === true){
-          spliceInArray(intToByteArray(3), ouchMsg, 4, 32);       //investors have TOF of 3 seconds
+      if(leepsMsg.IOC == true){
+          spliceInArray(intToByteArray(batchLength), ouchMsg, 4, 32);       //investors have TOF of 3 seconds
       }
-      else{    
+      else{   
           spliceInArray(intToByteArray(99999), ouchMsg, 4, 32);   //users have TOF of infinity
       }
 
@@ -202,7 +207,7 @@ function leepsMsgToOuch(leepsMsg){
       // Time in Force
       //if(leepsMsg.msgData[2] === true){
       if(leepsMsg.IOC === true){  
-         spliceInArray(intToByteArray(1), ouchMsg, 4, 37);    //7/18/17 changed from 0 to 1 for sniping purposes
+         spliceInArray(intToByteArray(3), ouchMsg, 4, 37);    //will last for one 3 second batch
       }
       else{
          spliceInArray(intToByteArray(99999), ouchMsg, 4, 37);
