@@ -10,14 +10,15 @@
             </tr>
             <tr>
                 <td class="status-display">Period # {{period}}</td>
-                <td class="status-display">Number of Makers: {{dHistory.totalMakers}} ({{dHistory.fastMakers}} fast)</td>
+                <!-- <td class="status-display">Number of Makers: {{dHistory.totalMakers}} ({{dHistory.fastMakers}} fast)</td> -->
                 <td class="status-display">Spread: {{GetSpread()}}</td>
                 <td class="status-display">Current Buy Offer: {{dHistory.getCurrBuy() | number : 2}}</td>
             </tr>
             <tr>
-                <td class="status-display">Speed Cost: ${{dHistory.speedCost | number : 2}} / Second</td>
-                <td class="status-display">Number of Snipers: {{dHistory.totalSnipers}} ({{dHistory.fastSnipers}} fast)</td>
-                <td class="status-display">Your Profit: ${{dHistory.profit | number : 2}}</td>
+                <td class="status-display">Speed Cost: {{dHistory.speedCost | number : 2}} ECUs / Second</td>
+                <td class="status-display">Payoff: {{(dHistory.profit / exchangeRate) | number : 2}}ECUs </td>
+                <!-- <td class="status-display">Number of Snipers: {{dHistory.totalSnipers}} ({{dHistory.fastSnipers}} fast)</td> -->
+                <td class="status-display">ECUs: {{dHistory.profit | number : 2}}</td>
                  <td class="status-display">Current Sell Offer: {{dHistory.getCurrSell() | number : 2}}</td>
             </tr>    
         </table>
